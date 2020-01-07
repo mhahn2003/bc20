@@ -25,3 +25,25 @@ This is the Battlecode 2020 scaffold, containing an `examplefuncsplayer`. Read h
 - `gradle/`
     Contains files used by the Gradle wrapper scripts. Can be safely ignored.
 
+### Resources
+
+Here are some useful links for reference.
+
+- Battlecode homepage
+https://2020.battlecode.org/home
+- Battlecode repository
+https://github.com/skipiano/bc20
+- Game specifications
+https://2020.battlecode.org/specs.html
+- Java documentation
+https://2020.battlecode.org/javadoc/index.html
+- Debugging
+[TODO: Not up yet, update when they fix the link]
+- Game visualizer
+https://2020.battlecode.org/visualizer.html
+- Bytecode optimization
+https://cory.li/bytecode-hacking/
+- Git tutorial
+https://guides.github.com/introduction/git-handbook/
+
+
