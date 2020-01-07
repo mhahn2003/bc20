@@ -1,14 +1,20 @@
 package bot01;
+
 import battlecode.common.*;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
 
-    static Direction[] directions = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+    static Direction[] directions = {Direction.NORTH, Direction.NORTHEAST, Direction.EAST, Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST, Direction.WEST, Direction.NORTHWEST};
     static RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
     static int turnCount;
+
+    // game map, not implemented yet
+    static int[][] map;
+
+    static MapLocation HQLocation;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -31,6 +37,10 @@ public strictfp class RobotPlayer {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You can add the missing ones or rewrite this into your own control structure.
                 System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
+
+                if (turnCount == 1) {
+                    initialize();
+                }
                 switch (rc.getType()) {
                     case HQ:                 runHQ();                break;
                     case MINER:              runMiner();             break;
@@ -54,24 +64,49 @@ public strictfp class RobotPlayer {
     }
 
     static void runHQ() throws GameActionException {
-        for (Direction dir : directions)
-            tryBuild(RobotType.MINER, dir);
+        // build all the miners we can get in the first few turns
+        if (turnCount <= 11) {
+            for (Direction d: Direction.allDirections()) {
+                if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
+            }
+        }
+        MapLocation[] soupLoc = findSoup();
+        if (soupLoc.length != 0) {
+            // we found soup, so we want to broadcast so our miners can get to it faster
+            // TODO: implement broadcasting
+        }
     }
 
     static void runMiner() throws GameActionException {
-        tryBlockchain();
-        tryMove(randomDirection());
-        if (tryMove(randomDirection()))
-            System.out.println("I moved!");
-        // tryBuild(randomSpawnedByMiner(), randomDirection());
-        for (Direction dir : directions)
-            tryBuild(RobotType.FULFILLMENT_CENTER, dir);
-        for (Direction dir : directions)
-            if (tryRefine(dir))
-                System.out.println("I refined soup! " + rc.getTeamSoup());
-        for (Direction dir : directions)
-            if (tryMine(dir))
-                System.out.println("I mined soup! " + rc.getSoupCarrying());
+        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
+            // if the robot is full move back to HQ
+            // TODO: implement bug nav
+            if (HQLocation != null) {
+                if (rc.canMove(rc.getLocation().directionTo(HQLocation))) {
+                    rc.move(rc.getLocation().directionTo(HQLocation));
+                }
+            }
+        } else {
+            MapLocation[] soupLoc = findSoup();
+            for (MapLocation soup: soupLoc) {
+                if (rc.canMineSoup(rc.getLocation().directionTo(soup))) {
+                    rc.mineSoup(rc.getLocation().directionTo(soup));
+                }
+            }
+            // if we can't mine soup, go to other soups
+            for (MapLocation soup: soupLoc) {
+                if (rc.canMove(rc.getLocation().directionTo(soup))) {
+                    rc.move(rc.getLocation().directionTo(soup));
+                }
+            }
+
+            if (soupLoc.length == 0) {
+                // if there is no soup nearby move randomly for now I guess?
+                // TODO: think of strategy for scouting for soup
+                tryMove(directions[(int) (Math.random()*directions.length)]);
+            }
+        }
+
     }
 
     static void runRefinery() throws GameActionException {
@@ -96,58 +131,11 @@ public strictfp class RobotPlayer {
     }
 
     static void runDeliveryDrone() throws GameActionException {
-        Team enemy = rc.getTeam().opponent();
-        if (!rc.isCurrentlyHoldingUnit()) {
-            // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
-            RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.DELIVERY_DRONE_PICKUP_RADIUS_SQUARED, enemy);
 
-            if (robots.length > 0) {
-                // Pick up a first robot within range
-                rc.pickUpUnit(robots[0].getID());
-                System.out.println("I picked up " + robots[0].getID() + "!");
-            }
-        } else {
-            // No close robots, so search for robots within sight radius
-            tryMove(randomDirection());
-        }
     }
 
     static void runNetGun() throws GameActionException {
 
-    }
-
-    /**
-     * Returns a random Direction.
-     *
-     * @return a random Direction
-     */
-    static Direction randomDirection() {
-        return directions[(int) (Math.random() * directions.length)];
-    }
-
-    /**
-     * Returns a random RobotType spawned by miners.
-     *
-     * @return a random RobotType
-     */
-    static RobotType randomSpawnedByMiner() {
-        return spawnedByMiner[(int) (Math.random() * spawnedByMiner.length)];
-    }
-
-    static boolean tryMove() throws GameActionException {
-        for (Direction dir : directions)
-            if (tryMove(dir))
-                return true;
-        return false;
-        // MapLocation loc = rc.getLocation();
-        // if (loc.x < 10 && loc.x < loc.y)
-        //     return tryMove(Direction.EAST);
-        // else if (loc.x < 10)
-        //     return tryMove(Direction.SOUTH);
-        // else if (loc.x > loc.y)
-        //     return tryMove(Direction.WEST);
-        // else
-        //     return tryMove(Direction.NORTH);
     }
 
     /**
@@ -219,5 +207,51 @@ public strictfp class RobotPlayer {
                 rc.submitTransaction(message, 10);
         }
         // System.out.println(rc.getRoundMessages(turnCount-1));
+    }
+
+
+    // returns the current water level given turn count
+    static double waterLevel() {
+        double x = (double) turnCount;
+        return Math.exp(0.0028*x-1.38*Math.sin(0.00157*x-1.73)+1.38*Math.sin(-1.73))-1;
+    }
+
+    static double distSqr(int dx, int dy) {
+        return dx*dx+dy*dy;
+    }
+
+    // returns a list of MapLocations of soup in the robot's vision radius
+    static MapLocation[] findSoup() throws GameActionException {
+        MapLocation robotLoc = rc.getLocation();
+        int sensorR = rc.getType().sensorRadiusSquared;
+        // currently, HQ can see 48 distance squared, so we only need to check 6x6 square
+        int maxV = 6;
+        MapLocation[] soupLoc = new MapLocation[36];
+        int index = 0;
+        for (int x = -maxV; x <= maxV; x++) {
+            for (int y = -maxV; y <= maxV; y++) {
+                if (distSqr(x, y) < sensorR) {
+                    MapLocation check = robotLoc.translate(x, y);
+                    if (rc.senseSoup(check) > 0) {
+                        soupLoc[index] = check;
+                        index++;
+                    }
+                }
+            }
+        }
+        return soupLoc;
+    }
+
+    static void findHQ() throws GameActionException {
+        MapLocation robotLoc = rc.getLocation();
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo ri: robots){
+            if (ri.getType() == RobotType.HQ) HQLocation = ri.getLocation();
+        }
+    }
+
+    // when a unit is first created it calls this function
+    static void initialize() throws GameActionException {
+        findHQ();
     }
 }
