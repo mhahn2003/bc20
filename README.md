@@ -51,7 +51,7 @@ https://guides.github.com/introduction/git-handbook/
 Our current strategy is to:
 1. Produce miners
 2. Find the nearest soup deposit and mine them
-3. Somehow build a refinery? (Initially we have 200 soup and we used some of them on miners so we somoehow need to get up to 200 more soup until the miners can build them again)
+3. Somehow build a refinery? (Initially we have 200 soup and we used some of them on miners so we somoehow need to get up to 200 more soup until the miners can build them again) (so HQ is a refinery which I missed so we can just refine at HQ)
 4. Let the miners keep mining and build landscaper factory (design schools) and drone factory (fullfillment centers)
 5. Once with enough landscapers and drones, pick up necessary amounts of landscapers, drones, and one miner
 6. Drop off the units once close to enemy HQ (We might need to build net guns in our base to counter this strategy too)
