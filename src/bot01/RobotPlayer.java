@@ -36,7 +36,7 @@ public strictfp class RobotPlayer {
             try {
                 // Here, we've separated the controls into a different method for each RobotType.
                 // You can add the missing ones or rewrite this into your own control structure.
-                System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
+                //System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
 
                 if (turnCount == 1) {
                     initialize();
@@ -70,8 +70,8 @@ public strictfp class RobotPlayer {
                 if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
             }
         }
-        MapLocation[] soupLoc = findSoup();
-        if (soupLoc.length != 0) {
+        MapLocation soupLoc = findSoup();
+        if (soupLoc != null) {
             // we found soup, so we want to broadcast so our miners can get to it faster
             // TODO: implement broadcasting
         }
@@ -87,20 +87,18 @@ public strictfp class RobotPlayer {
                 }
             }
         } else {
-            MapLocation[] soupLoc = findSoup();
-            for (MapLocation soup: soupLoc) {
-                if (rc.canMineSoup(rc.getLocation().directionTo(soup))) {
-                    rc.mineSoup(rc.getLocation().directionTo(soup));
+            MapLocation soupLoc = findSoup();
+            if (soupLoc != null) {
+                System.out.println("Soup is at: " + soupLoc.toString());
+                if (rc.canMineSoup(rc.getLocation().directionTo(soupLoc))) {
+                    rc.mineSoup(rc.getLocation().directionTo(soupLoc));
+                }
+                // if we can't mine soup, go to other soups
+                if (rc.canMove(rc.getLocation().directionTo(soupLoc))) {
+                    rc.move(rc.getLocation().directionTo(soupLoc));
                 }
             }
-            // if we can't mine soup, go to other soups
-            for (MapLocation soup: soupLoc) {
-                if (rc.canMove(rc.getLocation().directionTo(soup))) {
-                    rc.move(rc.getLocation().directionTo(soup));
-                }
-            }
-
-            if (soupLoc.length == 0) {
+            else {
                 // if there is no soup nearby move randomly for now I guess?
                 // TODO: think of strategy for scouting for soup
                 tryMove(directions[(int) (Math.random()*directions.length)]);
@@ -216,25 +214,22 @@ public strictfp class RobotPlayer {
         return Math.exp(0.0028*x-1.38*Math.sin(0.00157*x-1.73)+1.38*Math.sin(-1.73))-1;
     }
 
-    static double distSqr(int dx, int dy) {
-        return dx*dx+dy*dy;
+    static int distSqr(int dx, int dy) {
+        return dx * dx + dy * dy;
     }
 
-    // returns a list of MapLocations of soup in the robot's vision radius
-    static MapLocation[] findSoup() throws GameActionException {
+    // returns the closest MapLocation of soup in the robot's vision radius
+    static MapLocation findSoup() throws GameActionException {
         MapLocation robotLoc = rc.getLocation();
-        int sensorR = rc.getType().sensorRadiusSquared;
-        // currently, HQ can see 48 distance squared, so we only need to check 6x6 square
         int maxV = 6;
-        MapLocation[] soupLoc = new MapLocation[36];
-        int index = 0;
+        MapLocation soupLoc = null;
         for (int x = -maxV; x <= maxV; x++) {
             for (int y = -maxV; y <= maxV; y++) {
-                if (distSqr(x, y) < sensorR) {
-                    MapLocation check = robotLoc.translate(x, y);
+                MapLocation check = robotLoc.translate(x, y);
+                if (rc.canSenseLocation(check)) {
                     if (rc.senseSoup(check) > 0) {
-                        soupLoc[index] = check;
-                        index++;
+                        if (soupLoc == null || check.distanceSquaredTo(rc.getLocation()) < soupLoc.distanceSquaredTo(rc.getLocation()))
+                        soupLoc = check;
                     }
                 }
             }
