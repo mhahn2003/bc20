@@ -29,21 +29,21 @@ This is the Battlecode 2020 scaffold, containing an `examplefuncsplayer`. Read h
 
 Here are some useful links for reference.
 
-- Battlecode homepage
+- Battlecode homepage:
 https://2020.battlecode.org/home
-- Battlecode repository
+- Battlecode repository:
 https://github.com/skipiano/bc20
-- Game specifications
+- Game specifications:
 https://2020.battlecode.org/specs.html
-- Java documentation
+- Java documentation:
 https://2020.battlecode.org/javadoc/index.html
-- Debugging
+- Debugging:
 [TODO: Not up yet, update when they fix the link]
-- Game visualizer
+- Game visualizer:
 https://2020.battlecode.org/visualizer.html
-- Bytecode optimization
+- Bytecode optimization:
 https://cory.li/bytecode-hacking/
-- Git tutorial
+- Git tutorial:
 https://guides.github.com/introduction/git-handbook/
 
 
