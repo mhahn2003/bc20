@@ -68,7 +68,6 @@ public strictfp class RobotPlayer {
 
     static void runHQ() throws GameActionException {
         // build all the miners we can get in the first few turns
-        // if turncount <= 11
         if (rc.getRobotCount() < 5) {
             for (Direction d : Direction.allDirections()) {
                 if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
@@ -98,32 +97,22 @@ public strictfp class RobotPlayer {
                 }
             }
         } else {
-            // if HQ is right next to miner and still have some soup left, keep depositing
-            if (rc.getSoupCarrying() > 0 && HQLocation.isAdjacentTo(rc.getLocation())) {
-                Direction soupDepositDir = rc.getLocation().directionTo(HQLocation);
-                if (rc.canDepositSoup(soupDepositDir)) {
-                    System.out.println("Depositing " + rc.getSoupCarrying() + " soup!");
-                    rc.depositSoup(soupDepositDir, rc.getSoupCarrying());
+            MapLocation soupLoc = findSoup();
+            if (soupLoc != null) {
+                System.out.println("Soup is at: " + soupLoc.toString());
+                if (rc.canMineSoup(rc.getLocation().directionTo(soupLoc))) {
+                    rc.mineSoup(rc.getLocation().directionTo(soupLoc));
+                }
+                // if we can't mine soup, go to other soups
+                if (rc.canMove(rc.getLocation().directionTo(soupLoc))) {
+                    rc.move(rc.getLocation().directionTo(soupLoc));
                 }
             } else {
-                MapLocation soupLoc = findSoup();
-                if (soupLoc != null) {
-                    System.out.println("Soup is at: " + soupLoc.toString());
-                    if (rc.canMineSoup(rc.getLocation().directionTo(soupLoc))) {
-                        rc.mineSoup(rc.getLocation().directionTo(soupLoc));
-                    }
-                    // if we can't mine soup, go to other soups
-                    if (rc.canMove(rc.getLocation().directionTo(soupLoc))) {
-                        rc.move(rc.getLocation().directionTo(soupLoc));
-                    }
-                } else {
-                    // if there is no soup nearby move randomly for now I guess?
-                    // TODO: think of strategy for scouting for soup
-                    tryMove(directions[(int) (Math.random() * directions.length)]);
-                }
+                // if there is no soup nearby move randomly for now I guess?
+                // TODO: think of strategy for scouting for soup
+                tryMove(directions[(int) (Math.random() * directions.length)]);
             }
         }
-
     }
 
     static void runRefinery() throws GameActionException {
