@@ -1,13 +1,5 @@
 package bot01;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-
-import java.util.LinkedList;
-import java.lang.Math;
-
 // Navigation class
 public class Cast {
 
@@ -51,6 +43,8 @@ public class Cast {
             case 2: return information_catagory.REMOVE_BUILDING;
             case 3: return information_catagory.NEW_SOUP;
         }
+        // need to return
+        return null;
     }
 
 

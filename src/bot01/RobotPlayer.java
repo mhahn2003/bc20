@@ -88,7 +88,7 @@ public strictfp class RobotPlayer {
                 if (HQLocation.isAdjacentTo(rc.getLocation())) {
                     Direction soupDepositDir = rc.getLocation().directionTo(HQLocation);
                     tryRefine(soupDepositDir);
-                    nav.bugOff();
+                    nav.navReset();
                 } else {
                     nav.bugNav(rc, HQLocation);
                 }
@@ -100,10 +100,10 @@ public strictfp class RobotPlayer {
                 Direction locDir = rc.getLocation().directionTo(soupLoc);
                 if (rc.canMineSoup(locDir)) {
                     rc.mineSoup(locDir);
-                    nav.bugOff();
+                    nav.navReset();
                 }
                 // if we can't mine soup, go to other soups
-                nav.bugNav(rc, soupLoc);
+                else nav.bugNav(rc, soupLoc);
             } else {
                 // if there is no soup nearby move randomly for now I guess?
                 // TODO: think of strategy for scouting for soup
