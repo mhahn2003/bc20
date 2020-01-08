@@ -1,13 +1,5 @@
 package bot01;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-
-import java.util.LinkedList;
-import java.lang.Math;
-
 // Navigation class
 public class Cast {
 
@@ -58,6 +50,8 @@ public class Cast {
             default:
             return information_catagory.OTHER;
         }
+        // need to return
+        return null;
     }
 
     public static int[] getCoord(int message){
