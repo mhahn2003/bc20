@@ -3,8 +3,6 @@ package bot01;
 // Navigation class
 public class Cast {
 
-    public static int ukey;
-
     public static enum information_catagory{
         // new building(needs coordinate and type)
         NEW_BUILDING,
@@ -23,7 +21,6 @@ public class Cast {
             case NEW_BUILDING:      return 1;
             case REMOVE_BUILDING:   return 2;
             case NEW_SOUP:          return 3;
-            case OTHER:             return 0;
             default:                return 0;
         }
     }
