@@ -59,4 +59,7 @@ Our current strategy is to:
 8. Surround enemy HQ with landscapers and bury to kill HQ
 9. If there are units surrounding HQ so we can't bury HQ, build a river and flood HQ.
 
+### Need to Fix
 
+1. Improve scouting mechanism of searching for soup
+2. How to check if the area is inacessible without landscapers?

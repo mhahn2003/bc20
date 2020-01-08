@@ -68,10 +68,9 @@ public strictfp class RobotPlayer {
 
     static void runHQ() throws GameActionException {
         // build all the miners we can get in the first few turns
-        if (turnCount <= 11) {
-            for (Direction d: Direction.allDirections()) {
-                if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
-            }
+        // if turncount <= 11
+        for (Direction d: Direction.allDirections()) {
+            if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
         }
         MapLocation soupLoc = findSoup();
         if (soupLoc != null) {
@@ -83,7 +82,6 @@ public strictfp class RobotPlayer {
     static void runMiner() throws GameActionException {
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
             // if the robot is full move back to HQ
-            // TODO: implement bug nav
             if (HQLocation != null) {
                 // if HQ is next to miner deposit
                 if (HQLocation.isAdjacentTo(rc.getLocation())) {
