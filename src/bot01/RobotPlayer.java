@@ -18,6 +18,8 @@ public strictfp class RobotPlayer {
     static Nav nav = new Nav();
 
     static MapLocation HQLocation;
+    // suspected enemy HQ location
+    static MapLocation enemyHQLocationSuspect;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -89,8 +91,8 @@ public strictfp class RobotPlayer {
                 tryBuild(RobotType.FULFILLMENT_CENTER, d);
             }
         }
-        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
-            // if the robot is full move back to HQ
+        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (findSoup() == null && rc.getSoupCarrying() > 0)) {
+            // if the robot is full or has stuff and no more soup nearby, move back to HQ
             if (HQLocation != null) {
                 // if HQ is next to miner deposit
                 if (HQLocation.isAdjacentTo(rc.getLocation())) {
@@ -113,9 +115,9 @@ public strictfp class RobotPlayer {
                 // if we can't mine soup, go to other soups
                 else nav.bugNav(rc, soupLoc);
             } else {
-                // if there is no soup nearby move randomly for now I guess?
                 // TODO: think of strategy for scouting for soup
-                tryMove(directions[(int) (Math.random() * directions.length)]);
+                // move to suspected enemy HQ
+                nav.bugNav(rc, enemyHQLocationSuspect);
             }
         }
     }
@@ -147,7 +149,7 @@ public strictfp class RobotPlayer {
 
     static void runDeliveryDrone() throws GameActionException {
         findHQ();
-
+        nav.bugNav(rc, enemyHQLocationSuspect);
     }
 
     static void runNetGun() throws GameActionException {
@@ -227,11 +229,15 @@ public strictfp class RobotPlayer {
         return soupLoc;
     }
 
+    // finds HQ and guesses enemy HQ
     static void findHQ() throws GameActionException {
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo ri: robots){
             if (ri.getType() == RobotType.HQ && ri.getTeam() == rc.getTeam()) HQLocation = ri.getLocation();
         }
+        MapLocation[] suspects = new MapLocation[]{horRef(HQLocation, rc), verRef(HQLocation, rc), horVerRef(HQLocation, rc)};
+        enemyHQLocationSuspect = suspects[rc.getID() % 3];
+        rc.setIndicatorDot(enemyHQLocationSuspect, 255, 0, 0);
     }
 
     // when a unit is first created it calls this function
@@ -241,16 +247,16 @@ public strictfp class RobotPlayer {
 
     // reflect horizontally
     static MapLocation horRef(MapLocation loc, RobotController rc) {
-        return null;
+        return new MapLocation(rc.getMapWidth()-1-loc.x, loc.y);
     }
 
     // reflect vertically
     static MapLocation verRef(MapLocation loc, RobotController rc) {
-        return null;
+        return new MapLocation(loc.x, rc.getMapHeight()-1-loc.y);
     }
 
     // reflect vertically and horizontally
     static MapLocation horVerRef(MapLocation loc, RobotController rc) {
-        return null;
+        return new MapLocation(rc.getMapWidth()-1-loc.x, rc.getMapHeight()-1-loc.y);
     }
 }

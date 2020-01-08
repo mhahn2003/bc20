@@ -40,6 +40,7 @@ public class Nav {
     }
 
     public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
+        // TODO: fix this function for different types of units (e.g. drones)
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
         return true;
