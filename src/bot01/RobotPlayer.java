@@ -14,6 +14,9 @@ public strictfp class RobotPlayer {
     // game map, not implemented yet
     static int[][] map;
 
+    // navigation object
+    static Nav nav = new Nav();
+
     static MapLocation HQLocation;
 
     /**
@@ -82,8 +85,16 @@ public strictfp class RobotPlayer {
             // if the robot is full move back to HQ
             // TODO: implement bug nav
             if (HQLocation != null) {
-                if (rc.canMove(rc.getLocation().directionTo(HQLocation))) {
-                    rc.move(rc.getLocation().directionTo(HQLocation));
+                // if HQ is next to miner deposit
+                if (HQLocation.isAdjacentTo(rc.getLocation())) {
+                    Direction soupDepositDir = rc.getLocation().directionTo(HQLocation);
+                    if (rc.canDepositSoup(soupDepositDir)) {
+                        System.out.println("Depositing " + rc.getSoupCarrying() + " soup!");
+                        rc.depositSoup(soupDepositDir, rc.getSoupCarrying());
+                    }
+                    nav.bugOff();
+                } else {
+                    nav.bugNav(rc, HQLocation);
                 }
             }
         } else {
@@ -228,7 +239,9 @@ public strictfp class RobotPlayer {
                 MapLocation check = robotLoc.translate(x, y);
                 if (rc.canSenseLocation(check)) {
                     if (rc.senseSoup(check) > 0) {
-                        if (soupLoc == null || check.distanceSquaredTo(rc.getLocation()) < soupLoc.distanceSquaredTo(rc.getLocation()))
+                        // find the closest maxmimal soup deposit
+                        if (soupLoc == null || check.distanceSquaredTo(rc.getLocation()) < soupLoc.distanceSquaredTo(rc.getLocation())
+                        || (check.distanceSquaredTo(rc.getLocation()) == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
                         soupLoc = check;
                     }
                 }
