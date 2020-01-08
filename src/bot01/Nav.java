@@ -37,8 +37,8 @@ public class Nav {
     }
 
     public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
-        if (rc.getType() == RobotType.MINER) canGoMiner(rc, dir);
-        else if (rc.getType() == RobotType.DELIVERY_DRONE) canGoDrone(rc, dir);
+        if (rc.getType() == RobotType.MINER) return canGoMiner(rc, dir);
+        else if (rc.getType() == RobotType.DELIVERY_DRONE) return canGoDrone(rc, dir);
         // TODO: fix this function for different types of units (e.g. drones)
         return true;
     }

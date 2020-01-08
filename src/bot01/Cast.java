@@ -1,6 +1,6 @@
 package bot01;
 
-import battlecode.common.RobotController;
+import battlecode.common.MapLocation;
 
 // Navigation class
 public class Cast {
@@ -17,34 +17,34 @@ public class Cast {
     }
 
 
-    public static int broadCast(information_catagory cat,int[] coord ) {
+    public static int broadCast(information_catagory cat, MapLocation coord) {
         int message=0;
         switch (cat) {
-            case NEW_BUILDING:      message+= 1;
-            case REMOVE_BUILDING:   message+= 2;
-            case NEW_SOUP:          message+= 3;
-            default:                message+= 0;
+            case NEW_BUILDING:      message += 1;
+            case REMOVE_BUILDING:   message += 2;
+            case NEW_SOUP:          message += 4;
+            default:                message += 8;
         }
         message=addCoord(message, coord);
         return message;
     }
 
-    public static int addCoord(int info_ori,int[] pos){
-        return info_ori*10000+pos[0]*100+pos[1];
+    public static int addCoord(int message, MapLocation coord){
+        return message*10000 + coord.x*100 + coord.y;
     }
 
     public static information_catagory get_cat(int message){
-        switch((int)Math.floor(message/10000)){
+        switch(message/10000) {
+            // We might be able to do combination of cases with binary?
             case 1:  return information_catagory.NEW_BUILDING;
             case 2:  return information_catagory.REMOVE_BUILDING;
-            case 3:  return information_catagory.NEW_SOUP;
+            case 4:  return information_catagory.NEW_SOUP;
             default: return information_catagory.OTHER;
         }
     }
 
-    public static int[] getCoord(int message){
-        int[] coord={message%10000-message%100, message%100};
-        return coord;
+    public static MapLocation getCoord(int message){
+        return new MapLocation(message%10000-message%100, message%100);
     }
 
 }

@@ -90,6 +90,11 @@ public strictfp class RobotPlayer {
                 tryBuild(RobotType.FULFILLMENT_CENTER, d);
             }
         }
+        if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+200 && rc.getLocation().distanceSquaredTo(HQLocation) < 15) {
+            for (Direction d : Direction.allDirections()) {
+                tryBuild(RobotType.VAPORATOR, d);
+            }
+        }
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (findSoup() == null && rc.getSoupCarrying() > 0)) {
             // if the robot is full or has stuff and no more soup nearby, move back to HQ
             if (HQLocation != null) {
@@ -136,7 +141,7 @@ public strictfp class RobotPlayer {
     static void runFulfillmentCenter() throws GameActionException {
         // no drones -> 6 units
         // produce 4 drones
-        if (rc.getRobotCount() < 10) {
+        if (rc.getRobotCount() < 25) {
             for (Direction dir : directions)
                 tryBuild(RobotType.DELIVERY_DRONE, dir);
         }
@@ -147,7 +152,59 @@ public strictfp class RobotPlayer {
     }
 
     static void runDeliveryDrone() throws GameActionException {
-        findHQ();
+        // find opponent units and pick up
+        if (!rc.isCurrentlyHoldingUnit()) {
+            // find opponent units
+            RobotInfo pickup = null;
+            for (RobotInfo r: rc.senseNearbyRobots()) {
+                if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType()  == RobotType.COW)) {
+                    pickup = r;
+                }
+            }
+            if (pickup != null) {
+                // if can pickup do pickup
+                if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
+                    if (rc.canPickUpUnit(pickup.getID())) rc.pickUpUnit(pickup.getID());
+                    nav.navReset();
+                } else {
+                    // if not navigate to that unit
+                    nav.bugNav(rc, pickup.getLocation());
+                }
+            } else {
+                // if there are no robots nearby
+                nav.bugNav(rc, enemyHQLocationSuspect);
+            }
+        } else {
+            // find water if not cow
+            MapLocation water = null;
+            MapLocation robotLoc = rc.getLocation();
+            int maxV = 5;
+            for (int x = -maxV; x <= maxV; x++) {
+                for (int y = -maxV; y <= maxV; y++) {
+                    MapLocation check = robotLoc.translate(x, y);
+                    if (rc.canSenseLocation(check)) {
+                        if (rc.senseFlooding(check)) {
+                            // find the closest maxmimal soup deposit
+                            if (water == null || check.distanceSquaredTo(rc.getLocation()) < water.distanceSquaredTo(rc.getLocation())) water = check;
+                        }
+                    }
+                }
+            }
+            if (water != null) {
+                if (water.isAdjacentTo(robotLoc)) {
+                    // drop off unit
+                    Direction dropDir = robotLoc.directionTo(water);
+                    if (rc.canDropUnit(dropDir)) rc.dropUnit(dropDir);
+                    nav.navReset();
+                } else {
+                    nav.bugNav(rc, water);
+                }
+            } else {
+                // TODO: find water
+                // for now, move randomly to try find water
+                tryMove(directions[(int) (Math.random()*directions.length)]);
+            }
+        }
         nav.bugNav(rc, enemyHQLocationSuspect);
     }
 

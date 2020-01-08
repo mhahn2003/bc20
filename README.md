@@ -38,7 +38,7 @@ https://2020.battlecode.org/specs.html
 - Java documentation:
 https://2020.battlecode.org/javadoc/index.html
 - Debugging:
-[TODO: Not up yet, update when they fix the link]
+https://2020.battlecode.org/debugging
 - Game visualizer:
 https://2020.battlecode.org/visualizer.html
 - Bytecode optimization:
