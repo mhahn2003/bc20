@@ -87,10 +87,7 @@ public strictfp class RobotPlayer {
                 // if HQ is next to miner deposit
                 if (HQLocation.isAdjacentTo(rc.getLocation())) {
                     Direction soupDepositDir = rc.getLocation().directionTo(HQLocation);
-                    if (rc.canDepositSoup(soupDepositDir)) {
-                        System.out.println("Depositing " + rc.getSoupCarrying() + " soup!");
-                        rc.depositSoup(soupDepositDir, rc.getSoupCarrying());
-                    }
+                    tryRefine(soupDepositDir);
                     nav.bugOff();
                 } else {
                     nav.bugNav(rc, HQLocation);
@@ -100,13 +97,13 @@ public strictfp class RobotPlayer {
             MapLocation soupLoc = findSoup();
             if (soupLoc != null) {
                 System.out.println("Soup is at: " + soupLoc.toString());
-                if (rc.canMineSoup(rc.getLocation().directionTo(soupLoc))) {
-                    rc.mineSoup(rc.getLocation().directionTo(soupLoc));
+                Direction locDir = rc.getLocation().directionTo(soupLoc);
+                if (rc.canMineSoup(locDir)) {
+                    rc.mineSoup(locDir);
+                    nav.bugOff();
                 }
                 // if we can't mine soup, go to other soups
-                if (rc.canMove(rc.getLocation().directionTo(soupLoc))) {
-                    rc.move(rc.getLocation().directionTo(soupLoc));
-                }
+                nav.bugNav(rc, soupLoc);
             } else {
                 // if there is no soup nearby move randomly for now I guess?
                 // TODO: think of strategy for scouting for soup
@@ -144,13 +141,6 @@ public strictfp class RobotPlayer {
 
     }
 
-    /**
-     * Attempts to move in a given direction.
-     *
-     * @param dir The intended direction of movement
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
     static boolean tryMove(Direction dir) throws GameActionException {
         // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.isReady() && rc.canMove(dir)) {
@@ -159,14 +149,6 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    /**
-     * Attempts to build a given robot in a given direction.
-     *
-     * @param type The type of the robot to build
-     * @param dir The intended direction of movement
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
     static boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
         if (rc.isReady() && rc.canBuildRobot(type, dir)) {
             rc.buildRobot(type, dir);
@@ -174,13 +156,6 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    /**
-     * Attempts to mine soup in a given direction.
-     *
-     * @param dir The intended direction of mining
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
     static boolean tryMine(Direction dir) throws GameActionException {
         if (rc.isReady() && rc.canMineSoup(dir)) {
             rc.mineSoup(dir);
@@ -188,20 +163,12 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    /**
-     * Attempts to refine soup in a given direction.
-     *
-     * @param dir The intended direction of refining
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
     static boolean tryRefine(Direction dir) throws GameActionException {
         if (rc.isReady() && rc.canDepositSoup(dir)) {
             rc.depositSoup(dir, rc.getSoupCarrying());
             return true;
         } else return false;
     }
-
 
     static void tryBlockchain() throws GameActionException {
         if (turnCount < 3) {
