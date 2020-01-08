@@ -48,7 +48,8 @@ public class Nav {
 
     // avoid going to blocks gone before
     public void stinkyTrail(MapLocation last) {
-        while (visited.size() >= 5) visited.remove();
+        int trailSize = 3;
+        while (visited.size() >= trailSize) visited.remove();
         visited.add(last);
     }
 

@@ -68,9 +68,10 @@ public strictfp class RobotPlayer {
 
     static void runHQ() throws GameActionException {
         // build all the miners we can get in the first few turns
-        // if turncount <= 11
-        for (Direction d: Direction.allDirections()) {
-            if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
+        if (rc.getRobotCount() < 5) {
+            for (Direction d : Direction.allDirections()) {
+                if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
+            }
         }
         MapLocation soupLoc = findSoup();
         if (soupLoc != null) {
@@ -106,14 +107,12 @@ public strictfp class RobotPlayer {
                 if (rc.canMove(rc.getLocation().directionTo(soupLoc))) {
                     rc.move(rc.getLocation().directionTo(soupLoc));
                 }
-            }
-            else {
+            } else {
                 // if there is no soup nearby move randomly for now I guess?
                 // TODO: think of strategy for scouting for soup
-                tryMove(directions[(int) (Math.random()*directions.length)]);
+                tryMove(directions[(int) (Math.random() * directions.length)]);
             }
         }
-
     }
 
     static void runRefinery() throws GameActionException {
