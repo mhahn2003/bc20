@@ -63,4 +63,4 @@ Our current strategy is to:
 
 1. Improve scouting mechanism of searching for soup
 2. How to check if the area is inacessible without landscapers?
-3. create path objects each with an id(for future modification, need to be set unique in some way), so if nothing happend, just render the path.
+3. Create path objects each with an id(for future modification, need to be set unique in some way), so if nothing happend, just render the path.
