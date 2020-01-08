@@ -54,6 +54,13 @@ public strictfp class RobotPlayer {
     }
 
     static void runHQ() throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r: robots) {
+            if (r.getTeam() != rc.getTeam() && r.getType() == RobotType.DELIVERY_DRONE) {
+                if (rc.canShootUnit(r.getID())) rc.shootUnit(r.getID());
+                System.out.println("I shot a unit!");
+            }
+        }
         for (Direction dir : directions)
             tryBuild(RobotType.MINER, dir);
     }

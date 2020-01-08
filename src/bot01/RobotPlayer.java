@@ -21,6 +21,9 @@ public strictfp class RobotPlayer {
     // suspected enemy HQ location
     static MapLocation enemyHQLocationSuspect;
 
+    // possible navigation locations
+    static MapLocation[] suspects;
+
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
@@ -154,6 +157,7 @@ public strictfp class RobotPlayer {
     static void runDeliveryDrone() throws GameActionException {
         // find opponent units and pick up
         if (!rc.isCurrentlyHoldingUnit()) {
+            System.out.println("I'm not holding any units!");
             // find opponent units
             RobotInfo pickup = null;
             for (RobotInfo r: rc.senseNearbyRobots()) {
@@ -164,18 +168,22 @@ public strictfp class RobotPlayer {
             if (pickup != null) {
                 // if can pickup do pickup
                 if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
+                    System.out.println("Just picked up a " + pickup.getType());
                     if (rc.canPickUpUnit(pickup.getID())) rc.pickUpUnit(pickup.getID());
                     nav.navReset();
                 } else {
                     // if not navigate to that unit
                     nav.bugNav(rc, pickup.getLocation());
+                    System.out.println("Navigating to unit at " + pickup.getLocation().toString());
                 }
             } else {
                 // if there are no robots nearby
                 nav.bugNav(rc, enemyHQLocationSuspect);
+                System.out.println("Searching for robots, navigating to suspected enemy HQ");
             }
         } else {
             // find water if not cow
+            System.out.println("I'm holding a unit!");
             MapLocation water = null;
             MapLocation robotLoc = rc.getLocation();
             int maxV = 5;
@@ -192,20 +200,24 @@ public strictfp class RobotPlayer {
             }
             if (water != null) {
                 if (water.isAdjacentTo(robotLoc)) {
+                    System.out.println("Dropping off unit!");
                     // drop off unit
                     Direction dropDir = robotLoc.directionTo(water);
                     if (rc.canDropUnit(dropDir)) rc.dropUnit(dropDir);
                     nav.navReset();
                 } else {
+                    System.out.println("Navigating to water at " + water.toString());
                     nav.bugNav(rc, water);
                 }
             } else {
                 // TODO: find water
                 // for now, move randomly to try find water
-                tryMove(directions[(int) (Math.random()*directions.length)]);
+                System.out.println("Moving randomly to find water!");
+                nav.bugNav(rc, suspects[rc.getID() % 4]);
             }
         }
         nav.bugNav(rc, enemyHQLocationSuspect);
+        System.out.println("I'm at " + rc.getLocation().toString());
     }
 
     static void runNetGun() throws GameActionException {
@@ -223,13 +235,6 @@ public strictfp class RobotPlayer {
     static boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
         if (rc.isReady() && rc.canBuildRobot(type, dir)) {
             rc.buildRobot(type, dir);
-            return true;
-        } else return false;
-    }
-
-    static boolean tryMine(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMineSoup(dir)) {
-            rc.mineSoup(dir);
             return true;
         } else return false;
     }
@@ -252,7 +257,6 @@ public strictfp class RobotPlayer {
         }
         // System.out.println(rc.getRoundMessages(turnCount-1));
     }
-
 
     // returns the current water level given turn count
     static double waterLevel() {
@@ -291,7 +295,7 @@ public strictfp class RobotPlayer {
         for (RobotInfo ri: robots){
             if (ri.getType() == RobotType.HQ && ri.getTeam() == rc.getTeam()) HQLocation = ri.getLocation();
         }
-        MapLocation[] suspects = new MapLocation[]{horRef(HQLocation, rc), verRef(HQLocation, rc), horVerRef(HQLocation, rc)};
+        suspects = new MapLocation[]{horRef(HQLocation, rc), verRef(HQLocation, rc), horVerRef(HQLocation, rc), HQLocation};
         enemyHQLocationSuspect = suspects[rc.getID() % 3];
         rc.setIndicatorDot(enemyHQLocationSuspect, 255, 0, 0);
     }
