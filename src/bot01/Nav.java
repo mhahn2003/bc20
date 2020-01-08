@@ -1,9 +1,6 @@
 package bot01;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 import static java.lang.Math.min;
 
@@ -40,9 +37,27 @@ public class Nav {
     }
 
     public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
+        if (rc.getType() == RobotType.MINER) canGoMiner(rc, dir);
+        else if (rc.getType() == RobotType.DELIVERY_DRONE) canGoDrone(rc, dir);
         // TODO: fix this function for different types of units (e.g. drones)
+        return true;
+    }
+
+    public boolean canGoMiner(RobotController rc, Direction dir) throws GameActionException {
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
+        return true;
+    }
+
+    public boolean canGoDrone(RobotController rc, Direction dir) throws GameActionException {
+        if (!rc.canMove(dir)) return false;
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        MapLocation goodLoc = rc.getLocation().add(dir);
+        for (RobotInfo r: robots) {
+            if ((r.getType() == RobotType.NET_GUN || r.getType() == RobotType.HQ) && r.getTeam() != rc.getTeam()) {
+                if (goodLoc.distanceSquaredTo(r.getLocation()) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
+            }
+        }
         return true;
     }
 
