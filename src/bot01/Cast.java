@@ -1,5 +1,7 @@
 package bot01;
 
+import battlecode.common.RobotController;
+
 // Navigation class
 public class Cast {
 
@@ -14,15 +16,17 @@ public class Cast {
         OTHER
     }
 
-    
 
-    public static int broadCast(information_catagory cat ) {
+    public static int broadCast(information_catagory cat,int[] coord ) {
+        int message=0;
         switch (cat) {
-            case NEW_BUILDING:      return 1;
-            case REMOVE_BUILDING:   return 2;
-            case NEW_SOUP:          return 3;
-            default:                return 0;
+            case NEW_BUILDING:      message+= 1;
+            case REMOVE_BUILDING:   message+= 2;
+            case NEW_SOUP:          message+= 3;
+            default:                message+= 0;
         }
+        message=addCoord(message, coord);
+        return message;
     }
 
     public static int addCoord(int info_ori,int[] pos){
