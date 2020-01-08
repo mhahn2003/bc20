@@ -10,12 +10,10 @@ import static java.lang.Math.min;
 // Navigation class
 public class Nav {
 
-//    Queue<MapLocation> visited;
     private boolean isBugging;
     private int closestDist;
 
     public Nav() {
-//        visited = new LinkedList<>();
         isBugging = false;
         closestDist = 1000000;
     }
@@ -39,55 +37,16 @@ public class Nav {
             rc.move(optDir);
             if (rc.getLocation().distanceSquaredTo(dest)<closestDist) isBugging = false;
         }
-//        if (tryMove(rc, optDir)) stinkyTrail(rc.getLocation(), rc);
-//        else visited = new LinkedList<>();
     }
 
     public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
-        MapLocation goTo = rc.getLocation().add(dir);
-//        for (MapLocation stink: visited) {
-//            if (goTo.equals(stink)) return false;
-//        }
         return true;
     }
-
-    // avoid going to blocks gone before
-//    public void stinkyTrail(MapLocation last, RobotController rc) {
-//        int trailSize = 6;
-//        while (visited.size() >= trailSize) visited.remove();
-//        visited.add(last);
-//
-//        // debug
-//        if (!visited.isEmpty()) {
-//            for (MapLocation loc : visited) {
-//                rc.setIndicatorDot(loc, 255, 0, 0);
-//            }
-//        }
-//    }
 
     public void navReset() {
         isBugging = false;
         closestDist = 1000000;
     }
-
-//    public boolean tryMove(RobotController rc, Direction optDir) throws GameActionException {
-//        Direction left = optDir.rotateLeft();
-//        Direction right = optDir.rotateRight();
-//        Direction leftLeft = left.rotateLeft();
-//        Direction rightRight= right.rotateRight();
-//        Direction leftLeftLeft = leftLeft.rotateLeft();
-//        Direction rightRightRight = rightRight.rotateRight();
-//        if (canGo(rc,optDir)) rc.move(optDir);
-//        else if (canGo(rc, left)) rc.move(left);
-//        else if (canGo(rc, right)) rc.move(right);
-//        else if (canGo(rc, leftLeft)) rc.move(leftLeft);
-//        else if (canGo(rc, rightRight)) rc.move(rightRight);
-//        else if (canGo(rc, leftLeftLeft)) rc.move(leftLeftLeft);
-//        else if (canGo(rc, leftLeftLeft)) rc.move(rightRightRight);
-//        else if (canGo(rc, optDir.opposite())) rc.move(optDir.opposite());
-//        else return false;
-//        return true;
-//    }
 }

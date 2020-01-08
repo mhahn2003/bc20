@@ -69,7 +69,7 @@ public strictfp class RobotPlayer {
         // build all the miners we can get in the first few turns
         if (rc.getRobotCount() < 5) {
             for (Direction d : Direction.allDirections()) {
-                if (rc.canBuildRobot(RobotType.MINER, d)) rc.buildRobot(RobotType.MINER, d);
+                tryBuild(RobotType.MINER, d);
             }
         }
         MapLocation soupLoc = findSoup();
@@ -77,9 +77,17 @@ public strictfp class RobotPlayer {
             // we found soup, so we want to broadcast so our miners can get to it faster
             // TODO: implement broadcasting
         }
+
+        // TODO: shoot drones in range
     }
 
     static void runMiner() throws GameActionException {
+        // build drone factory if there isn't one
+        if (rc.getRobotCount() == 5 && rc.getLocation().distanceSquaredTo(HQLocation) < 15 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
+            for (Direction d : Direction.allDirections()) {
+                tryBuild(RobotType.FULFILLMENT_CENTER, d);
+            }
+        }
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
             // if the robot is full move back to HQ
             if (HQLocation != null) {
@@ -124,8 +132,12 @@ public strictfp class RobotPlayer {
     }
 
     static void runFulfillmentCenter() throws GameActionException {
-        for (Direction dir : directions)
-            tryBuild(RobotType.DELIVERY_DRONE, dir);
+        // no drones -> 6 units
+        // produce 4 drones
+        if (rc.getRobotCount() < 10) {
+            for (Direction dir : directions)
+                tryBuild(RobotType.DELIVERY_DRONE, dir);
+        }
     }
 
     static void runLandscaper() throws GameActionException {
@@ -133,6 +145,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runDeliveryDrone() throws GameActionException {
+        findHQ();
 
     }
 
@@ -214,15 +227,29 @@ public strictfp class RobotPlayer {
     }
 
     static void findHQ() throws GameActionException {
-        MapLocation robotLoc = rc.getLocation();
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo ri: robots){
-            if (ri.getType() == RobotType.HQ) HQLocation = ri.getLocation();
+            if (ri.getType() == RobotType.HQ && ri.getTeam() == rc.getTeam()) HQLocation = ri.getLocation();
         }
     }
 
     // when a unit is first created it calls this function
     static void initialize() throws GameActionException {
         findHQ();
+    }
+
+    // reflect horizontally
+    static MapLocation horRef(MapLocation loc, RobotController rc) {
+        return null;
+    }
+
+    // reflect vertically
+    static MapLocation verRef(MapLocation loc, RobotController rc) {
+        return null;
+    }
+
+    // reflect vertically and horizontally
+    static MapLocation horVerRef(MapLocation loc, RobotController rc) {
+        return null;
     }
 }
