@@ -2,6 +2,8 @@ package bot01;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+
 public strictfp class RobotPlayer {
     static RobotController rc;
 
@@ -14,13 +16,27 @@ public strictfp class RobotPlayer {
     // game map, not implemented yet
     static int[][] map;
 
+    // information queue waiting to be sent to blockchain
+    static ArrayList<Integer> infoQ = new ArrayList<>();
+
+    // constants
+    // max vision of all units
+    static int maxV = 6;
+    // how many turns we wait before blockChain
+    static int waitBlock = 10;
+
     // navigation object
     static Nav nav = new Nav();
 
-    static MapLocation HQLocation;
+    // important locations
+    static MapLocation HQLocation = null;
+    static MapLocation enemyHQLocation = null;
+    static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
+    static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
+
+
     // suspected enemy HQ location
     static MapLocation enemyHQLocationSuspect;
-
     // possible navigation locations
     static MapLocation[] suspects;
 
@@ -47,17 +63,38 @@ public strictfp class RobotPlayer {
 
                 if (turnCount == 1) {
                     initialize();
+                } else {
+                    getInfo(rc.getRoundNum()-1);
+                    collectInfo();
                 }
                 switch (rc.getType()) {
-                    case HQ:                 runHQ();                break;
-                    case MINER:              runMiner();             break;
-                    case REFINERY:           runRefinery();          break;
-                    case VAPORATOR:          runVaporator();         break;
-                    case DESIGN_SCHOOL:      runDesignSchool();      break;
-                    case FULFILLMENT_CENTER: runFulfillmentCenter(); break;
-                    case LANDSCAPER:         runLandscaper();        break;
-                    case DELIVERY_DRONE:     runDeliveryDrone();     break;
-                    case NET_GUN:            runNetGun();            break;
+                    case HQ:
+                        runHQ();
+                        break;
+                    case MINER:
+                        runMiner();
+                        break;
+                    case REFINERY:
+                        runRefinery();
+                        break;
+                    case VAPORATOR:
+                        runVaporator();
+                        break;
+                    case DESIGN_SCHOOL:
+                        runDesignSchool();
+                        break;
+                    case FULFILLMENT_CENTER:
+                        runFulfillmentCenter();
+                        break;
+                    case LANDSCAPER:
+                        runLandscaper();
+                        break;
+                    case DELIVERY_DRONE:
+                        runDeliveryDrone();
+                        break;
+                    case NET_GUN:
+                        runNetGun();
+                        break;
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
@@ -71,19 +108,23 @@ public strictfp class RobotPlayer {
     }
 
     static void runHQ() throws GameActionException {
+        // find drones and shoot them
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getTeam() != rc.getTeam() && r.getType() == RobotType.DELIVERY_DRONE) {
+                System.out.println("Shot a drone at " + r.getLocation());
+                if (rc.canShootUnit(r.getID())) {
+                    rc.shootUnit(r.getID());
+                    break;
+                }
+            }
+        }
         // build all the miners we can get in the first few turns
         if (rc.getRobotCount() < 5) {
             for (Direction d : Direction.allDirections()) {
                 tryBuild(RobotType.MINER, d);
             }
         }
-        MapLocation soupLoc = findSoup();
-        if (soupLoc != null) {
-            // we found soup, so we want to broadcast so our miners can get to it faster
-            // TODO: implement broadcasting
-        }
-
-        // TODO: shoot drones in range
     }
 
     static void runMiner() throws GameActionException {
@@ -93,7 +134,7 @@ public strictfp class RobotPlayer {
                 tryBuild(RobotType.FULFILLMENT_CENTER, d);
             }
         }
-        if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+200 && rc.getLocation().distanceSquaredTo(HQLocation) < 15) {
+        if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost + 200 && rc.getLocation().distanceSquaredTo(HQLocation) < 15) {
             for (Direction d : Direction.allDirections()) {
                 tryBuild(RobotType.VAPORATOR, d);
             }
@@ -130,7 +171,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runRefinery() throws GameActionException {
-        // System.out.println("Pollution: " + rc.sensePollution(rc.getLocation()));
+
     }
 
     static void runVaporator() throws GameActionException {
@@ -160,8 +201,8 @@ public strictfp class RobotPlayer {
             System.out.println("I'm not holding any units!");
             // find opponent units
             RobotInfo pickup = null;
-            for (RobotInfo r: rc.senseNearbyRobots()) {
-                if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType()  == RobotType.COW)) {
+            for (RobotInfo r : rc.senseNearbyRobots()) {
+                if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
                     pickup = r;
                 }
             }
@@ -193,7 +234,8 @@ public strictfp class RobotPlayer {
                     if (rc.canSenseLocation(check)) {
                         if (rc.senseFlooding(check)) {
                             // find the closest maxmimal soup deposit
-                            if (water == null || check.distanceSquaredTo(rc.getLocation()) < water.distanceSquaredTo(rc.getLocation())) water = check;
+                            if (water == null || check.distanceSquaredTo(rc.getLocation()) < water.distanceSquaredTo(rc.getLocation()))
+                                water = check;
                         }
                     }
                 }
@@ -221,15 +263,17 @@ public strictfp class RobotPlayer {
     }
 
     static void runNetGun() throws GameActionException {
-
-    }
-
-    static boolean tryMove(Direction dir) throws GameActionException {
-        // System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
-        if (rc.isReady() && rc.canMove(dir)) {
-            rc.move(dir);
-            return true;
-        } else return false;
+        // find drones and shoot them
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r : robots) {
+            if (r.getTeam() != rc.getTeam() && r.getType() == RobotType.DELIVERY_DRONE) {
+                System.out.println("Shot a drone at " + r.getLocation());
+                if (rc.canShootUnit(r.getID())) {
+                    rc.shootUnit(r.getID());
+                    break;
+                }
+            }
+        }
     }
 
     static boolean tryBuild(RobotType type, Direction dir) throws GameActionException {
@@ -246,22 +290,10 @@ public strictfp class RobotPlayer {
         } else return false;
     }
 
-    static void tryBlockchain() throws GameActionException {
-        if (turnCount < 3) {
-            int[] message = new int[10];
-            for (int i = 0; i < 10; i++) {
-                message[i] = 123;
-            }
-            if (rc.canSubmitTransaction(message, 10))
-                rc.submitTransaction(message, 10);
-        }
-        // System.out.println(rc.getRoundMessages(turnCount-1));
-    }
-
     // returns the current water level given turn count
     static double waterLevel() {
         double x = (double) turnCount;
-        return Math.exp(0.0028*x-1.38*Math.sin(0.00157*x-1.73)+1.38*Math.sin(-1.73))-1;
+        return Math.exp(0.0028 * x - 1.38 * Math.sin(0.00157 * x - 1.73) + 1.38 * Math.sin(-1.73)) - 1;
     }
 
     static int distSqr(int dx, int dy) {
@@ -280,8 +312,8 @@ public strictfp class RobotPlayer {
                     if (rc.senseSoup(check) > 0) {
                         // find the closest maxmimal soup deposit
                         if (soupLoc == null || check.distanceSquaredTo(rc.getLocation()) < soupLoc.distanceSquaredTo(rc.getLocation())
-                        || (check.distanceSquaredTo(rc.getLocation()) == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
-                        soupLoc = check;
+                                || (check.distanceSquaredTo(rc.getLocation()) == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
+                            soupLoc = check;
                     }
                 }
             }
@@ -289,34 +321,169 @@ public strictfp class RobotPlayer {
         return soupLoc;
     }
 
-    // finds HQ and guesses enemy HQ
+    // guesses enemy HQ
     static void findHQ() throws GameActionException {
-        RobotInfo[] robots = rc.senseNearbyRobots();
-        for (RobotInfo ri: robots){
-            if (ri.getType() == RobotType.HQ && ri.getTeam() == rc.getTeam()) HQLocation = ri.getLocation();
-        }
-        suspects = new MapLocation[]{horRef(HQLocation, rc), verRef(HQLocation, rc), horVerRef(HQLocation, rc), HQLocation};
+        suspects = new MapLocation[]{horRef(HQLocation), verRef(HQLocation), horVerRef(HQLocation), HQLocation};
         enemyHQLocationSuspect = suspects[rc.getID() % 3];
-        rc.setIndicatorDot(enemyHQLocationSuspect, 255, 0, 0);
+//        rc.setIndicatorDot(enemyHQLocationSuspect, 255, 0, 0);
     }
 
     // when a unit is first created it calls this function
     static void initialize() throws GameActionException {
+        if (rc.getType() == RobotType.HQ) {
+            Cast.blockChain(Cast.InformationCategory.HQ, rc.getLocation(), rc);
+            HQLocation = rc.getLocation();
+        } else {
+            getAllInfo();
+        }
         findHQ();
     }
 
     // reflect horizontally
-    static MapLocation horRef(MapLocation loc, RobotController rc) {
-        return new MapLocation(rc.getMapWidth()-1-loc.x, loc.y);
+    static MapLocation horRef(MapLocation loc) {
+        return new MapLocation(rc.getMapWidth() - 1 - loc.x, loc.y);
     }
 
     // reflect vertically
-    static MapLocation verRef(MapLocation loc, RobotController rc) {
-        return new MapLocation(loc.x, rc.getMapHeight()-1-loc.y);
+    static MapLocation verRef(MapLocation loc) {
+        return new MapLocation(loc.x, rc.getMapHeight() - 1 - loc.y);
     }
 
     // reflect vertically and horizontally
-    static MapLocation horVerRef(MapLocation loc, RobotController rc) {
-        return new MapLocation(rc.getMapWidth()-1-loc.x, rc.getMapHeight()-1-loc.y);
+    static MapLocation horVerRef(MapLocation loc) {
+        return new MapLocation(rc.getMapWidth() - 1 - loc.x, rc.getMapHeight() - 1 - loc.y);
+    }
+
+    // get information from the blocks
+    static void getAllInfo() throws GameActionException {
+        for (int i = 1; i < rc.getRoundNum(); i++) {
+            if (i % 10 == 1 || i % 10 == 2 || i % 10 == 3) getInfo(i);
+        }
+    }
+
+    // get information from blockchain on that turn
+    static void getInfo(int roundNum) throws GameActionException {
+        System.out.println("Getting info of round "+roundNum);
+        Transaction[] info = rc.getBlock(roundNum);
+        for (Transaction stuff: info) {
+            for (int message: stuff.getMessage()) {
+                System.out.println("message is: " + message);
+                System.out.println("message validness is " + Cast.isValid(message, rc));
+                System.out.println("message cat is" + Cast.getCat(message));
+                System.out.println("message coord is" + Cast.getCoord(message));
+                if (Cast.isValid(message, rc)) {
+                    // if valid message
+                    MapLocation loc = Cast.getCoord(message);
+                    boolean doAdd;
+                    System.out.println(Cast.getCat(message).toString());
+                    switch (Cast.getCat(message)) {
+                        case HQ:
+                            HQLocation = loc;
+                            break;
+                        case ENEMY_HQ:
+                            enemyHQLocation = loc;
+                            break;
+                        case NEW_SOUP:
+                            // add if it's far away enough from all the other soup coords
+                            doAdd = true;
+                            for (MapLocation soup: soupLocation) {
+                                if (soup.distanceSquaredTo(loc) <= 24) {
+                                    doAdd = false;
+                                    break;
+                                }
+                            }
+                            if (doAdd) {
+                                soupLocation.add(loc);
+                            }
+                            break;
+                        case WATER:
+                            // add if it's far away enough from all the other water coords
+                            doAdd = true;
+                            for (MapLocation water: waterLocation) {
+                                if (water.distanceSquaredTo(loc) <= 24) {
+                                    doAdd = false;
+                                    break;
+                                }
+                            }
+                            if (doAdd) {
+                                waterLocation.add(loc);
+                            }
+                            break;
+                        case REMOVE:
+                            soupLocation.remove(loc);
+                            waterLocation.remove(loc);
+                            break;
+                        // TODO: other cases we need to figure out
+                    }
+                }
+            }
+        }
+    }
+
+    // send info when the turn number is 1 mod waitBlock (10), otherwise keep saving data
+    static void collectInfo() throws GameActionException {
+        MapLocation robotLoc = rc.getLocation();
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r: robots) {
+            if (enemyHQLocation == null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
+                enemyHQLocation = r.getLocation();
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
+            }
+        }
+        boolean doAdd;
+        for (int x = -maxV; x <= maxV; x++) {
+            for (int y = -maxV; y <= maxV; y++) {
+                MapLocation check = robotLoc.translate(x, y);
+                if (rc.canSenseLocation(check)) {
+                    // TODO: do stuff
+                    // recording in order of importance
+                    if (rc.senseSoup(check) > 0) {
+                        doAdd = true;
+                        for (MapLocation soup: soupLocation) {
+                            if (soup.distanceSquaredTo(check) <= 24) {
+                                doAdd = false;
+                                break;
+                            }
+                        }
+                        if (doAdd) {
+                            soupLocation.add(check);
+                            infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_SOUP, check));
+                        }
+                    }
+                    if (rc.senseFlooding(check)) {
+                        doAdd = true;
+                        for (MapLocation water: waterLocation) {
+                            if (water.distanceSquaredTo(check) <= 24) {
+                                doAdd = false;
+                                break;
+                            }
+                        }
+                        if (doAdd) {
+                            waterLocation.add(check);
+                            infoQ.add(Cast.getMessage(Cast.InformationCategory.WATER, check));
+                        }
+                    }
+                }
+            }
+        }
+        if (rc.getRoundNum() % waitBlock == 1) sendInfo();
+    }
+
+    // send information collected to the blockchain
+    static void sendInfo() throws GameActionException {
+        if (!infoQ.isEmpty())  {
+            int blockSize = Math.min(7, infoQ.size());
+            int[] info = new int[blockSize];
+            for (int i = 0; i < blockSize; i++) {
+                info[i] = infoQ.get(0);
+                infoQ.remove(0);
+            }
+            //
+            if (rc.canSubmitTransaction(info, 5)) {
+                System.out.println("Submitted transaction! Message is : " + info.toString());
+                rc.submitTransaction(info, 5);
+            }
+        }
     }
 }
+
