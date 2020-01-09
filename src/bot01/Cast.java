@@ -157,14 +157,19 @@ public class Cast {
         switch(messageArr.length){
             case 2:
             hashedValue=((messageArr[0]%65436-9)^2+15)%65535;
+            break;
             case 3:
             hashedValue=((messageArr[0]%6555-23)+(messageArr[1]%998-1213)^2 )%65535;
+            break;
             case 4:
             hashedValue=((messageArr[0]%341-43)^2+(messageArr[1]%432-123)^2+(messageArr[2]%96538-2657)^2)%65535;
+            break;
             case 5:
             hashedValue=((messageArr[0]%21334-134)^2+(messageArr[1]%13412-4314)^2+(messageArr[2]%4312-324)^2+(messageArr[3]%42134-3242)^2)%65535;
+            break;
             case 6:
             hashedValue=((messageArr[0]%12344-341)^2+(messageArr[1]%1243-4134)^2+(messageArr[2]%41234-4432)^2+(messageArr[3]%4243-2144)^2+(messageArr[4]%42134-5432)^2)%65535;
+            break;
             case 7:
             hashedValue=((messageArr[0]%3143124-1341)^2+(messageArr[1]%5465-787654)^2+(messageArr[2]%6752-5634)^2+(messageArr[3]%6754-2435)^2+(messageArr[4]%63452-5463)^2+(messageArr[5]%43214-5234)^2)%65535;
         }
@@ -183,14 +188,19 @@ public class Cast {
         switch(messageArr.length){
             case 1:
             hashedValue=((messageArr[0]%65436-9)^2+15)%65535;
+            break;
             case 2:
             hashedValue=((messageArr[0]%6555-23)+(messageArr[1]%998-1213)^2 )%65535;
+            break;
             case 3:
             hashedValue=((messageArr[0]%341-43)^2+(messageArr[1]%432-123)^2+(messageArr[2]%96538-2657)^2)%65535;
+            break;
             case 4:
             hashedValue=((messageArr[0]%21334-134)^2+(messageArr[1]%13412-4314)^2+(messageArr[2]%4312-324)^2+(messageArr[3]%42134-3242)^2)%65535;
+            break;
             case 5:
             hashedValue=((messageArr[0]%12344-341)^2+(messageArr[1]%1243-4134)^2+(messageArr[2]%41234-4432)^2+(messageArr[3]%4243-2144)^2+(messageArr[4]%42134-5432)^2)%65535;
+            break;
             case 6:
             hashedValue=((messageArr[0]%3143124-1341)^2+(messageArr[1]%5465-787654)^2+(messageArr[2]%6752-5634)^2+(messageArr[3]%6754-2435)^2+(messageArr[4]%63452-5463)^2+(messageArr[5]%43214-5234)^2)%65535;
         }
