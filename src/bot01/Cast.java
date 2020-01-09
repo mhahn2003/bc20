@@ -145,4 +145,16 @@ public class Cast {
     public static boolean onMap(MapLocation loc, RobotController rc) {
         return (loc.x >= 0 && loc.x < rc.getMapWidth() && loc.y >= 0 && loc.y < rc.getMapHeight());
     }
+
+    // check if given message is valid
+    // Note: messageArr can be size 2, 3, 4, 5, 6, 7. If it's 1 or any other size, immediately return false
+    public static boolean isMessageValid(int[] messageArr) {
+        return false;
+    }
+
+    // hash function
+    // Note: messageArr can be size 1, 2, 3, 4, 5, 6
+    public static int hash(int[] messageArr) {
+        return 0;
+    }
 }
