@@ -7,6 +7,10 @@ import battlecode.common.RobotController;
 // Navigation class
 public class Cast {
 
+    private int x_bot;
+
+    private int y_bit;
+
     private static int defaultCost = 5;
     // number of possible cases for InfoCategory enum class
     private static int numCase = 7;
