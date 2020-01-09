@@ -74,6 +74,7 @@ public strictfp class RobotPlayer {
                     getInfo(rc.getRoundNum()-1);
                     collectInfo();
                 }
+                System.out.println("I have " + Clock.getBytecodesLeft() + " left!");
                 switch (rc.getType()) {
                     case HQ:
                         runHQ();
@@ -376,10 +377,10 @@ public strictfp class RobotPlayer {
             if (Cast.isMessageValid(stuff.getMessage())) {
                 for (int i = 0; i < stuff.getMessage().length-1; i++) {
                     int message = stuff.getMessage()[i];
-                    //                System.out.println("message is: " + message);
-                    //                System.out.println("message validness is " + Cast.isValid(message, rc));
-                    //                System.out.println("message cat is" + Cast.getCat(message));
-                    //                System.out.println("message coord is" + Cast.getCoord(message));
+                    System.out.println("message is: " + message);
+                    System.out.println("message validness is " + Cast.isValid(message, rc));
+                    System.out.println("message cat is" + Cast.getCat(message));
+                    System.out.println("message coord is" + Cast.getCoord(message));
                     if (Cast.isValid(message, rc)) {
                         // if valid message
                         MapLocation loc = Cast.getCoord(message);
@@ -489,13 +490,13 @@ public strictfp class RobotPlayer {
             int blockSize = Math.min(6, infoQ.size());
             int[] info = new int[blockSize+1];
             int[] prepHash = new int[blockSize];
-            for (int i = 0; i < blockSize-1; i++) {
+            for (int i = 0; i < blockSize; i++) {
                 info[i] = infoQ.get(0);
                 prepHash[i] = infoQ.get(0);
                 infoQ.remove(0);
             }
             // add the hash
-            info[blockSize-1] = Cast.hash(prepHash);
+            info[blockSize] = Cast.hash(prepHash);
             if (rc.canSubmitTransaction(info, 5)) {
                 System.out.println("Submitted transaction! Message is : " + info.toString());
                 rc.submitTransaction(info, 5);
