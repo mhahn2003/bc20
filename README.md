@@ -45,6 +45,10 @@ https://2020.battlecode.org/visualizer.html
 https://cory.li/bytecode-hacking/
 - Git tutorial:
 https://guides.github.com/introduction/git-handbook/
+- MIT Battlecode Twitch stream:
+https://www.twitch.tv/mitbattlecode
+- MIT Battlecode Youtube channel:
+https://www.youtube.com/channel/UCOrfTSnyimIXfYzI8j_-CTQ
 
 ### Strategy
 
@@ -66,3 +70,5 @@ Our current strategy is to:
 3. Create path objects each with an id(for future modification, need to be set unique in some way), so if nothing happend, just render the path
 4. Install net guns near miners to protect them
 5. Broadcast encrypted HQ location on turn 1 so everyone can access
+6. Copy enemy's broadcast to trick them
+7. When we remove a location by broadcasting, we can accidentally remove both water and soup locations
