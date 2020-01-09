@@ -63,6 +63,11 @@ Our current strategy is to:
 8. Surround enemy HQ with landscapers and bury to kill HQ
 9. If there are units surrounding HQ so we can't bury HQ, build a river and flood HQ.
 
+1. Surround enemy with walls
+2. Put cows inside walls with drones
+3. Install net guns to ward off drones repicking cows
+4. Guard wall with landscapers?
+
 ### Need to Fix
 
 1. ~~Improve scouting mechanism of searching for soup~~
