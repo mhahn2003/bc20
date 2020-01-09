@@ -32,6 +32,9 @@ public strictfp class RobotPlayer {
     // how far can water be away from each other
     static int waterClusterDist = 120;
 
+    // close to soup?
+    static boolean closeSoup = false;
+
     // navigation object
     static Nav nav = new Nav();
 
@@ -166,7 +169,14 @@ public strictfp class RobotPlayer {
 //                tryBuild(RobotType.VAPORATOR, d);
 //            }
 //        }
-        MapLocation soupLoc = findSoup();
+        System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
+        MapLocation soupLoc;
+        if (closeSoup) soupLoc = findSoup();
+        else {
+            soupLoc = findSoupFast();
+            if (soupLoc != null && rc.getLocation().distanceSquaredTo(soupLoc) < soupClusterDist) closeSoup = true;
+        }
+        System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (soupLoc == null && rc.getSoupCarrying() > 0)) {
             // if the robot is full or has stuff and no more soup nearby, move back to HQ
             // if HQ is next to miner deposit
@@ -177,13 +187,12 @@ public strictfp class RobotPlayer {
                 nav.bugNav(rc, HQLocation);
             }
         } else {
-            System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
-            System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
             if (soupLoc != null) {
                 System.out.println("Soup is at: " + soupLoc.toString());
                 Direction locDir = rc.getLocation().directionTo(soupLoc);
                 if (rc.canMineSoup(locDir)) {
                     rc.mineSoup(locDir);
+                    closeSoup = false;
                 }
                 // if we can't mine soup, go to other soups
                 else nav.bugNav(rc, soupLoc);
@@ -331,9 +340,9 @@ public strictfp class RobotPlayer {
     // returns the closest MapLocation of soup in the robot's stored soup locations
     // but if within vision range, just normally find the closest soup
     static MapLocation findSoup() throws GameActionException {
-        // try to find soup within vision range
+        // try to find soup very close
         MapLocation robotLoc = rc.getLocation();
-        int maxV = 6;
+        int maxV = 5;
         MapLocation soupLoc = null;
         for (int x = -maxV; x <= maxV; x++) {
             for (int y = -maxV; y <= maxV; y++) {
@@ -362,6 +371,22 @@ public strictfp class RobotPlayer {
         }
         // check if the soup location should be removed
         if (rc.canSenseLocation(soupLoc)) soupLoc = null;
+        return soupLoc;
+    }
+
+    // finds soup only according to soupLoc
+    static MapLocation findSoupFast() throws GameActionException {
+        MapLocation soupLoc = null;
+        int closestDist = 0;
+        for (MapLocation soup: soupLocation) {
+            // find the closest soup
+            int soupDist = soup.distanceSquaredTo(rc.getLocation());
+            if (soupLoc == null || soupDist < closestDist) {
+                closestDist = soupDist;
+                soupLoc = soup;
+            }
+        }
+        // check if the soup location should be removed
         return soupLoc;
     }
 
