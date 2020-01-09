@@ -24,6 +24,10 @@ public strictfp class RobotPlayer {
     static int maxV = 6;
     // how many turns we wait before blockChain
     static int waitBlock = 10;
+    // how far can soup be away from each other
+    static int soupClusterDist = 10;
+    // how far can water be away from each other
+    static int waterClusterDist = 24;
 
     // navigation object
     static Nav nav = new Nav();
@@ -331,7 +335,7 @@ public strictfp class RobotPlayer {
     // when a unit is first created it calls this function
     static void initialize() throws GameActionException {
         if (rc.getType() == RobotType.HQ) {
-            Cast.blockChain(Cast.InformationCategory.HQ, rc.getLocation(), rc);
+            collectInfo();
             HQLocation = rc.getLocation();
         } else {
             getAllInfo();
@@ -387,7 +391,7 @@ public strictfp class RobotPlayer {
                             // add if it's far away enough from all the other soup coords
                             doAdd = true;
                             for (MapLocation soup: soupLocation) {
-                                if (soup.distanceSquaredTo(loc) <= 24) {
+                                if (soup.distanceSquaredTo(loc) <= soupClusterDist) {
                                     doAdd = false;
                                     break;
                                 }
@@ -400,7 +404,7 @@ public strictfp class RobotPlayer {
                             // add if it's far away enough from all the other water coords
                             doAdd = true;
                             for (MapLocation water: waterLocation) {
-                                if (water.distanceSquaredTo(loc) <= 24) {
+                                if (water.distanceSquaredTo(loc) <= waterClusterDist) {
                                     doAdd = false;
                                     break;
                                 }
@@ -424,6 +428,10 @@ public strictfp class RobotPlayer {
     static void collectInfo() throws GameActionException {
         MapLocation robotLoc = rc.getLocation();
         RobotInfo[] robots = rc.senseNearbyRobots();
+        if (HQLocation == null && rc.getType() == RobotType.HQ) {
+            HQLocation = rc.getLocation();
+            infoQ.add(Cast.getMessage(Cast.InformationCategory.HQ, HQLocation));
+        }
         for (RobotInfo r: robots) {
             if (enemyHQLocation == null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
                 enemyHQLocation = r.getLocation();
@@ -440,7 +448,7 @@ public strictfp class RobotPlayer {
                     if (rc.senseSoup(check) > 0) {
                         doAdd = true;
                         for (MapLocation soup: soupLocation) {
-                            if (soup.distanceSquaredTo(check) <= 24) {
+                            if (soup.distanceSquaredTo(check) <= soupClusterDist) {
                                 doAdd = false;
                                 break;
                             }
@@ -453,7 +461,7 @@ public strictfp class RobotPlayer {
                     if (rc.senseFlooding(check)) {
                         doAdd = true;
                         for (MapLocation water: waterLocation) {
-                            if (water.distanceSquaredTo(check) <= 24) {
+                            if (water.distanceSquaredTo(check) <= waterClusterDist) {
                                 doAdd = false;
                                 break;
                             }
