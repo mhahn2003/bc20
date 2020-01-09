@@ -43,6 +43,9 @@ public strictfp class RobotPlayer {
     static MapLocation enemyHQLocationSuspect;
     // possible navigation locations
     static MapLocation[] suspects;
+    static boolean[] suspectsVisited;
+    // currently navigating to
+    static MapLocation exploreTo;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -370,54 +373,57 @@ public strictfp class RobotPlayer {
         System.out.println("Getting info of round "+roundNum);
         Transaction[] info = rc.getBlock(roundNum);
         for (Transaction stuff: info) {
-            for (int message: stuff.getMessage()) {
-                System.out.println("message is: " + message);
-                System.out.println("message validness is " + Cast.isValid(message, rc));
-                System.out.println("message cat is" + Cast.getCat(message));
-                System.out.println("message coord is" + Cast.getCoord(message));
-                if (Cast.isValid(message, rc)) {
-                    // if valid message
-                    MapLocation loc = Cast.getCoord(message);
-                    boolean doAdd;
-                    System.out.println(Cast.getCat(message).toString());
-                    switch (Cast.getCat(message)) {
-                        case HQ:
-                            HQLocation = loc;
-                            break;
-                        case ENEMY_HQ:
-                            enemyHQLocation = loc;
-                            break;
-                        case NEW_SOUP:
-                            // add if it's far away enough from all the other soup coords
-                            doAdd = true;
-                            for (MapLocation soup: soupLocation) {
-                                if (soup.distanceSquaredTo(loc) <= soupClusterDist) {
-                                    doAdd = false;
-                                    break;
+            if (Cast.isMessageValid(stuff.getMessage())) {
+                for (int i = 0; i < stuff.getMessage().length-1; i++) {
+                    int message = stuff.getMessage()[i];
+                    //                System.out.println("message is: " + message);
+                    //                System.out.println("message validness is " + Cast.isValid(message, rc));
+                    //                System.out.println("message cat is" + Cast.getCat(message));
+                    //                System.out.println("message coord is" + Cast.getCoord(message));
+                    if (Cast.isValid(message, rc)) {
+                        // if valid message
+                        MapLocation loc = Cast.getCoord(message);
+                        boolean doAdd;
+                        System.out.println(Cast.getCat(message).toString());
+                        switch (Cast.getCat(message)) {
+                            case HQ:
+                                HQLocation = loc;
+                                break;
+                            case ENEMY_HQ:
+                                enemyHQLocation = loc;
+                                break;
+                            case NEW_SOUP:
+                                // add if it's far away enough from all the other soup coords
+                                doAdd = true;
+                                for (MapLocation soup : soupLocation) {
+                                    if (soup.distanceSquaredTo(loc) <= soupClusterDist) {
+                                        doAdd = false;
+                                        break;
+                                    }
                                 }
-                            }
-                            if (doAdd) {
-                                soupLocation.add(loc);
-                            }
-                            break;
-                        case WATER:
-                            // add if it's far away enough from all the other water coords
-                            doAdd = true;
-                            for (MapLocation water: waterLocation) {
-                                if (water.distanceSquaredTo(loc) <= waterClusterDist) {
-                                    doAdd = false;
-                                    break;
+                                if (doAdd) {
+                                    soupLocation.add(loc);
                                 }
-                            }
-                            if (doAdd) {
-                                waterLocation.add(loc);
-                            }
-                            break;
-                        case REMOVE:
-                            soupLocation.remove(loc);
-                            waterLocation.remove(loc);
-                            break;
-                        // TODO: other cases we need to figure out
+                                break;
+                            case WATER:
+                                // add if it's far away enough from all the other water coords
+                                doAdd = true;
+                                for (MapLocation water : waterLocation) {
+                                    if (water.distanceSquaredTo(loc) <= waterClusterDist) {
+                                        doAdd = false;
+                                        break;
+                                    }
+                                }
+                                if (doAdd) {
+                                    waterLocation.add(loc);
+                                }
+                                break;
+                            case REMOVE:
+                                soupLocation.remove(loc);
+                                waterLocation.remove(loc);
+                                break;
+                            // TODO: other cases we need to figure out
+                        }
                     }
                 }
             }
@@ -480,13 +486,16 @@ public strictfp class RobotPlayer {
     // send information collected to the blockchain
     static void sendInfo() throws GameActionException {
         if (!infoQ.isEmpty())  {
-            int blockSize = Math.min(7, infoQ.size());
-            int[] info = new int[blockSize];
-            for (int i = 0; i < blockSize; i++) {
+            int blockSize = Math.min(6, infoQ.size());
+            int[] info = new int[blockSize+1];
+            int[] prepHash = new int[blockSize];
+            for (int i = 0; i < blockSize-1; i++) {
                 info[i] = infoQ.get(0);
+                prepHash[i] = infoQ.get(0);
                 infoQ.remove(0);
             }
-            //
+            // add the hash
+            info[blockSize-1] = Cast.hash(prepHash);
             if (rc.canSubmitTransaction(info, 5)) {
                 System.out.println("Submitted transaction! Message is : " + info.toString());
                 rc.submitTransaction(info, 5);
