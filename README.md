@@ -65,10 +65,11 @@ Our current strategy is to:
 
 ### Need to Fix
 
-1. Improve scouting mechanism of searching for soup
+1. ~~Improve scouting mechanism of searching for soup~~
 2. How to check if the area is inacessible without landscapers?
 3. Create path objects each with an id(for future modification, need to be set unique in some way), so if nothing happend, just render the path
 4. Install net guns near miners to protect them
-5. Broadcast encrypted HQ location on turn 1 so everyone can access
+5. ~~Broadcast encrypted HQ location on turn 1 so everyone can access~~
 6. Copy enemy's broadcast to trick them
 7. When we remove a location by broadcasting, we can accidentally remove both water and soup locations
+8. If enemy is smart enough to spam block on turn 1, then miners might throw an exception in trying to call findHQ() and could die
