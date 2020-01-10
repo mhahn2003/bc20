@@ -2,6 +2,8 @@ package bot01;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+
 import static java.lang.Math.min;
 
 // Navigation class
@@ -10,6 +12,7 @@ public class Nav {
     private boolean isBugging;
     private int closestDist;
     private MapLocation currentDest;
+    private ArrayList<MapLocation> threats= new ArrayList<>();
 
     public Nav() {
         isBugging = false;
@@ -61,10 +64,8 @@ public class Nav {
         if (!rc.canMove(dir)) return false;
         RobotInfo[] robots = rc.senseNearbyRobots();
         MapLocation goodLoc = rc.getLocation().add(dir);
-        for (RobotInfo r: robots) {
-            if ((r.getType() == RobotType.NET_GUN || r.getType() == RobotType.HQ) && r.getTeam() != rc.getTeam()) {
-                if (goodLoc.distanceSquaredTo(r.getLocation()) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
-            }
+        for (MapLocation loc: threats) {
+            if (goodLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
         }
         return true;
     }
@@ -73,5 +74,17 @@ public class Nav {
         isBugging = false;
         closestDist = 1000000;
         currentDest = dest;
+    }
+
+    public void addThreat(MapLocation loc) {
+        threats.add(loc);
+    }
+
+    public void removeThreat(MapLocation loc) {
+        threats.remove(loc);
+    }
+
+    public boolean isThreat(MapLocation loc) {
+        return threats.contains(loc);
     }
 }

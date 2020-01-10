@@ -515,6 +515,10 @@ public strictfp class RobotPlayer {
                                 break;
                             case ENEMY_HQ:
                                 enemyHQLocation = loc;
+                                if (!nav.isThreat(loc)) nav.addThreat(loc);
+                                break;
+                            case NET_GUN:
+                                if (!nav.isThreat(loc)) nav.addThreat(loc);
                                 break;
                             case NEW_SOUP:
                                 // add if it's far away enough from all the other soup coords
@@ -545,6 +549,7 @@ public strictfp class RobotPlayer {
                             case REMOVE:
                                 soupLocation.remove(loc);
                                 waterLocation.remove(loc);
+                                nav.removeThreat(loc);
                                 break;
                             // TODO: other cases we need to figure out
                         }
@@ -567,6 +572,8 @@ public strictfp class RobotPlayer {
                 if (r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
                     enemyHQLocation = r.getLocation();
                     infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
+                    infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
+                    if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
                 }
             }
         }
