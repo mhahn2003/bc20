@@ -27,7 +27,9 @@ public class Nav {
         Direction optDir = loc.directionTo(dest);
         if (!isBugging) {
             // if the state is free
-            if (canGo(rc, optDir)) rc.move(optDir);
+            if (canGo(rc, optDir)) {
+                rc.move(optDir);
+            }
             else isBugging = true;
         }
         if (isBugging) {
