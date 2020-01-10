@@ -168,8 +168,8 @@ public strictfp class RobotPlayer {
 //        }
         System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
         if (soupLoc == null) {
-            // if soup location is far
-            soupLoc = findSoup();
+            // if soup location is far or we just didn't notice
+            findSoup();
         }
         System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (soupLoc == null && rc.getSoupCarrying() > 0)) {
@@ -333,29 +333,28 @@ public strictfp class RobotPlayer {
 
     // returns the closest MapLocation of soup in the robot's stored soup locations
     // but if within vision range, just normally find the closest soup
-    static MapLocation findSoup() throws GameActionException {
-//        // try to find soup very close
-//        MapLocation robotLoc = rc.getLocation();
-//        int maxV = 5;
-//        MapLocation soupLoc = null;
-//        for (int x = -maxV; x <= maxV; x++) {
-//            for (int y = -maxV; y <= maxV; y++) {
-//                MapLocation check = robotLoc.translate(x, y);
-//                if (rc.canSenseLocation(check)) {
-//                    if (rc.senseSoup(check) > 0) {
-//                        // find the closest maxmimal soup deposit
-//                        int checkDist = check.distanceSquaredTo(rc.getLocation());
-//                        if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
-//                                || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
-//                            soupLoc = check;
-//                    }
-//                }
-//            }
-//        }
-//        if (soupLoc != null) return soupLoc;
+    static void findSoup() throws GameActionException {
+        // try to find soup very close
+        MapLocation robotLoc = rc.getLocation();
+        int maxV = 5;
+        for (int x = -maxV; x <= maxV; x++) {
+            for (int y = -maxV; y <= maxV; y++) {
+                MapLocation check = robotLoc.translate(x, y);
+                if (rc.canSenseLocation(check)) {
+                    if (rc.senseSoup(check) > 0) {
+                        // find the closest maxmimal soup deposit
+                        int checkDist = check.distanceSquaredTo(rc.getLocation());
+                        if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
+                                || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
+                            soupLoc = check;
+                    }
+                }
+            }
+        }
+        if (soupLoc != null) return;
         // if not, try to find closest soup according to stored soupLocation
         int closestDist = 0;
-        if (soupLocation.isEmpty()) return null;
+        if (soupLocation.isEmpty()) return;
         for (MapLocation soup: soupLocation) {
             // find the closest soup
             int soupDist = soup.distanceSquaredTo(rc.getLocation());
@@ -365,8 +364,7 @@ public strictfp class RobotPlayer {
             }
         }
         // check if the soup location should be removed
-        if (rc.canSenseLocation(soupLoc)) return null;
-        return soupLoc;
+        if (rc.canSenseLocation(soupLoc)) soupLoc = null;
     }
 
     // finds soup only according to soupLoc
@@ -555,8 +553,8 @@ public strictfp class RobotPlayer {
         }
         boolean doAdd;
         soupLoc = null;
-        for (int x = -maxV; x <= maxV; x++) {
-            for (int y = -maxV; y <= maxV; y++) {
+        for (int x = -maxV; x <= maxV; x+=2) {
+            for (int y = -maxV; y <= maxV; y+=2) {
                 // running out of bytecode so exiting early
                 if (Clock.getBytecodesLeft() < 1000) break;
                 MapLocation check = robotLoc.translate(x, y);
@@ -605,7 +603,7 @@ public strictfp class RobotPlayer {
             if (rc.getLocation().equals(soup)) {
                 // check if robot is on the soup location and there is no soup around him
                 // if there isn't any soup around it then remove
-                MapLocation soupLoc = findSoup();
+                findSoup();
                 if (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist) {
                     System.out.println("There's no soup!");
                     infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, soup));
