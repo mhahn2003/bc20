@@ -81,3 +81,4 @@ Our current strategy is to:
 9. Refactor code because RobotPlayer.java currently looks very ugly
 10. Implement exploreTo() completely
 11. Build net guns next to refineries?
+12. Apparently 4 vaporator is op?
