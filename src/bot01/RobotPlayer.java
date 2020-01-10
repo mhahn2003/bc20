@@ -39,6 +39,8 @@ public strictfp class RobotPlayer {
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
+    static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
+    static boolean refineryInVision;
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
     static MapLocation soupLoc = null;
 
@@ -87,6 +89,7 @@ public strictfp class RobotPlayer {
                         runHQ();
                         break;
                     case MINER:
+                        refineryInVision=false;
                         runMiner();
                         break;
                     case REFINERY:
@@ -175,12 +178,62 @@ public strictfp class RobotPlayer {
         System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (soupLoc == null && rc.getSoupCarrying() > 0)) {
             // if the robot is full or has stuff and no more soup nearby, move back to HQ
+            System.out.println("before going home i have" + Clock.getBytecodesLeft());
+            // default hq
+            MapLocation closestRefineryLocation=HQLocation;
+                // check select a point as reference(might be edge case?)
+            MapLocation reference_point=soupLoc;
+            System.out.println("reference to" + reference_point.toString());
+            int minRefineryDist=reference_point.distanceSquaredTo(HQLocation);
+
+            System.out.println("before find min d i have" + Clock.getBytecodesLeft());
+            // check through refinery(redundancy here)
+            for (MapLocation refineryLoca: refineryLocation){
+				int temp_d = reference_point.distanceSquaredTo(refineryLoca);
+                if ( temp_d < minRefineryDist){
+                    closestRefineryLocation=refineryLoca;
+                    minRefineryDist=temp_d;
+                }
+                System.out.println("my memory contain" + refineryLoca.toString());
+            } 
+            System.out.println("reference to" + reference_point.toString());
+            System.out.println("compare to" + closestRefineryLocation.toString());
+            System.out.println("after find min d i have" + Clock.getBytecodesLeft());
+            System.out.println("reference min distance to refinery " + minRefineryDist);
+            System.out.println("reference min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
+            // 
+            if (minRefineryDist>=81&& reference_point.distanceSquaredTo(rc.getLocation())<4 && rc.getTeamSoup()>=200){
+                System.out.println("attempt build refinery");
+                for (Direction temp_dir: directions){
+                    if (rc.canBuildRobot(RobotType.REFINERY, temp_dir)){
+                        System.out.println("can build refinery");
+                        rc.buildRobot( RobotType.REFINERY  , temp_dir);
+                        System.out.println("built refinery");
+                        MapLocation robotLoc = rc.getLocation();
+                        switch(temp_dir){
+                            case NORTH:       refineryLocation.add(robotLoc.translate(robotLoc.x,   robotLoc.y+1)); break;
+                            case NORTHEAST:   refineryLocation.add(robotLoc.translate(robotLoc.x+1, robotLoc.y+1)); break;
+                            case EAST:        refineryLocation.add(robotLoc.translate(robotLoc.x+1, robotLoc.y  )); break;
+                            case SOUTHEAST:   refineryLocation.add(robotLoc.translate(robotLoc.x+1, robotLoc.y-1)); break;
+                            case SOUTH:       refineryLocation.add(robotLoc.translate(robotLoc.x,   robotLoc.y-1)); break;
+                            case SOUTHWEST:   refineryLocation.add(robotLoc.translate(robotLoc.x-1, robotLoc.y-1)); break;
+                            case WEST:        refineryLocation.add(robotLoc.translate(robotLoc.x-1, robotLoc.y  )); break;
+                            case NORTHWEST:   refineryLocation.add(robotLoc.translate(robotLoc.x-1, robotLoc.y+1));
+                        }
+                        closestRefineryLocation=refineryLocation.get(refineryLocation.size()-1 );
+                        break;
+                    }
+                }
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size()-1 ) ));
+            }
+            System.out.println("after new refinery procedures" + Clock.getBytecodesLeft());
+            
             // if HQ is next to miner deposit
-            if (HQLocation.isAdjacentTo(rc.getLocation())) {
-                Direction soupDepositDir = rc.getLocation().directionTo(HQLocation);
+            if (closestRefineryLocation.isAdjacentTo(rc.getLocation())) {
+                Direction soupDepositDir = rc.getLocation().directionTo(closestRefineryLocation);
                 tryRefine(soupDepositDir);
             } else {
-                nav.bugNav(rc, HQLocation);
+                nav.bugNav(rc, closestRefineryLocation);
             }
         } else {
             if (soupLoc != null) {
@@ -543,12 +596,28 @@ public strictfp class RobotPlayer {
             HQLocation = rc.getLocation();
             infoQ.add(Cast.getMessage(Cast.InformationCategory.HQ, HQLocation));
         }
-        if (enemyHQLocation == null && rc.getType() == RobotType.DELIVERY_DRONE) {
-            RobotInfo[] robots = rc.senseNearbyRobots();
-            for (RobotInfo r : robots) {
-                if (r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
-                    enemyHQLocation = r.getLocation();
-                    infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        // location of the bot
+        MapLocation loc;
+        // whether it is already in memory
+        boolean saved;
+        for (RobotInfo r : robots) {
+            saved=false;
+            if (enemyHQLocation==null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
+                enemyHQLocation = r.getLocation();
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
+            }else if(rc.getType()==RobotType.MINER && (r.getType() == RobotType.REFINERY||r.getType() == RobotType.HQ) && r.getTeam() == rc.getTeam()){
+                refineryInVision=true;
+                loc=r.getLocation();
+                // check for matching
+                for (MapLocation refineryLoca: refineryLocation){
+                    if (refineryLoca==loc){
+                        saved=true;
+                    }
+                }
+                // no matching => not saved => save it
+                if (!saved){
+                    refineryLocation.add(loc);
                 }
             }
         }
