@@ -169,6 +169,7 @@ public strictfp class RobotPlayer {
         System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
         if (soupLoc == null) {
             // if soup location is far or we just didn't notice
+            System.out.println("In my soupLoc I have " + soupLocation.toString());
             findSoup();
         }
         System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
@@ -364,7 +365,7 @@ public strictfp class RobotPlayer {
             }
         }
         // check if the soup location should be removed
-        if (rc.canSenseLocation(soupLoc)) soupLoc = null;
+//        if (rc.canSenseLocation(soupLoc)) soupLoc = null;
     }
 
     // finds soup only according to soupLoc
@@ -604,7 +605,7 @@ public strictfp class RobotPlayer {
                 // check if robot is on the soup location and there is no soup around him
                 // if there isn't any soup around it then remove
                 findSoup();
-                if (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist) {
+                if (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc)) {
                     System.out.println("There's no soup!");
                     infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, soup));
                     soupLocation.remove(soup);
