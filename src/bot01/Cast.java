@@ -11,7 +11,7 @@ public class Cast {
 
     private int y_bit;
 
-    private static int defaultCost = 5;
+    private static int defaultCost = 3;
     // number of possible cases for InfoCategory enum class
     private static int numCase = 7;
 

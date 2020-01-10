@@ -42,6 +42,9 @@ public strictfp class RobotPlayer {
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
     static MapLocation soupLoc = null;
 
+    // booleans
+    static boolean isCow = false;
+
     // suspected enemy HQ location
     static MapLocation enemyHQLocationSuspect;
     // possible navigation locations
@@ -148,7 +151,7 @@ public strictfp class RobotPlayer {
     static void runMiner() throws GameActionException {
         System.out.println("I have " + Clock.getBytecodesLeft());
         // build drone factory if there isn't one
-        if (rc.getRobotCount() > 4 && rc.getLocation().distanceSquaredTo(HQLocation) < 15 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
+        if (rc.getRobotCount() > 4 && rc.getLocation().distanceSquaredTo(HQLocation) < 15 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && rc.getRoundNum() <= 200) {
             // first check if there's a fullfillment center nearby
             RobotInfo[] robots = rc.senseNearbyRobots();
             boolean alreadyBuilt = false;
@@ -237,14 +240,25 @@ public strictfp class RobotPlayer {
             RobotInfo pickup = null;
             for (RobotInfo r : rc.senseNearbyRobots()) {
                 if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
-                    pickup = r;
+                    if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
+                        if (r.getType() == RobotType.COW) {
+                            if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) > 48)
+                                pickup = r;
+                        } else {
+                            if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) > GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)
+                                pickup = r;
+                        }
+                    }
                 }
             }
             if (pickup != null) {
                 // if can pickup do pickup
                 if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
                     System.out.println("Just picked up a " + pickup.getType());
-                    if (rc.canPickUpUnit(pickup.getID())) rc.pickUpUnit(pickup.getID());
+                    if (rc.canPickUpUnit(pickup.getID())) {
+                        isCow = pickup.getType() == RobotType.COW;
+                        rc.pickUpUnit(pickup.getID());
+                    }
                 } else {
                     // if not navigate to that unit
                     nav.bugNav(rc, pickup.getLocation());
@@ -252,42 +266,55 @@ public strictfp class RobotPlayer {
                 }
             } else {
                 // if there are no robots nearby
-                nav.bugNav(rc, enemyHQLocationSuspect);
-                System.out.println("Searching for robots, navigating to suspected enemy HQ");
+                if (enemyHQLocation != null) {
+                    if (rc.getID() % 5 == 0) {
+                        // let some drones patrol
+                        nav.bugNav(rc, enemyHQLocationSuspect);
+                    } else nav.bugNav(rc, enemyHQLocation);
+                } else nav.bugNav(rc, enemyHQLocationSuspect);
+//                System.out.println("Searching for robots, navigating to suspected enemy HQ");
             }
         } else {
             // find water if not cow
             System.out.println("I'm holding a unit!");
-            MapLocation water = null;
-            MapLocation robotLoc = rc.getLocation();
-            int maxV = 5;
-            for (int x = -maxV; x <= maxV; x++) {
-                for (int y = -maxV; y <= maxV; y++) {
-                    MapLocation check = robotLoc.translate(x, y);
-                    if (rc.canSenseLocation(check)) {
-                        if (rc.senseFlooding(check)) {
-                            // find the closest maxmimal soup deposit
-                            if (water == null || check.distanceSquaredTo(rc.getLocation()) < water.distanceSquaredTo(rc.getLocation()))
-                                water = check;
+            if (isCow) {
+                // go to enemyHQ
+                boolean canPlace = false;
+                if (enemyHQLocation != null) {
+                    if (rc.getLocation().distanceSquaredTo(enemyHQLocation) < 24) {
+                        Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
+                        for (int i = 0; i < 8; i++) {
+                            if (rc.canDropUnit(optDir)) {
+                                rc.dropUnit(optDir);
+                                canPlace = true;
+                                break;
+                            } else optDir = optDir.rotateRight();
                         }
                     }
                 }
-            }
-            if (water != null) {
-                if (water.isAdjacentTo(robotLoc)) {
-                    System.out.println("Dropping off unit!");
-                    // drop off unit
-                    Direction dropDir = robotLoc.directionTo(water);
-                    if (rc.canDropUnit(dropDir)) rc.dropUnit(dropDir);
-                } else {
-                    System.out.println("Navigating to water at " + water.toString());
-                    nav.bugNav(rc, water);
+                if (enemyHQLocation != null && !canPlace) {
+                    nav.bugNav(rc, enemyHQLocation);
+                }
+                if (enemyHQLocation == null) {
+                    nav.bugNav(rc, exploreTo);
                 }
             } else {
-                // TODO: find water
-                // for now, move randomly to try find water
-                System.out.println("Moving randomly to find water!");
-                nav.bugNav(rc, suspects.get(rc.getID() % 4));
+                MapLocation water = findWater();
+                MapLocation robotLoc = rc.getLocation();
+                if (water != null) {
+                    if (water.isAdjacentTo(robotLoc)) {
+                        System.out.println("Dropping off unit!");
+                        // drop off unit
+                        Direction dropDir = robotLoc.directionTo(water);
+                        if (rc.canDropUnit(dropDir)) rc.dropUnit(dropDir);
+                    } else {
+                        System.out.println("Navigating to water at " + water.toString());
+                        nav.bugNav(rc, water);
+                    }
+                } else {
+                    // explore
+                    nav.bugNav(rc, exploreTo);
+                }
             }
         }
         nav.bugNav(rc, enemyHQLocationSuspect);
@@ -332,7 +359,7 @@ public strictfp class RobotPlayer {
         return dx * dx + dy * dy;
     }
 
-    // returns the closest MapLocation of soup in the robot's stored soup locations
+    // stores the closest MapLocation of soup in the robot's stored soup locations in soupLoc
     // but if within vision range, just normally find the closest soup
     static void findSoup() throws GameActionException {
         // try to find soup very close
@@ -364,47 +391,38 @@ public strictfp class RobotPlayer {
                 soupLoc = soup;
             }
         }
-        // check if the soup location should be removed
-//        if (rc.canSenseLocation(soupLoc)) soupLoc = null;
     }
 
-    // finds soup only according to soupLoc
-    static MapLocation findSoupFar() throws GameActionException {
-        MapLocation soupLoc = null;
-        int closestDist = 0;
-        for (MapLocation soup: soupLocation) {
-            // find the closest soup
-            int soupDist = soup.distanceSquaredTo(rc.getLocation());
-            if (soupLoc == null || soupDist < closestDist) {
-                closestDist = soupDist;
-                soupLoc = soup;
-            }
-        }
-        // check if the soup location should be removed
-        return soupLoc;
-    }
-
-    // finds soup only according to surroundings
-    static MapLocation findSoupClose() throws GameActionException {
-        MapLocation robotLoc = rc.getLocation();
-        int maxV = 4;
-        MapLocation soupLoc = null;
+    static MapLocation findWater() throws GameActionException {
+        MapLocation water = null;
+        int maxV = 2;
         for (int x = -maxV; x <= maxV; x++) {
             for (int y = -maxV; y <= maxV; y++) {
-                MapLocation check = robotLoc.translate(x, y);
+                MapLocation check = rc.getLocation().translate(x, y);
                 if (rc.canSenseLocation(check)) {
-                    if (rc.senseSoup(check) > 0) {
+                    if (rc.senseFlooding(check)) {
                         // find the closest maxmimal soup deposit
                         int checkDist = check.distanceSquaredTo(rc.getLocation());
-                        if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
-                                || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
-                            soupLoc = check;
+                        if (water == null || checkDist < water.distanceSquaredTo(rc.getLocation()))
+                            water = check;
                     }
                 }
             }
         }
-        return soupLoc;
+        if (water != null) return water;
+        int closestDist = 0;
+        for (MapLocation w : waterLocation) {
+            // find the closest soup
+            int waterDist = w.distanceSquaredTo(rc.getLocation());
+            if (water == null || waterDist < closestDist) {
+                closestDist = waterDist;
+                water = w;
+            }
+        }
+        return water;
     }
+
+
 
 
 
