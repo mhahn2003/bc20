@@ -9,14 +9,19 @@ public class Nav {
 
     private boolean isBugging;
     private int closestDist;
+    private MapLocation currentDest;
 
     public Nav() {
         isBugging = false;
         closestDist = 1000000;
+        currentDest = null;
     }
 
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
+        if (currentDest != dest) {
+            navReset(dest);
+        }
         closestDist = min(closestDist, rc.getLocation().distanceSquaredTo(dest));
         MapLocation loc = rc.getLocation();
         Direction optDir = loc.directionTo(dest);
@@ -24,7 +29,8 @@ public class Nav {
             // if the state is free
             if (canGo(rc, optDir)) rc.move(optDir);
             else isBugging = true;
-        } else {
+        }
+        if (isBugging) {
             // if the state is bug
             for (int i = 0; i < 8; i++) {
                 if (canGo(rc, optDir)) break;
@@ -61,8 +67,9 @@ public class Nav {
         return true;
     }
 
-    public void navReset() {
+    private void navReset(MapLocation dest) {
         isBugging = false;
         closestDist = 1000000;
+        currentDest = dest;
     }
 }

@@ -174,6 +174,8 @@ public class Cast {
                 hashedValue = ((messageArr[0]%3143-1341)^2+(messageArr[1]%5465-7876)^2+(messageArr[2]%6752-5634)^2+(messageArr[3]%6754-2435)^2+(messageArr[4]%6345-5463)^2+(messageArr[5]%4314-5234)^2)%65535;
                 break;
         }
+        System.out.println("Hashed value is supposed to be: " + hashedValue);
+        System.out.println("Our hash value is: " + messageArr[messageArr.length-1]);
         return hashedValue == messageArr[messageArr.length-1];
 
     }
