@@ -36,6 +36,8 @@ public strictfp class RobotPlayer {
     static int patrolRadiusMax = 45;
     // help radius
     static int helpRadius = 80;
+    // refinery radius
+    static int refineryDist = 48;
     // default cost of our transaction
     private static int defaultCost = 2;
 
@@ -227,7 +229,7 @@ public strictfp class RobotPlayer {
                     //                System.out.println("reference min distance to refinery " + minRefineryDist);
                     //                System.out.println("reference min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
                     //
-                    if (minRefineryDist >= 81 && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
+                    if (minRefineryDist >= refineryDist && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
                         //                    System.out.println("attempt build refinery");
                         for (Direction temp_dir : directions) {
                             if (rc.canBuildRobot(RobotType.REFINERY, temp_dir)) {
@@ -318,8 +320,8 @@ public strictfp class RobotPlayer {
 //            System.out.println("My help queue is: " + helpLoc.toString());
 //        }
         // check for help mode
-        if (helpMode == 0) {
-                // check for all of helpLoc if there's anything, if so, change helpMode and order of helpLoc
+        if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
+            // check for all of helpLoc if there's anything, if so, change helpMode and order of helpLoc
             helpIndex = -1;
             int closestDist = helpRadius;
             // first prune the helpLoc list
@@ -523,16 +525,6 @@ public strictfp class RobotPlayer {
             rc.depositSoup(dir, rc.getSoupCarrying());
             return true;
         } else return false;
-    }
-
-    // returns the current water level given turn count
-    static int waterLevel() {
-        double x = (double) turnCount;
-        return (int) Math.exp(0.0028 * x - 1.38 * Math.sin(0.00157 * x - 1.73) + 1.38 * Math.sin(-1.73)) - 1;
-    }
-
-    static int distSqr(int dx, int dy) {
-        return dx * dx + dy * dy;
     }
 
     // stores the closest MapLocation of soup in the robot's stored soup locations in soupLoc

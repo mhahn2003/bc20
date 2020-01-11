@@ -31,7 +31,7 @@ public class Nav {
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
         if (currentDest != dest) {
-            navReset(rc, dest);
+            navSoftReset(rc, dest);
         }
         // if currently getting help don't move
         if (helpReq != null) return;
@@ -119,6 +119,15 @@ public class Nav {
         currentDest = dest;
         travelDist = Math.abs(rc.getLocation().x-dest.x)+Math.abs(rc.getLocation().y-dest.y);
         travelRound = rc.getRoundNum();
+    }
+
+    public void navSoftReset(RobotController rc, MapLocation dest) {
+        if (currentDest != null) {
+            travelDist += Math.abs(currentDest.x-dest.x) + Math.abs(currentDest.y-dest.y);
+        }
+        isBugging = false;
+        closestDist = 1000000;
+        currentDest = dest;
     }
 
     public void addThreat(MapLocation loc) {
