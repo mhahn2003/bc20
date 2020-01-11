@@ -1,0 +1,49 @@
+Assume only two bases are not water
+
+new attribute
+- direction current bot is moving/ facing(abstructly assigned for strategies)
+
+
+if ( attack && age > A_G_E_L_I_M_I_T)
+    if enemy in sight:
+        if near
+            grab it
+        else
+            go to it
+    elif enemy in hand:
+        if water near
+            drop it
+        else 
+            go to water
+
+    
+    if prepare phase (// form maximum 4, average 2 squads of chess board ish look)
+        if (dist(enemyhq, rc) > (10+ (number of drones)/15)^2 )
+            move into circle
+        if  max(abs(r.x-enemy.x),abs(r.x-enemy.x))>4
+            move into squads
+        if a drone is behind (facing enemy hq) && and forward is not dangerous
+            move forward
+        if a drone is behind (facing enemy hq) && and forward is not dangerous
+            cast unmovable + location
+        if drone in front is immovable && ! max(abs(newposition.x-enemy.x),abs(newposition.x-enemy.x))>4
+            move left or right(away from enemy hq)
+        if drone in front is immovable && ! max(abs(newposition.x-enemy.x),abs(newposition.x-enemy.x))>4
+            move to adjecent squads away from danger zone
+    
+    if attack phase
+        if not (two block ahead is a movable enemy unit and there is a drone in front) // leave a space for quick discarding enemy unit
+            move forward
+        elseif front left is empty
+            move to front left
+        elseif front right is empty
+            move to front right
+        else
+            stay
+    
+    if surrender phase
+        one drone puts down a landscaper near to bury the hq
+        another drone puts down a miner near to build a gun to protect the landscaper
+    
+    
+
