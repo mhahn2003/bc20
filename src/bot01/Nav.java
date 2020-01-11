@@ -16,6 +16,7 @@ public class Nav {
     private MapLocation lastLoc;
     private int travelDist;
     private int travelRound;
+    private int wander;
     private MapLocation helpReq;
 
     public Nav() {
@@ -25,6 +26,7 @@ public class Nav {
         lastLoc = null;
         travelDist = 0;
         travelRound = 0;
+        wander = 0;
         helpReq = null;
     }
 
@@ -88,6 +90,7 @@ public class Nav {
             }
             if (rc.getLocation().distanceSquaredTo(dest)<closestDist) isBugging = false;
         }
+        if (rc.getLocation().isAdjacentTo(currentDest)) wander++;
     }
 
     public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
@@ -97,9 +100,12 @@ public class Nav {
     }
 
     public boolean canGoMiner(RobotController rc, Direction dir) throws GameActionException {
+        MapLocation moveTo = rc.getLocation().add(dir);
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
-        if (rc.getLocation().add(dir).equals(lastLoc)) return false;
+        if (moveTo.equals(lastLoc)) return false;
+        // run away from enemy drones
+        if (droneThreat(rc, moveTo)) return false;
         return true;
     }
 
@@ -128,6 +134,7 @@ public class Nav {
         isBugging = false;
         closestDist = 1000000;
         currentDest = dest;
+        wander = 0;
     }
 
     public void addThreat(MapLocation loc) {
@@ -144,6 +151,8 @@ public class Nav {
 
     public boolean needHelp(RobotController rc, int turnCount, MapLocation loc) {
         if (!loc.equals(currentDest)) return false;
+        // if under drone attack don't call for help
+        if (droneThreat(rc, rc.getLocation())) return false;
         if (travelDist < 15) {
             if (rc.getRoundNum()-travelRound-10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
                 helpReq = rc.getLocation();
@@ -152,7 +161,7 @@ public class Nav {
             }
         }
         else {
-            if ((rc.getRoundNum() - travelRound)*3/2 - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+            if ((rc.getRoundNum()-travelRound)*3/2 - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
                 helpReq = rc.getLocation();
 //                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
@@ -168,5 +177,17 @@ public class Nav {
             return true;
         }
         return false;
+    }
+
+    public boolean droneThreat(RobotController rc, MapLocation loc) {
+        RobotInfo[] robots = rc.senseNearbyRobots(8);
+        for (RobotInfo r: robots) {
+            if (r.getTeam() != rc.getTeam() && r.getType() == RobotType.DELIVERY_DRONE) return true;
+        }
+        return false;
+    }
+
+    public int getWander() {
+        return wander;
     }
 }

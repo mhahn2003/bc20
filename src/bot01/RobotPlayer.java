@@ -60,9 +60,16 @@ public strictfp class RobotPlayer {
     // for miners:   0: normal        1: requesting help
     static int helpMode = 0;
     static int helpIndex = -1;
+    // is miner #1
+    static boolean isBuilder;
+    // is miner #2
+    static boolean isAttacker;
 
     // booleans
     static boolean isCow = false;
+
+    // used for exploring enemy HQ locations
+    static int idIncrease = 0;
 
     // suspected enemy HQ location
     static MapLocation enemyHQLocationSuspect;
@@ -177,18 +184,15 @@ public strictfp class RobotPlayer {
         }
         if (helpMode == 0) {
             // build drone factory if there isn't one
-            if (rc.getRobotCount() > 4 && rc.getLocation().distanceSquaredTo(HQLocation) < 15 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && rc.getRoundNum() <= 200) {
-                // first check if there's a fullfillment center nearby
-                RobotInfo[] robots = rc.senseNearbyRobots();
-                boolean alreadyBuilt = false;
-                for (RobotInfo r : robots) {
-                    if (r.getType() == RobotType.FULFILLMENT_CENTER && r.getTeam() == rc.getTeam()) alreadyBuilt = true;
-                }
-                if (!alreadyBuilt) {
-                    for (Direction d : Direction.allDirections()) {
-                        tryBuild(RobotType.FULFILLMENT_CENTER, d);
-                    }
-                }
+            MapLocation DFLoc = HQLocation.add(Direction.EAST);
+            MapLocation LFLoc = HQLocation.add(Direction.WEST);
+            if (rc.getRobotCount() > 4 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && rc.getLocation().isAdjacentTo(DFLoc) && !rc.getLocation().equals(DFLoc)) {
+                // build a drone factory east of hq
+                tryBuild(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(DFLoc));
+            }
+            if (rc.getRobotCount() > 6 && rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost && rc.getLocation().isAdjacentTo(LFLoc) && !rc.getLocation().equals(LFLoc)) {
+                // build a landscaper factory west of hq
+                tryBuild(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(LFLoc));
             }
             //        if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost + 200 && rc.getLocation().distanceSquaredTo(HQLocation) < 15) {
             //            for (Direction d : Direction.allDirections()) {
@@ -253,7 +257,7 @@ public strictfp class RobotPlayer {
                 } else {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                         helpMode = 1;
-                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
                     }
                     else nav.bugNav(rc, closestRefineryLocation);
@@ -271,7 +275,7 @@ public strictfp class RobotPlayer {
                     else {
                         if (nav.needHelp(rc, turnCount, soupLoc)) {
                             helpMode = 1;
-                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                             infoQ.add(Cast.getMessage(rc.getLocation(), soupLoc));
                         }
                         else nav.bugNav(rc, soupLoc);
@@ -301,11 +305,15 @@ public strictfp class RobotPlayer {
 
     static void runFulfillmentCenter() throws GameActionException {
         // produce 8 drones
+        Direction optDir = Direction.NORTHWEST;
         if (droneCount < 8) {
-            for (Direction dir : directions) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, dir)) {
-                    rc.buildRobot(RobotType.DELIVERY_DRONE, dir);
+            for (int i = 0; i < 8; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
+                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
+                    break;
+                } else {
+                    optDir = optDir.rotateRight();
                 }
             }
         }
@@ -444,8 +452,12 @@ public strictfp class RobotPlayer {
                             }
                             if (rc.canMove(rotateDir)) rc.move(rotateDir);
                         } else nav.bugNav(rc, enemyHQLocation);
-                    } else nav.bugNav(rc, enemyHQLocationSuspect);
-                    //                System.out.println("Searching for robots, navigating to suspected enemy HQ");
+                    } else {
+                        if (nav.getWander() >= 10) {
+                            resetEnemyHQSuspect();
+                        }
+                        nav.bugNav(rc, enemyHQLocationSuspect);
+                    }
                 }
             } else {
                 // find water if not cow
@@ -630,6 +642,11 @@ public strictfp class RobotPlayer {
         exploreLoc();
     }
 
+    static void resetEnemyHQSuspect() throws GameActionException {
+        idIncrease++;
+        enemyHQLocationSuspect = suspects.get((rc.getID()+idIncrease) % 3);
+    }
+
 
 
 
@@ -687,6 +704,9 @@ public strictfp class RobotPlayer {
                                 break;
                             case NET_GUN:
                                 if (!nav.isThreat(loc)) nav.addThreat(loc);
+                                break;
+                            case NEW_REFINERY:
+                                if (!refineryLocation.contains(loc)) refineryLocation.add(loc);
                                 break;
                             case NEW_SOUP:
                                 // add if it's far away enough from all the other soup coords
