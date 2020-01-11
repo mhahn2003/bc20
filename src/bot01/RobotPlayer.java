@@ -649,7 +649,7 @@ public strictfp class RobotPlayer {
         }
         RobotInfo[] robots = rc.senseNearbyRobots();
         // location of the bot
-        MapLocation loc;
+        MapLocation rloc;
         // whether it is already in memory
         boolean saved;
         for (RobotInfo r : robots) {
@@ -663,16 +663,16 @@ public strictfp class RobotPlayer {
             // why is this an else if?
             else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY || r.getType() == RobotType.HQ) && r.getTeam() == rc.getTeam()){
                 refineryInVision=true;
-                loc=r.getLocation();
+                rloc=r.getLocation();
                 // check for matching
                 for (MapLocation refineryLoca: refineryLocation){
-                    if (refineryLoca==loc){
+                    if (refineryLoca==rloc){
                         saved=true;
                     }
                 }
                 // no matching => not saved => save it
                 if (!saved){
-                    refineryLocation.add(loc);
+                    refineryLocation.add(rloc);
                 }
             }
         }
