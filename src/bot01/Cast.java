@@ -21,7 +21,7 @@ public class Cast {
 
     public enum InformationCategory {
         // new building(needs coordinate and type)
-        NEW_BUILDING,
+        NEW_REFINERY,
         // destroyed building(needs coordinate)
         REMOVE,
         // found a soup repository
@@ -39,13 +39,13 @@ public class Cast {
         // enemy?
         OTHER
     }
-
+  
 
 
     public static int getMessage(InformationCategory cat, MapLocation coord) {
         int message=0;
         switch (cat) {
-            case NEW_BUILDING:
+            case NEW_REFINERY:
                 message += 1;
                 break;
             case REMOVE:
@@ -82,7 +82,7 @@ public class Cast {
 
     public static InformationCategory getCat(int message){
         switch(message/10000) {
-            case 1: return InformationCategory.NEW_BUILDING;
+            case 1: return InformationCategory.NEW_REFINERY;
             case 2: return InformationCategory.REMOVE;
             case 3: return InformationCategory.NEW_SOUP;
             case 4: return InformationCategory.HELP;
@@ -148,6 +148,7 @@ public class Cast {
         int hashedValue=0;
         switch(messageArr.length){
             case 1:
+
                 hashedValue=((messageArr[0]%7345-9)^2+15)%65535;
                 break;
             case 2:
