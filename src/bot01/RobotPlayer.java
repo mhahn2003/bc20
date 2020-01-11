@@ -34,6 +34,8 @@ public strictfp class RobotPlayer {
     // patrol radius
     static int patrolRadiusMin = 36;
     static int patrolRadiusMax = 45;
+    // default cost of our transaction
+    private static int defaultCost = 2;
 
     // navigation object
     static Nav nav = new Nav();
@@ -46,6 +48,7 @@ public strictfp class RobotPlayer {
     static boolean refineryInVision;
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
     static MapLocation soupLoc = null;
+    static MapLocation closestRefineryLocation = null;
 
     // booleans
     static boolean isCow = false;
@@ -175,65 +178,57 @@ public strictfp class RobotPlayer {
 //                tryBuild(RobotType.VAPORATOR, d);
 //            }
 //        }
-        System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
+//        System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
         if (soupLoc == null) {
             // if soup location is far or we just didn't notice
-            System.out.println("In my soupLoc I have " + soupLocation.toString());
+//            System.out.println("In my soupLoc I have " + soupLocation.toString());
             findSoup();
         }
-        System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
+//        System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
         if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (soupLoc == null && rc.getSoupCarrying() > 0)) {
             // if the robot is full or has stuff and no more soup nearby, move back to HQ
-            System.out.println("before going home i have" + Clock.getBytecodesLeft());
+//            System.out.println("before going home i have " + Clock.getBytecodesLeft());
             // default hq
-            MapLocation closestRefineryLocation=HQLocation;
+            closestRefineryLocation = HQLocation;
                 // check select a point as reference(might be edge case?)
-            MapLocation reference_point=soupLoc;
-            System.out.println("reference to" + reference_point.toString());
-            int minRefineryDist=reference_point.distanceSquaredTo(HQLocation);
+            MapLocation reference_point = soupLoc;
+            if (reference_point != null) {
+//                System.out.println("reference to " + reference_point.toString());
+                int minRefineryDist = reference_point.distanceSquaredTo(HQLocation);
 
-            System.out.println("before find min d i have" + Clock.getBytecodesLeft());
-            // check through refinery(redundancy here)
-            for (MapLocation refineryLoca: refineryLocation){
-				int temp_d = reference_point.distanceSquaredTo(refineryLoca);
-                if ( temp_d < minRefineryDist){
-                    closestRefineryLocation=refineryLoca;
-                    minRefineryDist=temp_d;
-                }
-                System.out.println("my memory contain" + refineryLoca.toString());
-            } 
-            System.out.println("reference to" + reference_point.toString());
-            System.out.println("compare to" + closestRefineryLocation.toString());
-            System.out.println("after find min d i have" + Clock.getBytecodesLeft());
-            System.out.println("reference min distance to refinery " + minRefineryDist);
-            System.out.println("reference min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
-            // 
-            if (minRefineryDist>=81&& reference_point.distanceSquaredTo(rc.getLocation())<4 && rc.getTeamSoup()>=200){
-                System.out.println("attempt build refinery");
-                for (Direction temp_dir: directions){
-                    if (rc.canBuildRobot(RobotType.REFINERY, temp_dir)){
-                        System.out.println("can build refinery");
-                        rc.buildRobot( RobotType.REFINERY  , temp_dir);
-                        System.out.println("built refinery");
-                        MapLocation robotLoc = rc.getLocation();
-                        switch(temp_dir){
-                            case NORTH:       refineryLocation.add(robotLoc.translate(robotLoc.x,   robotLoc.y+1)); break;
-                            case NORTHEAST:   refineryLocation.add(robotLoc.translate(robotLoc.x+1, robotLoc.y+1)); break;
-                            case EAST:        refineryLocation.add(robotLoc.translate(robotLoc.x+1, robotLoc.y  )); break;
-                            case SOUTHEAST:   refineryLocation.add(robotLoc.translate(robotLoc.x+1, robotLoc.y-1)); break;
-                            case SOUTH:       refineryLocation.add(robotLoc.translate(robotLoc.x,   robotLoc.y-1)); break;
-                            case SOUTHWEST:   refineryLocation.add(robotLoc.translate(robotLoc.x-1, robotLoc.y-1)); break;
-                            case WEST:        refineryLocation.add(robotLoc.translate(robotLoc.x-1, robotLoc.y  )); break;
-                            case NORTHWEST:   refineryLocation.add(robotLoc.translate(robotLoc.x-1, robotLoc.y+1));
-                        }
-                        closestRefineryLocation=refineryLocation.get(refineryLocation.size()-1 );
-                        break;
+//                System.out.println("before find min d i have" + Clock.getBytecodesLeft());
+                // check through refinery(redundancy here)
+                for (MapLocation refineryLoca : refineryLocation) {
+                    int temp_d = reference_point.distanceSquaredTo(refineryLoca);
+                    if (temp_d < minRefineryDist) {
+                        closestRefineryLocation = refineryLoca;
+                        minRefineryDist = temp_d;
                     }
+//                    System.out.println("my memory contain " + refineryLoca.toString());
                 }
-                infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size()-1 ) ));
+//                System.out.println("reference to " + reference_point.toString());
+//                System.out.println("compare to " + closestRefineryLocation.toString());
+//                System.out.println("after find min d i have " + Clock.getBytecodesLeft());
+//                System.out.println("reference min distance to refinery " + minRefineryDist);
+//                System.out.println("reference min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
+                //
+                if (minRefineryDist >= 81 && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
+//                    System.out.println("attempt build refinery");
+                    for (Direction temp_dir : directions) {
+                        if (rc.canBuildRobot(RobotType.REFINERY, temp_dir)) {
+//                            System.out.println("can build refinery");
+                            rc.buildRobot(RobotType.REFINERY, temp_dir);
+//                            System.out.println("built refinery");
+                            MapLocation robotLoc = rc.getLocation();
+                            refineryLocation.add(robotLoc.add(temp_dir));
+                            closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
+                            break;
+                        }
+                    }
+                    infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size() - 1)));
+                }
+//                System.out.println("after new refinery procedures" + Clock.getBytecodesLeft());
             }
-            System.out.println("after new refinery procedures" + Clock.getBytecodesLeft());
-            
             // if HQ is next to miner deposit
             if (closestRefineryLocation.isAdjacentTo(rc.getLocation())) {
                 Direction soupDepositDir = rc.getLocation().directionTo(closestRefineryLocation);
@@ -243,7 +238,7 @@ public strictfp class RobotPlayer {
             }
         } else {
             if (soupLoc != null) {
-                System.out.println("Soup is at: " + soupLoc.toString());
+//                System.out.println("Soup is at: " + soupLoc.toString());
                 Direction locDir = rc.getLocation().directionTo(soupLoc);
                 if (rc.canMineSoup(locDir)) {
                     rc.mineSoup(locDir);
@@ -572,16 +567,16 @@ public strictfp class RobotPlayer {
 
     // get information from blockchain on that turn
     static void getInfo(int roundNum) throws GameActionException {
-        System.out.println("Getting info of round "+roundNum);
+//        System.out.println("Getting info of round "+roundNum);
         Transaction[] info = rc.getBlock(roundNum);
         for (Transaction stuff: info) {
             if (Cast.isMessageValid(stuff.getMessage())) {
                 for (int i = 0; i < stuff.getMessage().length-1; i++) {
                     int message = stuff.getMessage()[i];
-                    System.out.println("message is: " + message);
-                    System.out.println("message validness is " + Cast.isValid(message, rc));
-                    System.out.println("message cat is" + Cast.getCat(message));
-                    System.out.println("message coord is" + Cast.getCoord(message));
+//                    System.out.println("message is: " + message);
+//                    System.out.println("message validness is " + Cast.isValid(message, rc));
+//                    System.out.println("message cat is" + Cast.getCat(message));
+//                    System.out.println("message coord is" + Cast.getCoord(message));
                     if (Cast.isValid(message, rc)) {
                         // if valid message
                         MapLocation loc = Cast.getCoord(message);
@@ -743,21 +738,21 @@ public strictfp class RobotPlayer {
             }
         }
         if (suspects != null) {
-            for (MapLocation loc : suspects) {
-                if (suspectsVisited.get(loc)) {
-                    if (rc.getLocation().equals(loc)) {
-                        suspectsVisited.replace(loc, true);
-                        infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, loc));
-                    } else if (rc.canSenseLocation(loc)) {
-                        RobotInfo r = rc.senseRobotAtLocation(loc);
+            for (MapLocation l: suspects) {
+                if (suspectsVisited.get(l)) {
+                    if (rc.getLocation().equals(l)) {
+                        suspectsVisited.replace(l, true);
+                        infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
+                    } else if (rc.canSenseLocation(l)) {
+                        RobotInfo r = rc.senseRobotAtLocation(l);
                         if (r != null) {
                             RobotType t = r.getType();
                             if (r.getTeam() != rc.getTeam() && (t == RobotType.HQ || t == RobotType.NET_GUN)) {
-                                suspectsVisited.replace(loc, true);
-                                infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, loc));
-                            } else if (rc.getLocation().distanceSquaredTo(loc) < 9) {
-                                suspectsVisited.replace(loc, true);
-                                infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, loc));
+                                suspectsVisited.replace(l, true);
+                                infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
+                            } else if (rc.getLocation().distanceSquaredTo(l) < 9) {
+                                suspectsVisited.replace(l, true);
+                                infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                             }
                         }
                     }
@@ -780,9 +775,9 @@ public strictfp class RobotPlayer {
             }
             // add the hash
             info[blockSize] = Cast.hash(prepHash);
-            if (rc.canSubmitTransaction(info, 3)) {
-                System.out.println("Submitted transaction! Message is : " + info.toString());
-                rc.submitTransaction(info, 3);
+            if (rc.canSubmitTransaction(info, defaultCost)) {
+//                System.out.println("Submitted transaction! Message is : " + info.toString());
+                rc.submitTransaction(info, defaultCost);
             }
         }
     }
