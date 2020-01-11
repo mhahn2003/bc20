@@ -74,6 +74,15 @@ public class Nav {
                             if (rc.canMove(safe)) rc.move(safe);
                         }
                     }
+                } else {
+                    for (int i = 0; i < 8; i++) {
+                        if (rc.canMove(optDir)) {
+                            rc.move(optDir);
+                            break;
+                        }
+                        else optDir = optDir.rotateRight();
+                        if (i == 7) return;
+                    }
                 }
                 // if you still can't move you're kind of screwed
             }
@@ -96,7 +105,6 @@ public class Nav {
 
     public boolean canGoDrone(RobotController rc, Direction dir) throws GameActionException {
         if (!rc.canMove(dir)) return false;
-        RobotInfo[] robots = rc.senseNearbyRobots();
         MapLocation goodLoc = rc.getLocation().add(dir);
         if (rc.getLocation().add(dir).equals(lastLoc)) return false;
         for (MapLocation loc: threats) {
@@ -128,14 +136,16 @@ public class Nav {
     public boolean needHelp(RobotController rc, int turnCount, MapLocation loc) {
         if (!loc.equals(currentDest)) return false;
         if (travelDist < 15) {
-            if ((rc.getRoundNum()-travelRound)*5/2-10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+            if (rc.getRoundNum()-travelRound-10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
                 helpReq = rc.getLocation();
+//                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
         }
         else {
-            if ((rc.getRoundNum() - travelRound) - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+            if ((rc.getRoundNum() - travelRound)*3/2 - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
                 helpReq = rc.getLocation();
+//                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
         }

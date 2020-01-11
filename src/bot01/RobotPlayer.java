@@ -314,9 +314,9 @@ public strictfp class RobotPlayer {
     }
 
     static void runDeliveryDrone() throws GameActionException {
-        if (!helpLoc.isEmpty()) {
-            System.out.println("My help queue is: " + helpLoc.toString());
-        }
+//        if (!helpLoc.isEmpty()) {
+//            System.out.println("My help queue is: " + helpLoc.toString());
+//        }
         // check for help mode
         if (helpMode == 0) {
                 // check for all of helpLoc if there's anything, if so, change helpMode and order of helpLoc
@@ -836,7 +836,7 @@ public strictfp class RobotPlayer {
                 // check if robot is on the soup location and there is no soup around him
                 // if there isn't any soup around it then remove
                 findSoup();
-                if (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc)) {
+                if (rc.senseSoup(soup) == 0 && (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc))) {
                     System.out.println("There's no soup!");
                     infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, soup));
                     soupLocation.remove(soup);
