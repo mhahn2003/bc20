@@ -76,5 +76,11 @@ Our current strategy is to:
 4. Install net guns near miners to protect them
 5. ~~Broadcast encrypted HQ location on turn 1 so everyone can access~~
 6. Copy enemy's broadcast to trick them
-7. When we remove a location by broadcasting, we can accidentally remove both water and soup locations
+7. ~~When we remove a location by broadcasting, we can accidentally remove both water and soup locations~~
 8. If enemy is smart enough to spam block on turn 1, then miners might throw an exception in trying to call findHQ() and could die
+9. Refactor code because RobotPlayer.java currently looks very ugly
+10. Implement exploreTo() completely
+11. Build net guns next to refineries?
+12. Apparently 4 vaporator is op?
+13. Assign a build miner (using turncount) and if round number is 200+ make it come back to HQ and it will build things right next to HQ for us
+14. Make drones patrol HQ
