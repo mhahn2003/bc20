@@ -14,19 +14,27 @@ public class Nav {
     private MapLocation currentDest;
     private ArrayList<MapLocation> threats= new ArrayList<>();
     private MapLocation lastLoc;
+    private int travelDist;
+    private int travelRound;
+    private MapLocation helpReq;
 
     public Nav() {
         isBugging = false;
         closestDist = 1000000;
         currentDest = null;
         lastLoc = null;
+        travelDist = 0;
+        travelRound = 0;
+        helpReq = null;
     }
 
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
         if (currentDest != dest) {
-            navReset(dest);
+            navReset(rc, dest);
         }
+        // if currently getting help don't move
+        if (helpReq != null) return;
         closestDist = min(closestDist, rc.getLocation().distanceSquaredTo(dest));
         MapLocation loc = rc.getLocation();
         Direction optDir = loc.directionTo(dest);
@@ -90,16 +98,19 @@ public class Nav {
         if (!rc.canMove(dir)) return false;
         RobotInfo[] robots = rc.senseNearbyRobots();
         MapLocation goodLoc = rc.getLocation().add(dir);
+        if (rc.getLocation().add(dir).equals(lastLoc)) return false;
         for (MapLocation loc: threats) {
             if (goodLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
         }
         return true;
     }
 
-    private void navReset(MapLocation dest) {
+    public void navReset(RobotController rc, MapLocation dest) {
         isBugging = false;
         closestDist = 1000000;
         currentDest = dest;
+        travelDist = Math.abs(rc.getLocation().x-dest.x)+Math.abs(rc.getLocation().y-dest.y);
+        travelRound = rc.getRoundNum();
     }
 
     public void addThreat(MapLocation loc) {
@@ -112,5 +123,31 @@ public class Nav {
 
     public boolean isThreat(MapLocation loc) {
         return threats.contains(loc);
+    }
+
+    public boolean needHelp(RobotController rc, int turnCount, MapLocation loc) {
+        if (!loc.equals(currentDest)) return false;
+        if (travelDist < 15) {
+            if ((rc.getRoundNum()-travelRound)*5/2-10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+                helpReq = rc.getLocation();
+                return true;
+            }
+        }
+        else {
+            if ((rc.getRoundNum() - travelRound) - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+                helpReq = rc.getLocation();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean outOfDrone(RobotController rc) {
+        if (!rc.getLocation().equals(helpReq)) {
+            helpReq = null;
+            navReset(rc, currentDest);
+            return true;
+        }
+        return false;
     }
 }
