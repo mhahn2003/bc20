@@ -36,6 +36,12 @@ public class Cast {
         WATER,
         // NET_GUN
         NET_GUN,
+        // FORM SQUADS
+        PREPARE,
+        //RUN TO ENEMY HQ
+        ATTACK,
+        // LEAVE ENEMY HQ
+        SURRENDER,
         // enemy?
         OTHER
     }
@@ -68,8 +74,18 @@ public class Cast {
                 break;
             case NET_GUN:
                 message += 8;
-            default:
+                break;
+            case PREPARE:
                 message += 9;
+                break;
+            case ATTACK:
+                message += 10;
+                break;
+            case SURRENDER:
+                message += 11;
+                break;
+            default:
+                message += 12;
                 break;
         }
         message=addCoord(message, coord);
@@ -90,6 +106,9 @@ public class Cast {
             case 6: return InformationCategory.HQ;
             case 7: return InformationCategory.WATER;
             case 8: return InformationCategory.NET_GUN;
+            case 9: return InformationCategory.PREPARE;
+            case 10: return InformationCategory.ATTACK;
+            case 11: return InformationCategory.SURRENDER;
             default: return InformationCategory.OTHER;
         }
     }
