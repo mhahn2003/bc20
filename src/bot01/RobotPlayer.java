@@ -238,11 +238,11 @@ public strictfp class RobotPlayer {
 //                    System.out.println("my memory contain " + refineryLoca.toString());
                 }
 //                System.out.println("after find min d i have " + Clock.getBytecodesLeft());
-                System.out.println("soup at " + reference_point.toString());
-                System.out.println("closest refinery at " + closestRefineryLocation.toString());
-                System.out.println("im at " + rc.getLocation().toString());
-                System.out.println("soup min distance to refinery " + minRefineryDist);
-                System.out.println("soup min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
+//                System.out.println("soup at " + reference_point.toString());
+//                System.out.println("closest refinery at " + closestRefineryLocation.toString());
+//                System.out.println("im at " + rc.getLocation().toString());
+//                System.out.println("soup min distance to refinery " + minRefineryDist);
+//                System.out.println("soup min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
                 //
                 if (minRefineryDist >= 81 && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
                     System.out.println("attempt build refinery");
@@ -304,7 +304,10 @@ public strictfp class RobotPlayer {
         Direction optDir = Direction.NORTHWEST;
         if (droneCount < 80) {
             for (int i=0; i<8 ; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
+                if ( rc.getTeamSoup()<350){
+                    break;
+                }
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) ) {
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
                 }else{
@@ -418,6 +421,8 @@ public strictfp class RobotPlayer {
                 if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) > 169 ){
                     nav.bugNav(rc, enemyHQLocation);
                     break;
+                }else if(enemyHQLocation.distanceSquaredTo(rc.getLocation()) < 16 ){
+                    nav.bugNav(rc, HQLocation);
                 }
                 
                 MapLocation minminManhattan = rc.getLocation();
@@ -426,10 +431,11 @@ public strictfp class RobotPlayer {
                 for (Direction dir: directions){
                     nextLocation=rc.getLocation().add(dir);
                     if (manhattanDistance(enemyHQLocation, nextLocation)%2==1 &&
-                        manhattanDistance(enemyHQLocation, nextLocation) < minManhattanDist &&
-                        enemyHQLocation.distanceSquaredTo(nextLocation) >=64 &&
+                        (manhattanDistance(enemyHQLocation, minminManhattan)%2==0 || manhattanDistance(enemyHQLocation, nextLocation) <= minManhattanDist) &&
+                        enemyHQLocation.distanceSquaredTo(nextLocation) >=25 &&
                         rc.canMove(dir)){
                         rc.move(dir);
+                        break;
                     }
                 }
             break;
@@ -439,7 +445,6 @@ public strictfp class RobotPlayer {
             break;
 
         }
-        nav.bugNav(rc, enemyHQLocationSuspect);
         System.out.println("I'm at " + rc.getLocation().toString());
     }
 
