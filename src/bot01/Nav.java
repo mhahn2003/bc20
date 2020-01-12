@@ -86,7 +86,7 @@ public class Nav {
                         if (i == 7) return;
                     }
                 }
-                // if you still can't move you're kind of screwed
+                // if still can't move pretty screwed
             }
             if (rc.getLocation().distanceSquaredTo(dest)<closestDist) isBugging = false;
         }

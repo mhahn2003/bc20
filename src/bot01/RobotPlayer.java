@@ -40,9 +40,13 @@ public strictfp class RobotPlayer {
     static int refineryDist = 48;
     // default cost of our transaction
     private static int defaultCost = 2;
+    // how much drones can wander
+    static int wanderLimit = 5;
 
     // navigation object
     static Nav nav = new Nav();
+    // turtle object
+    static Turtle turtle;
 
     // important locations
     static MapLocation HQLocation = null;
@@ -82,6 +86,7 @@ public strictfp class RobotPlayer {
     // unit counter
     static int minerCount = 0;
     static int droneCount = 0;
+    static int landscaperCount = 0;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -292,7 +297,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runRefinery() throws GameActionException {
-
+        // maybe refineries can request for help from drones?
     }
 
     static void runVaporator() throws GameActionException {
@@ -301,6 +306,58 @@ public strictfp class RobotPlayer {
 
     static void runDesignSchool() throws GameActionException {
 
+        // produce 3 landscapers initially
+        Direction optDir = Direction.SOUTHEAST;
+        if (landscaperCount < 5) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                    rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                    landscaperCount++;
+                    break;
+                } else {
+                    optDir = optDir.rotateRight();
+                }
+            }
+        }
+        boolean isVaporator = false;
+        int netGunCount = 0;
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        for (RobotInfo r: robots) {
+            if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
+                isVaporator = true;
+            }
+            if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) {
+                netGunCount++;
+            }
+        }
+        if (isVaporator) {
+            // produce outer layer
+            if (landscaperCount < 28) {
+                for (int i = 0; i < 8; i++) {
+                    if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                        rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                        landscaperCount++;
+                        break;
+                    } else {
+                        optDir = optDir.rotateRight();
+                    }
+                }
+            }
+        }
+        // produce inner layer of minescapers
+        if (netGunCount >= 4) {
+            if (landscaperCount < 39) {
+                for (int i = 0; i < 8; i++) {
+                    if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                        rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                        landscaperCount++;
+                        break;
+                    } else {
+                        optDir = optDir.rotateRight();
+                    }
+                }
+            }
+        }
     }
 
     static void runFulfillmentCenter() throws GameActionException {
@@ -437,23 +494,10 @@ public strictfp class RobotPlayer {
                             // let some drones patrol
                             nav.bugNav(rc, enemyHQLocationSuspect);
                         } else if (rc.getID() % 2 == 1) {
-                            // patrol HQ
-                            Direction rotateDir = rc.getLocation().directionTo(HQLocation);
-                            int distHQ = rc.getLocation().distanceSquaredTo(HQLocation);
-                            if (distHQ < patrolRadiusMin) {
-                                rotateDir = rotateDir.opposite();
-                            } else if (distHQ <= patrolRadiusMax) {
-                                rotateDir = rotateDir.rotateLeft();
-                                rotateDir = rotateDir.rotateLeft();
-                            }
-                            for (int i = 0; i < 8; i++) {
-                                if (nav.canGoDrone(rc, rotateDir)) rc.move(rotateDir);
-                                else rotateDir = rotateDir.rotateRight();
-                            }
-                            if (rc.canMove(rotateDir)) rc.move(rotateDir);
+                            patrolHQ();
                         } else nav.bugNav(rc, enemyHQLocation);
                     } else {
-                        if (nav.getWander() >= 10) {
+                        if (nav.getWander() >= wanderLimit) {
                             resetEnemyHQSuspect();
                         }
                         nav.bugNav(rc, enemyHQLocationSuspect);
@@ -640,11 +684,41 @@ public strictfp class RobotPlayer {
             getAllInfo();
         }
         exploreLoc();
+        if (rc.getType() == RobotType.MINER) {
+            findState();
+        }
+        if (rc.getType() == RobotType.LANDSCAPER) {
+            turtle = new Turtle(rc, HQLocation);
+        }
     }
 
     static void resetEnemyHQSuspect() throws GameActionException {
         idIncrease++;
         enemyHQLocationSuspect = suspects.get((rc.getID()+idIncrease) % 3);
+    }
+
+    static void patrolHQ() throws GameActionException {
+        Direction rotateDir = rc.getLocation().directionTo(HQLocation);
+        int distHQ = rc.getLocation().distanceSquaredTo(HQLocation);
+        if (distHQ < patrolRadiusMin) {
+            rotateDir = rotateDir.opposite();
+        } else if (distHQ <= patrolRadiusMax) {
+            rotateDir = rotateDir.rotateLeft();
+            rotateDir = rotateDir.rotateLeft();
+        }
+        for (int i = 0; i < 8; i++) {
+            if (nav.canGo(rc, rotateDir)) rc.move(rotateDir);
+            else rotateDir = rotateDir.rotateRight();
+        }
+        if (rc.canMove(rotateDir)) rc.move(rotateDir);
+    }
+
+    static void findState() throws GameActionException {
+        if (rc.getType() == RobotType.MINER) {
+            if (rc.getRoundNum() == 2) isBuilder = true;
+            if (rc.getRoundNum() == 3) isAttacker = true;
+            return;
+        }
     }
 
 
