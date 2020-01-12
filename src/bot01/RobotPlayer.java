@@ -164,7 +164,15 @@ public strictfp class RobotPlayer {
         }
         if (turnCount == 600 && enemyHQLocation!= null) {
             infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, enemyHQLocation));
-            System.out.println("prepare");
+            System.out.println("Prepare");
+        }
+        if (turnCount == 700 && enemyHQLocation!= null) {
+            infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, enemyHQLocation));
+            System.out.println("Attack");
+        }
+        if (turnCount == 750 && enemyHQLocation!= null) {
+            infoQ.add(Cast.getMessage(Cast.InformationCategory.SURRENDER, enemyHQLocation));
+            System.out.println("Surrender");
         }
         // above are debugging
         RobotInfo[] robots = rc.senseNearbyRobots();
@@ -425,23 +433,36 @@ public strictfp class RobotPlayer {
                     nav.bugNav(rc, HQLocation);
                 }
                 
-                MapLocation minminManhattan = rc.getLocation();
-                int minManhattanDist = manhattanDistance(enemyHQLocation, minminManhattan);
-                MapLocation nextLocation;
+                MapLocation minDistancedSafe = rc.getLocation();
+                int min_dist = enemyHQLocation.distanceSquaredTo(minDistancedSafe);
+                MapLocation nextPrepareLocation;
                 for (Direction dir: directions){
-                    nextLocation=rc.getLocation().add(dir);
-                    if (manhattanDistance(enemyHQLocation, nextLocation)%2==1 &&
-                        (manhattanDistance(enemyHQLocation, minminManhattan)%2==0 || manhattanDistance(enemyHQLocation, nextLocation) <= minManhattanDist) &&
-                        enemyHQLocation.distanceSquaredTo(nextLocation) >=25 &&
+                    nextPrepareLocation=rc.getLocation().add(dir);
+                    if (min_dist > enemyHQLocation.distanceSquaredTo(nextPrepareLocation) &&
+                        enemyHQLocation.distanceSquaredTo(nextPrepareLocation) >=25 &&
+                        rc.canMove(dir)){
+                        rc.move(dir);
+                        break;
+                    }
+                }
+
+
+            break;
+            case ATTACK:
+                int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo( enemyHQLocation ) ;
+                MapLocation nextAttackLocation;
+                for (Direction dir: directions){
+                    nextAttackLocation=rc.getLocation().add(dir);
+                    if (manhattanDistance(enemyHQLocation, nextAttackLocation)%2==1 &&
+                        (currentDistToEnemyHQ%2==0 || nextAttackLocation.distanceSquaredTo(enemyHQLocation) <= currentDistToEnemyHQ ) &&
                         rc.canMove(dir)){
                         rc.move(dir);
                         break;
                     }
                 }
             break;
-            case ATTACK:
-            break;
             case SURRENDER:
+                nav.bugNav(rc, HQLocation);
             break;
 
         }
