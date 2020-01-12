@@ -525,17 +525,24 @@ public strictfp class RobotPlayer {
                     // if it's an enemy building, bury it
                     if (rc.getDirtCarrying() == 0) {
                         // dig downward because you are alpha
+                        System.out.println("Digging towards center");
                         if (rc.canDigDirt(Direction.CENTER)) rc.digDirt(Direction.CENTER);
                     } else {
                         // fill up location
                         Direction optDir = rc.getLocation().directionTo(r.getLocation());
-                        if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                        if (rc.canDepositDirt(optDir)) {
+                            System.out.println("Filling up dirt at: "+ optDir.toString());
+                            rc.depositDirt(optDir);
+                        }
                     }
                 }
                 if (r.getTeam() == rc.getTeam() && r.getType().isBuilding()) {
                     // if our own building is getting buried (most likely net gun) dig out dirt
                     Direction optDir = rc.getLocation().directionTo(r.getLocation());
-                    if (rc.canDigDirt(optDir)) rc.digDirt(optDir);
+                    if (rc.canDigDirt(optDir)) {
+                        System.out.println("Our building is getting buried! Digging out at: " + optDir.toString());
+                        rc.digDirt(optDir);
+                    }
                 }
             }
             // build inner wall
@@ -543,11 +550,14 @@ public strictfp class RobotPlayer {
                 MapLocation left = new Vector(0, -2).addWith(HQLocation);
                 MapLocation right = new Vector(1, -2).addWith(HQLocation);
                 if (rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null) {
+                    System.out.println("Going to left location");
                     nav.bugNav(rc, left);
                 } else {
+                    System.out.println("Going to right location");
                     nav.bugNav(rc, right);
                 }
             } else {
+                System.out.println("Building fort");
                 turtle.buildFort(rc);
             }
         }
