@@ -13,8 +13,8 @@ public class Cast {
     private int y_bit;
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 8;
-
+    private static int numCase = 12;
+ 
     public Cast() {
 
     }

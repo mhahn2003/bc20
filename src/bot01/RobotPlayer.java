@@ -19,8 +19,7 @@ public strictfp class RobotPlayer {
         NON_ATTACKING,
         PREPARE,
         ATTACK,
-        SURRENDER,
-        TURTLE
+        SURRENDER
     }
         
         
@@ -159,11 +158,11 @@ public strictfp class RobotPlayer {
         System.out.println("enemy hq is at" + enemyHQLocation.toString());
         }
         // below are debugging
-        if (turnCount == 400 && enemyHQLocation== null){
+        if (turnCount == 600 && enemyHQLocation== null){
             infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocationSuspect ));
             enemyHQLocation=enemyHQLocationSuspect;
         }
-        if (turnCount == 400 && enemyHQLocation!= null) {
+        if (turnCount == 600 && enemyHQLocation!= null) {
             infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, enemyHQLocation));
             System.out.println("prepare");
         }
@@ -238,12 +237,12 @@ public strictfp class RobotPlayer {
                     }
 //                    System.out.println("my memory contain " + refineryLoca.toString());
                 }
-                System.out.println("reference at " + reference_point.toString());
-                System.out.println("compare to " + closestRefineryLocation.toString());
+//                System.out.println("after find min d i have " + Clock.getBytecodesLeft());
+                System.out.println("soup at " + reference_point.toString());
+                System.out.println("closest refinery at " + closestRefineryLocation.toString());
                 System.out.println("im at " + rc.getLocation().toString());
-                System.out.println("after find min d i have " + Clock.getBytecodesLeft());
-                System.out.println("reference min distance to refinery " + minRefineryDist);
-                System.out.println("reference min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
+                System.out.println("soup min distance to refinery " + minRefineryDist);
+                System.out.println("soup min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
                 //
                 if (minRefineryDist >= 81 && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
                     System.out.println("attempt build refinery");
@@ -302,11 +301,14 @@ public strictfp class RobotPlayer {
 
     static void runFulfillmentCenter() throws GameActionException {
         // produce 8 drones
+        Direction optDir = Direction.NORTHWEST;
         if (droneCount < 80) {
-            for (Direction dir : directions) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, dir)) {
-                    rc.buildRobot(RobotType.DELIVERY_DRONE, dir);
+            for (int i=0; i<8 ; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
+                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
+                }else{
+                    optDir=optDir.rotateRight();
                 }
             }
         }
@@ -435,7 +437,7 @@ public strictfp class RobotPlayer {
             break;
             case SURRENDER:
             break;
-            case TURTLE:
+
         }
         nav.bugNav(rc, enemyHQLocationSuspect);
         System.out.println("I'm at " + rc.getLocation().toString());
