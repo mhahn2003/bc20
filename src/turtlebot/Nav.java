@@ -1,4 +1,4 @@
-package bot01;
+package turtlebot;
 
 import battlecode.common.*;
 
@@ -13,13 +13,11 @@ public class Nav {
     private int closestDist;
     private MapLocation currentDest;
     private ArrayList<MapLocation> threats= new ArrayList<>();
-    private MapLocation lastLoc;
 
     public Nav() {
         isBugging = false;
         closestDist = 1000000;
         currentDest = null;
-        lastLoc = null;
     }
 
     // use bug navigation algorithm to navigate to destination
@@ -30,7 +28,6 @@ public class Nav {
         closestDist = min(closestDist, rc.getLocation().distanceSquaredTo(dest));
         MapLocation loc = rc.getLocation();
         Direction optDir = loc.directionTo(dest);
-        if (!rc.isReady()) return;
         if (!isBugging) {
             // if the state is free
             if (canGo(rc, optDir)) {
@@ -40,35 +37,12 @@ public class Nav {
         }
         if (isBugging) {
             // if the state is bug
-            boolean canMove = false;
             for (int i = 0; i < 8; i++) {
-                if (canGo(rc, optDir)) {
-                    canMove = true;
-                    break;
-                }
+                if (canGo(rc, optDir)) break;
                 else optDir = optDir.rotateRight();
                 if (i == 7) return;
             }
-            if (canMove) {
-                lastLoc = rc.getLocation();
-                rc.move(optDir);
-            }
-            else {
-                if (!threats.isEmpty()) {
-                    Direction safe = rc.getLocation().directionTo(threats.get(threats.size() - 1)).opposite();
-                    if (rc.canMove(safe)) rc.move(safe);
-                    else {
-                        safe = safe.rotateLeft();
-                        if (rc.canMove(safe)) rc.move(safe);
-                        else {
-                            safe = safe.rotateRight();
-                            safe = safe.rotateRight();
-                            if (rc.canMove(safe)) rc.move(safe);
-                        }
-                    }
-                }
-                // if you still can't move you're kind of screwed
-            }
+            rc.move(optDir);
             if (rc.getLocation().distanceSquaredTo(dest)<closestDist) isBugging = false;
         }
     }
@@ -76,13 +50,13 @@ public class Nav {
     public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
         if (rc.getType() == RobotType.MINER) return canGoMiner(rc, dir);
         else if (rc.getType() == RobotType.DELIVERY_DRONE) return canGoDrone(rc, dir);
+        // TODO: fix this function for different types of units (e.g. drones)
         return true;
     }
 
     public boolean canGoMiner(RobotController rc, Direction dir) throws GameActionException {
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
-        if (rc.getLocation().add(dir).equals(lastLoc)) return false;
         return true;
     }
 

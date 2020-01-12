@@ -1,4 +1,4 @@
-package bot01;
+package turtlebot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -7,11 +7,11 @@ import battlecode.common.RobotController;
 // Navigation class
 public class Cast {
 
-    // what are these for?
     private int x_bot;
 
     private int y_bit;
 
+    private static int defaultCost = 3;
     // number of possible cases for InfoCategory enum class
     private static int numCase = 8;
 
@@ -20,9 +20,9 @@ public class Cast {
     }
 
     public enum InformationCategory {
-        // new refinery
-        NEW_REFINERY,
-        // information not there anymore
+        // new building(needs coordinate and type)
+        NEW_BUILDING,
+        // destroyed building(needs coordinate)
         REMOVE,
         // found a soup repository
         NEW_SOUP,
@@ -36,22 +36,16 @@ public class Cast {
         WATER,
         // NET_GUN
         NET_GUN,
-        // FORM SQUADS
-        PREPARE,
-        //RUN TO ENEMY HQ
-        ATTACK,
-        // LEAVE ENEMY HQ
-        SURRENDER,
         // enemy?
         OTHER
     }
-  
+
 
 
     public static int getMessage(InformationCategory cat, MapLocation coord) {
         int message=0;
         switch (cat) {
-            case NEW_REFINERY:
+            case NEW_BUILDING:
                 message += 1;
                 break;
             case REMOVE:
@@ -74,18 +68,8 @@ public class Cast {
                 break;
             case NET_GUN:
                 message += 8;
-                break;
-            case PREPARE:
-                message += 9;
-                break;
-            case ATTACK:
-                message += 10;
-                break;
-            case SURRENDER:
-                message += 11;
-                break;
             default:
-                message += 12;
+                message += 9;
                 break;
         }
         message=addCoord(message, coord);
@@ -98,7 +82,7 @@ public class Cast {
 
     public static InformationCategory getCat(int message){
         switch(message/10000) {
-            case 1: return InformationCategory.NEW_REFINERY;
+            case 1: return InformationCategory.NEW_BUILDING;
             case 2: return InformationCategory.REMOVE;
             case 3: return InformationCategory.NEW_SOUP;
             case 4: return InformationCategory.HELP;
@@ -106,9 +90,6 @@ public class Cast {
             case 6: return InformationCategory.HQ;
             case 7: return InformationCategory.WATER;
             case 8: return InformationCategory.NET_GUN;
-            case 9: return InformationCategory.PREPARE;
-            case 10: return InformationCategory.ATTACK;
-            case 11: return InformationCategory.SURRENDER;
             default: return InformationCategory.OTHER;
         }
     }
@@ -155,8 +136,8 @@ public class Cast {
                 hashedValue = ((messageArr[0]%3143-1341)^2+(messageArr[1]%5465-7876)^2+(messageArr[2]%6752-5634)^2+(messageArr[3]%6754-2435)^2+(messageArr[4]%6345-5463)^2+(messageArr[5]%4314-5234)^2)%65535;
                 break;
         }
-//        System.out.println("Hashed value is supposed to be: " + hashedValue);
-//        System.out.println("Our hash value is: " + messageArr[messageArr.length-1]);
+        System.out.println("Hashed value is supposed to be: " + hashedValue);
+        System.out.println("Our hash value is: " + messageArr[messageArr.length-1]);
         return hashedValue == messageArr[messageArr.length-1];
 
     }
@@ -167,7 +148,6 @@ public class Cast {
         int hashedValue=0;
         switch(messageArr.length){
             case 1:
-
                 hashedValue=((messageArr[0]%7345-9)^2+15)%65535;
                 break;
             case 2:

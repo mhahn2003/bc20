@@ -79,18 +79,9 @@ Our current strategy is to:
 7. ~~When we remove a location by broadcasting, we can accidentally remove both water and soup locations~~
 8. If enemy is smart enough to spam block on turn 1, then miners might throw an exception in trying to call findHQ() and could die
 9. Refactor code because RobotPlayer.java currently looks very ugly
-10. ~~Implement exploreTo() completely~~
+10. Implement exploreTo() completely
 11. Build net guns next to refineries?
 12. Apparently 4 vaporator is op?
 13. Assign a build miner (using turncount) and if round number is 200+ make it come back to HQ and it will build things right next to HQ for us
-14. ~~Make drones patrol HQ~~
+14. Make drones patrol HQ
 15. Drones sense nearby robots 2 times
-16. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
-LNL
-LC
- C
- C
-LNL
-
-Hopefully the landscapers are enough to protect the net guns from getting buried.
-Install net guns to protect the landscapers, and landscapers protect the net guns from getting potentially buried by enemy landscapers. The landscapers dig a pit where the cows are going to be, and drones come and place the cows in there. 
