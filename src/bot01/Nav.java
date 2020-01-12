@@ -95,11 +95,23 @@ public class Nav {
 
     public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
         if (rc.getType() == RobotType.MINER) return canGoMiner(rc, dir);
+        else if (rc.getType() == RobotType.LANDSCAPER) return canGoLandscaper(rc, dir);
         else if (rc.getType() == RobotType.DELIVERY_DRONE) return canGoDrone(rc, dir);
         return true;
     }
 
     public boolean canGoMiner(RobotController rc, Direction dir) throws GameActionException {
+        MapLocation moveTo = rc.getLocation().add(dir);
+        if (!rc.canMove(dir)) return false;
+        if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
+        if (moveTo.equals(lastLoc)) return false;
+        // run away from enemy drones
+        if (droneThreat(rc, moveTo)) return false;
+        return true;
+    }
+
+    public boolean canGoLandscaper(RobotController rc, Direction dir) throws GameActionException {
+        // TODO: change this to account for landscapers being able to dig
         MapLocation moveTo = rc.getLocation().add(dir);
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;

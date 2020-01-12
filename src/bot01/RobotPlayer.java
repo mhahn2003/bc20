@@ -170,12 +170,14 @@ public strictfp class RobotPlayer {
             }
         }
         // build all the miners we can get in the first few turns
-        if (minerCount < 5+rc.getRoundNum()/100) {
-            for (Direction d : Direction.allDirections()) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, d)) {
-                    rc.buildRobot(RobotType.MINER, d);
+        // maximum of 15 miners at 280th round
+        Direction optDir = Direction.NORTH;
+        if (minerCount < Math.max(5+rc.getRoundNum()/40, 12)) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
+                    rc.buildRobot(RobotType.MINER, optDir);
                     minerCount++;
-                }
+                } else optDir = optDir.rotateLeft();
             }
         }
     }
@@ -199,12 +201,6 @@ public strictfp class RobotPlayer {
                 // build a landscaper factory west of hq
                 tryBuild(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(LFLoc));
             }
-            //        if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost + 200 && rc.getLocation().distanceSquaredTo(HQLocation) < 15) {
-            //            for (Direction d : Direction.allDirections()) {
-            //                tryBuild(RobotType.VAPORATOR, d);
-            //            }
-            //        }
-            //        System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
             if (soupLoc == null) {
                 // if soup location is far or we just didn't notice
                 //            System.out.println("In my soupLoc I have " + soupLocation.toString());
@@ -306,7 +302,7 @@ public strictfp class RobotPlayer {
 
     static void runDesignSchool() throws GameActionException {
 
-        // produce 3 landscapers initially
+        // produce 5 landscapers initially to guard hq
         Direction optDir = Direction.SOUTHEAST;
         if (landscaperCount < 5) {
             for (int i = 0; i < 8; i++) {
@@ -377,7 +373,132 @@ public strictfp class RobotPlayer {
     }
 
     static void runLandscaper() throws GameActionException {
-
+        if (rc.getRoundNum() >= 600) {
+            // convert to state 2 if needed
+            // TODO: figure out when is optimal to change into state 2, or to change into state 3 where we can use the disruptWithCow strategy
+            turtle.setLandscaperState(2);
+        }
+        if (turtle.getLandscaperState() == 0) {
+            // TODO: maybe we can make a ENEMY_BUILDING category and have them attack in the future
+            RobotInfo[] robots = rc.senseNearbyRobots();
+            for (RobotInfo r: robots) {
+                if (r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam() && r.getLocation().distanceSquaredTo(HQLocation) <= 20) {
+                    // if they're attacking HQ they're most likely attacking it or one of our building
+                    MapLocation DFLoc = HQLocation.add(Direction.EAST);
+                    MapLocation LFLoc = HQLocation.add(Direction.WEST);
+                    RobotInfo LFr = rc.senseRobotAtLocation(LFLoc);
+                    RobotInfo DFr = rc.senseRobotAtLocation(DFLoc);
+                    if (rc.getLocation().isAdjacentTo(HQLocation) && rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
+                    else if (rc.getLocation().isAdjacentTo(LFLoc) && rc.canDigDirt(rc.getLocation().directionTo(LFLoc)) && LFr != null && LFr.getType() == RobotType.DESIGN_SCHOOL) rc.digDirt(rc.getLocation().directionTo(LFLoc));
+                    else if (rc.getLocation().isAdjacentTo(DFLoc) && rc.canDigDirt(rc.getLocation().directionTo(DFLoc)) && DFr != null && DFr.getType() == RobotType.FULFILLMENT_CENTER) rc.digDirt(rc.getLocation().directionTo(DFLoc));
+                    else {
+                        // if not adjacent, stay there
+                        if (!rc.getLocation().isAdjacentTo(HQLocation)) nav.bugNav(rc, HQLocation);
+                    }
+                }
+                if (r.getTeam() != rc.getTeam() && (r.getType() != RobotType.MINER || r.getType() != RobotType.LANDSCAPER || r.getType() != RobotType.DELIVERY_DRONE || r.getType() != RobotType.COW)) {
+                    // if it's an enemy building, bury it
+                    if (rc.getLocation().isAdjacentTo(r.getLocation())) {
+                        if (rc.getDirtCarrying() == 0) {
+                            // dig anywhere but to that robot, and preferably not downward
+                            for (Direction d: directions) {
+                                if (rc.getLocation().add(d).equals(r.getLocation())) continue;
+                                if (rc.canDigDirt(d)) rc.digDirt(d);
+                            }
+                        } else {
+                            // fill up location
+                            Direction optDir = rc.getLocation().directionTo(r.getLocation());
+                            if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                        }
+                    } else {
+                        // move to that location
+                        nav.bugNav(rc, r.getLocation());
+                    }
+                }
+            }
+            // if there's nothing nearby, patrol
+            if (rc.isReady()) {
+                MapLocation patrol = turtle.findPatrol(rc);
+                if (!rc.getLocation().equals(patrol)) {
+                    nav.bugNav(rc, patrol);
+                }
+            }
+        } else if (turtle.getLandscaperState() == 1) {
+            RobotInfo[] robots = rc.senseNearbyRobots(2);
+            // check if there's anything adjacent to it that can bury
+            for (RobotInfo r: robots) {
+                if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
+                    // if it's an enemy building, bury it
+                    if (rc.getDirtCarrying() == 0) {
+                        // dig anywhere but to that robot, and preferably not downward
+                        Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                        for (int i = 0; i < 8; i++) {
+                            if (!rc.getLocation().add(optDir).equals(r.getLocation())) {
+                                if (rc.canDigDirt(optDir)) {
+                                    rc.digDirt(optDir);
+                                    break;
+                                }
+                            }
+                            optDir = optDir.rotateRight();
+                        }
+                    } else {
+                        // fill up location
+                        Direction optDir = rc.getLocation().directionTo(r.getLocation());
+                        if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                    }
+                }
+                if (r.getTeam() == rc.getTeam() && r.getType().isBuilding()) {
+                    // if our own building is getting buried (most likely net gun) dig out dirt
+                    Direction optDir = rc.getLocation().directionTo(r.getLocation());
+                    if (rc.canDigDirt(optDir)) rc.digDirt(optDir);
+                }
+            }
+            // build outer wall if no other problems
+            if (turtle.positionOut(rc.getLocation()) == -1) {
+                MapLocation left = new Vector(-1, -3).addWith(HQLocation);
+                MapLocation right = new Vector(0, -3).addWith(HQLocation);
+                if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
+                    nav.bugNav(rc, right);
+                } else {
+                    nav.bugNav(rc, left);
+                }
+            } else {
+                turtle.buildFort(rc);
+            }
+        } else if (turtle.getLandscaperState() == 2) {
+            RobotInfo[] robots = rc.senseNearbyRobots(2);
+            // check if there's anything adjacent to it that can bury, but I really doubt it can happen at this state
+            for (RobotInfo r: robots) {
+                if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
+                    // if it's an enemy building, bury it
+                    if (rc.getDirtCarrying() == 0) {
+                        // dig downward because you are alpha
+                        if (rc.canDigDirt(Direction.CENTER)) rc.digDirt(Direction.CENTER);
+                    } else {
+                        // fill up location
+                        Direction optDir = rc.getLocation().directionTo(r.getLocation());
+                        if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                    }
+                }
+                if (r.getTeam() == rc.getTeam() && r.getType().isBuilding()) {
+                    // if our own building is getting buried (most likely net gun) dig out dirt
+                    Direction optDir = rc.getLocation().directionTo(r.getLocation());
+                    if (rc.canDigDirt(optDir)) rc.digDirt(optDir);
+                }
+            }
+            // build inner wall
+            if (turtle.positionOut(rc.getLocation()) == -1) {
+                MapLocation left = new Vector(0, -2).addWith(HQLocation);
+                MapLocation right = new Vector(1, -2).addWith(HQLocation);
+                if (rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null) {
+                    nav.bugNav(rc, left);
+                } else {
+                    nav.bugNav(rc, right);
+                }
+            } else {
+                turtle.buildFort(rc);
+            }
+        }
     }
 
     static void runDeliveryDrone() throws GameActionException {
@@ -395,7 +516,7 @@ public strictfp class RobotPlayer {
                 MapLocation helpAt = value.getKey();
                 if (rc.canSenseLocation(helpAt)) {
                     RobotInfo r = rc.senseRobotAtLocation(helpAt);
-                    if (r == null) {
+                    if (r == null || r.getType() != RobotType.MINER || r.getTeam() != rc.getTeam()) {
                         removeHelp.add(value);
                     }
                 }

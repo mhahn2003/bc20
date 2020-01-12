@@ -7,7 +7,9 @@ public class Turtle {
     // 0: patrolling and rushing enemyHQ with disruptWithCow
     // 1: building outer wall
     // 2: building inner wall
-    private int landScaperState;
+    // 3: disrupt with cow
+    // TODO: implement state 3
+    private int landscaperState;
     private MapLocation HQLocation;
     private Vector[] patrolLoc;
     private Vector[] outerLoc;
@@ -28,35 +30,55 @@ public class Turtle {
             }
         }
         if (netGunCount >= 4) {
-            landScaperState = 2;
+            landscaperState = 2;
         }
         else if (isVaporator) {
-            landScaperState = 1;
+            landscaperState = 1;
         }
         else {
-            landScaperState = 0;
+            landscaperState = 0;
         }
         patrolLoc = new Vector[]{new Vector(-1, 2), new Vector(1, -2), new Vector(-2, 1), new Vector(2, -1), new Vector(1, 2)};
         outerLoc = new Vector[]{new Vector(-1, 3), new Vector(-2, 3), new Vector(-3, 3), new Vector(-3, 2), new Vector(-3, 1), new Vector(-3, 0), new Vector(-3, -1), new Vector(-3, -2), new Vector(-3, -3),
                 new Vector(-2, -3), new Vector(-1, -3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0), new Vector(3, -1), new Vector(3, -2),
                 new Vector(3, -3), new Vector(2, -3), new Vector(1, -3), new Vector(0, -3)};
-        innerLoc = new Vector[]{new Vector(-1, 2), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -2), new Vector(1, 2), new Vector(2, 1), new Vector(2, 0), new Vector(2, -1), new Vector(1, -2), new Vector(0, -2)};
+        innerLoc = new Vector[]{new Vector(1,2), new Vector(2,1), new Vector(2, 0), new Vector(2, -1), new Vector(1, -2), new Vector(-1, 2), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -2), new Vector(0, -2)};
     }
 
     public int getLandscaperState() {
-        return landScaperState;
+        return landscaperState;
     }
 
-    public void buildFort(RobotController rc, boolean even) throws GameActionException {
-        if (landScaperState == 0) return;
-        if (landScaperState == 1) buildOuterFort(rc, even);
-        if (landScaperState == 2) buildInnerFort(rc);
+    public void setLandscaperState(int landscaperState) { this.landscaperState = landscaperState; }
+
+    public void buildFort(RobotController rc) throws GameActionException {
+        if (landscaperState == 0) return;
+        if (landscaperState == 1) buildOuterFort(rc);
+        if (landscaperState == 2) buildInnerFort(rc);
+    }
+
+    private boolean isEvenOuter(RobotController rc, int index) throws GameActionException {
+        MapLocation nextIndex;
+        if (index != 10 && index != 22) {
+            nextIndex = outerLoc[index+1].addWith(HQLocation);
+        } else if (index == 10) {
+            nextIndex = rc.getLocation().add(Direction.EAST);
+        } else {
+            // index == 22
+            nextIndex = rc.getLocation().add(Direction.WEST);
+        }
+        if (rc.canSenseLocation(nextIndex)) {
+            RobotInfo r = rc.senseRobotAtLocation(nextIndex);
+            return r != null && r.getType() == RobotType.LANDSCAPER && r.getTeam() == rc.getTeam();
+        }
+        return false;
     }
 
     // try to build the outer layer, even is when we should try to build evenly
-    private void buildOuterFort(RobotController rc, boolean even) throws GameActionException {
+    private void buildOuterFort(RobotController rc) throws GameActionException {
         int index = positionOut(rc.getLocation());
         if (index == -1) return;
+        boolean even = isEvenOuter(rc, index);
         Direction evenDir = rc.getLocation().directionTo(lowestElevationOuter(rc, index));
         if (index != 0 && index != 11) {
             MapLocation nextSpot = outerLoc[index-1].addWith(HQLocation);
@@ -81,7 +103,7 @@ public class Turtle {
     private void buildInnerFort(RobotController rc) throws GameActionException {
         int index = positionIn(rc.getLocation());
         if (index == -1) return;
-        Direction evenDir = rc.getLocation().directionTo(lowestElevationOuter(rc, index));
+        Direction evenDir = rc.getLocation().directionTo(lowestElevationInner(rc));
         if (index != 0 && index != 5) {
             MapLocation nextSpot = innerLoc[index-1].addWith(HQLocation);
             if (rc.isReady()) {
@@ -116,7 +138,7 @@ public class Turtle {
                             }
                         }
                     }
-                    else if (r.getTeam() != rc.getTeam() && (r.getType() != RobotType.MINER && r.getType() != RobotType.DELIVERY_DRONE && r.getType() != RobotType.LANDSCAPER && r.getType() != RobotType.COW)) {
+                    else if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
                         // if some other unit is in the way that is a building, bury it
                         if (rc.getDirtCarrying() == 0) {
                             // dig
@@ -222,7 +244,7 @@ public class Turtle {
         for (int i = 0; i < outerLoc.length; i++) {
             if (outerLoc[i].equals(vec)) return i;
         }
-        landScaperState = 0;
+        landscaperState = 0;
         return -1;
     }
 
@@ -232,7 +254,7 @@ public class Turtle {
         for (int i = 0; i < innerLoc.length; i++) {
             if (innerLoc[i].equals(vec)) return i;
         }
-        landScaperState = 0;
+        landscaperState = 0;
         return -1;
     }
 
@@ -272,7 +294,7 @@ public class Turtle {
                         }
                     }
                 }
-                else if (r.getTeam() != rc.getTeam() && (r.getType() != RobotType.MINER && r.getType() != RobotType.DELIVERY_DRONE && r.getType() != RobotType.LANDSCAPER && r.getType() != RobotType.COW)) {
+                else if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
                     // if some other unit is in the way that is a building, bury it
                     if (rc.getDirtCarrying() == 0) {
                         // dig
@@ -301,5 +323,23 @@ public class Turtle {
                 }
             }
         }
+    }
+
+
+
+    public MapLocation findPatrol(RobotController rc) throws GameActionException {
+        for (int i = 0; i < patrolLoc.length; i++) {
+            MapLocation patLoc = patrolLoc[i].addWith(HQLocation);
+            if (rc.canSenseLocation(patLoc)) {
+                RobotInfo r = rc.senseRobotAtLocation(patLoc);
+                if (r == null) return patLoc;
+                // only if it's our team landscaper we don't move there
+                if (r.getTeam() != rc.getTeam() || r.getType() != RobotType.LANDSCAPER) {
+                    return patLoc;
+                }
+            }
+        }
+        // when they're far away and can't see anything
+        return HQLocation;
     }
 }
