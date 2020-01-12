@@ -1,9 +1,6 @@
 package bot01;
 
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 public class Turtle {
 
@@ -50,28 +47,110 @@ public class Turtle {
         return landScaperState;
     }
 
-    public void buildFort(RobotController rc) {
+    public void buildFort(RobotController rc, boolean even) throws GameActionException {
         if (landScaperState == 0) return;
-        if (landScaperState == 1) buildOuterFort(rc);
-        if (landScaperState == 2) buildInnerFort(rc);
+        if (landScaperState == 1) buildOuterFort(rc, even);
+        if (landScaperState == 2) buildInnerFort(rc, even);
     }
 
-    private void buildOuterFort(RobotController rc) {
+    // try to build the outer layer, even is when we should try to build evenly
+    private void buildOuterFort(RobotController rc, boolean even) throws GameActionException {
         int index = positionOut(rc.getLocation());
         if (index == -1) return;
-        if (index <= 11) {
-            if (index != 1) {
-
+        if (index != 0 && index != 11) {
+            MapLocation nextSpot = outerLoc[index-1].addWith(HQLocation);
+            if (rc.isReady()) {
+                Direction optDir = rc.getLocation().directionTo(nextSpot);
+                if (rc.canMove(optDir) && !rc.senseFlooding(nextSpot)) {
+                    rc.move(optDir);
+                } else {
+                    // if can't move, then check if we need to dig or bury
+                    Direction evenDir = rc.getLocation().directionTo(lowestElevationOuter(rc, index));
+                    RobotInfo r = rc.senseRobotAtLocation(nextSpot);
+                    if (r == null) {
+                        if (rc.senseElevation(rc.getLocation()) > rc.senseElevation(nextSpot)) {
+                            // if lower, fill
+                            if (rc.getDirtCarrying() == 0) {
+                                // dig
+                                Direction digTo = rc.getLocation().directionTo(HQLocation).opposite();
+                                if (rc.canDigDirt(digTo)) {
+                                    rc.digDirt(digTo);
+                                }
+                            } else {
+                                // fill
+                                if (even && rc.canDepositDirt(evenDir)) rc.depositDirt(evenDir);
+                                if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                            }
+                        } else {
+                            // if higher, place blocks on one self
+                            if (rc.getDirtCarrying() == 0) {
+                                // dig
+                                if (rc.canDigDirt(optDir)) {
+                                    rc.digDirt(optDir);
+                                }
+                            } else {
+                                // fill
+                                if (even && rc.canDepositDirt(evenDir)) rc.depositDirt(evenDir);
+                                if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+                            }
+                        }
+                    }
+                    else if (r.getTeam() != rc.getTeam() && (r.getType() != RobotType.MINER && r.getType() != RobotType.DELIVERY_DRONE && r.getType() != RobotType.LANDSCAPER && r.getType() != RobotType.COW)) {
+                        // if some other unit is in the way that is a building, bury it
+                        if (rc.getDirtCarrying() == 0) {
+                            // dig
+                            Direction digTo = rc.getLocation().directionTo(HQLocation).opposite();
+                            if (rc.canDigDirt(digTo)) {
+                                rc.digDirt(digTo);
+                            }
+                        } else {
+                            // fill
+                            if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                        }
+                    }
+                    // if team is same or it's like an enemy unit or something
+                    else {
+                        if (rc.getDirtCarrying() == 0) {
+                            // dig
+                            Direction digTo = rc.getLocation().directionTo(HQLocation).opposite();
+                            if (rc.canDigDirt(digTo)) {
+                                rc.digDirt(digTo);
+                            }
+                        } else {
+                            // fill
+                            if (even && rc.canDepositDirt(evenDir)) rc.depositDirt(evenDir);
+                            if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+                        }
+                    }
+                }
             }
-        } else {
-            // right side
         }
     }
 
-    private void buildInnerFort(RobotController rc) {
+    private MapLocation lowestElevationOuter(RobotController rc, int index) throws GameActionException {
+        MapLocation lowest = rc.getLocation();
+        MapLocation left;
+        MapLocation right;
+        if (index == 0 || index == 10 || index == 11 || index == 22) {
+            left = rc.getLocation().add(Direction.WEST);
+            right = rc.getLocation().add(Direction.EAST);
+        } else {
+            left = outerLoc[index-1].addWith(HQLocation);
+            right = outerLoc[index+1].addWith(HQLocation);
+        }
+        if (rc.senseElevation(left) < rc.senseElevation(lowest)) {
+            lowest = left;
+        }
+        if (rc.senseElevation(right) < rc.senseElevation(lowest)) {
+            lowest = right;
+        }
+        return lowest;
+    }
+
+    private void buildInnerFort(RobotController rc, boolean even) {
         int index = positionIn(rc.getLocation());
         if (index == -1) return;
-        if (index <= 5) {
+        if (index <= 4) {
             // left side
         } else {
             // right side
