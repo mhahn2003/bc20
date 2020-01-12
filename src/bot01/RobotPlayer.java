@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.math.*;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -15,14 +14,14 @@ public strictfp class RobotPlayer {
     static RobotType[] spawnedByMiner = {RobotType.REFINERY, RobotType.VAPORATOR, RobotType.DESIGN_SCHOOL,
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
+
     public enum actionPhase{
         NON_ATTACKING,
         PREPARE,
         ATTACK,
         SURRENDER
     }
-        
-        
+
     static int turnCount;
 
     // game map, not implemented yet
@@ -42,9 +41,16 @@ public strictfp class RobotPlayer {
     static int waterClusterDist = 120;
     // patrol radius
     static int patrolRadiusMin = 36;
-    static int patrolRadiusMax = 169;
+    static int patrolRadiusMax = 45;
+    // help radius
+    static int helpRadius = 80;
+    // refinery radius
+    static int refineryDist = 48;
     // unit count control
     static int maxDroneCount = 80;
+    // attack control
+    static int battlefieldRadius =169;
+  
     // default cost of our transaction
     private static int defaultCost = 2;
 
@@ -54,18 +60,31 @@ public strictfp class RobotPlayer {
     // important locations
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
-    static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
-    // only miners use following
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
-    // only drones use following
-    static RobotInfo closestEnemyUnit;
-
+    static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
+    // only miners use the following
     static MapLocation soupLoc = null;
     static MapLocation closestRefineryLocation = null;
+    // only drones use following
+    static RobotInfo closestEnemyUnit;
+    static ArrayList<Pair> helpLoc = new ArrayList<>();
+
+    // states
+    // for drones:   0: not helping   1: finding stranded   2: going to requested loc
+    // for miners:   0: normal        1: requesting help
+    static int helpMode = 0;
+    static int helpIndex = -1;
+    // is miner #1
+    static boolean isBuilder;
+    // is miner #2
+    static boolean isAttacker;
 
     // booleans
     static boolean isCow = false;
+
+    // used for exploring enemy HQ locations
+    static int idIncrease = 0;
 
     // suspected enemy HQ location
     static MapLocation enemyHQLocationSuspect;
@@ -79,20 +98,17 @@ public strictfp class RobotPlayer {
     static int minerCount = 0;
     static int droneCount = 0;
 
-    // strategy
-    static actionPhase phase = actionPhase.NON_ATTACKING;
-
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
      * If this method returns, the robot dies!
      **/
-
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
 
         // This is the RobotController object. You use it to perform actions from this robot,
         // and to get information on its current status.
         RobotPlayer.rc = rc;
+
         turnCount = 0;
         System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
@@ -157,24 +173,6 @@ public strictfp class RobotPlayer {
         if (enemyHQLocation!=null){
         System.out.println("enemy hq is at" + enemyHQLocation.toString());
         }
-        // below are debugging
-        if (turnCount == 600 && enemyHQLocation== null){
-            infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocationSuspect ));
-            enemyHQLocation=enemyHQLocationSuspect;
-        }
-        if (turnCount == 600 && enemyHQLocation!= null) {
-            infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, enemyHQLocation));
-            System.out.println("Prepare");
-        }
-        if (turnCount == 700 && enemyHQLocation!= null) {
-            infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, enemyHQLocation));
-            System.out.println("Attack");
-        }
-        if (turnCount == 750 && enemyHQLocation!= null) {
-            infoQ.add(Cast.getMessage(Cast.InformationCategory.SURRENDER, enemyHQLocation));
-            System.out.println("Surrender");
-        }
-        // above are debugging
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo r : robots) {
             if (r.getTeam() != rc.getTeam() && r.getType() == RobotType.DELIVERY_DRONE) {
@@ -198,99 +196,117 @@ public strictfp class RobotPlayer {
 
     static void runMiner() throws GameActionException {
         System.out.println("I have " + Clock.getBytecodesLeft());
-        // build drone factory if there isn't one
-        if (rc.getRobotCount() > 4 && rc.getLocation().distanceSquaredTo(HQLocation) < 15 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && rc.getRoundNum() <= 200) {
-            // first check if there's a fullfillment center nearby
-            RobotInfo[] robots = rc.senseNearbyRobots();
-            boolean alreadyBuilt = false;
-            for (RobotInfo r: robots) {
-                if (r.getType() == RobotType.FULFILLMENT_CENTER && r.getTeam() == rc.getTeam()) alreadyBuilt = true;
-            }
-            if (!alreadyBuilt) {
-                for (Direction d : Direction.allDirections()) {
-                    tryBuild(RobotType.FULFILLMENT_CENTER, d);
-                }
-            }
+        System.out.println("I have " + rc.getSoupCarrying());
+        // check if it's in help mode and it moved so it can go free
+        if (helpMode == 1) {
+            if (nav.outOfDrone(rc)) helpMode = 0;
         }
-//        if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost + 200 && rc.getLocation().distanceSquaredTo(HQLocation) < 15) {
-//            for (Direction d : Direction.allDirections()) {
-//                tryBuild(RobotType.VAPORATOR, d);
-//            }
-//        }
-//        System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
-        if (soupLoc == null) {
-            // if soup location is far or we just didn't notice
-//            System.out.println("In my soupLoc I have " + soupLocation.toString());
-            findSoup();
-        }
-//        System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
-        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (soupLoc == null && rc.getSoupCarrying() > 0)) {
-            // if the robot is full or has stuff and no more soup nearby, move back to HQ
-//            System.out.println("before going home i have " + Clock.getBytecodesLeft());
-            // default hq
-            closestRefineryLocation = HQLocation;
+        if (helpMode == 0) {
+            // build drone factory if there isn't one
+            MapLocation DFLoc = HQLocation.add(Direction.EAST);
+            MapLocation LFLoc = HQLocation.add(Direction.WEST);
+            if (rc.getRobotCount() > 4 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && rc.getLocation().isAdjacentTo(DFLoc) && !rc.getLocation().equals(DFLoc)) {
+                // build a drone factory east of hq
+                tryBuild(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(DFLoc));
+            }
+            if (rc.getRobotCount() > 6 && rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost && rc.getLocation().isAdjacentTo(LFLoc) && !rc.getLocation().equals(LFLoc)) {
+                // build a landscaper factory west of hq
+                tryBuild(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(LFLoc));
+            }
+            //        if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost + 200 && rc.getLocation().distanceSquaredTo(HQLocation) < 15) {
+            //            for (Direction d : Direction.allDirections()) {
+            //                tryBuild(RobotType.VAPORATOR, d);
+            //            }
+            //        }
+            //        System.out.println("Before finding soup, I have "+ Clock.getBytecodesLeft());
+            if (soupLoc == null) {
+                // if soup location is far or we just didn't notice
+                //            System.out.println("In my soupLoc I have " + soupLocation.toString());
+                findSoup();
+            }
+            //        System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
+            if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (soupLoc == null && rc.getSoupCarrying() > 0)) {
+                // if the robot is full or has stuff and no more soup nearby, move back to HQ
+                //            System.out.println("before going home i have " + Clock.getBytecodesLeft());
+                // default hq
+                closestRefineryLocation = HQLocation;
                 // check select a point as reference(might be edge case?)
-            MapLocation reference_point = soupLoc;
-            if (reference_point != null) {
-//                System.out.println("reference to " + reference_point.toString());
-                int minRefineryDist = reference_point.distanceSquaredTo(HQLocation);
+                MapLocation reference_point = soupLoc;
+                if (reference_point != null) {
+                    //                System.out.println("reference to " + reference_point.toString());
+                    int minRefineryDist = reference_point.distanceSquaredTo(HQLocation);
 
-//                System.out.println("before find min d i have" + Clock.getBytecodesLeft());
-                // check through refinery(redundancy here)
-                for (MapLocation refineryLoca : refineryLocation) {
-                    int temp_d = reference_point.distanceSquaredTo(refineryLoca);
-                    if (temp_d < minRefineryDist) {
-                        closestRefineryLocation = refineryLoca;
-                        minRefineryDist = temp_d;
-                    }
-//                    System.out.println("my memory contain " + refineryLoca.toString());
-                }
-//                System.out.println("after find min d i have " + Clock.getBytecodesLeft());
-//                System.out.println("soup at " + reference_point.toString());
-//                System.out.println("closest refinery at " + closestRefineryLocation.toString());
-//                System.out.println("im at " + rc.getLocation().toString());
-//                System.out.println("soup min distance to refinery " + minRefineryDist);
-//                System.out.println("soup min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
-                //
-                if (minRefineryDist >= 81 && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
-                    System.out.println("attempt build refinery");
-                    for (Direction temp_dir : directions) {
-                        if (rc.canBuildRobot(RobotType.REFINERY, temp_dir)) {
-                            System.out.println("can build refinery");
-                            rc.buildRobot(RobotType.REFINERY, temp_dir);
-                            System.out.println("built refinery");
-                            MapLocation robotLoc = rc.getLocation();
-                            refineryLocation.add(robotLoc.add(temp_dir));
-                            closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
-                            break;
+                    //                System.out.println("before find min d i have" + Clock.getBytecodesLeft());
+                    // check through refinery(redundancy here)
+                    for (MapLocation refineryLoca : refineryLocation) {
+                        int temp_d = reference_point.distanceSquaredTo(refineryLoca);
+                        if (temp_d < minRefineryDist) {
+                            closestRefineryLocation = refineryLoca;
+                            minRefineryDist = temp_d;
                         }
+                        //                    System.out.println("my memory contain " + refineryLoca.toString());
                     }
-                    infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size() - 1)));
+                    //                System.out.println("after find min d i have " + Clock.getBytecodesLeft());
+                    //                System.out.println("soup at " + reference_point.toString());
+                    //                System.out.println("closest refinery at " + closestRefineryLocation.toString());
+                    //                System.out.println("im at " + rc.getLocation().toString());
+                    //                System.out.println("soup min distance to refinery " + minRefineryDist);
+                    //                System.out.println("soup min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
+                    //
+                    if (minRefineryDist >= 81 && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
+                        //System.out.println("attempt build refinery");
+                        for (Direction temp_dir : directions) {
+                            if (rc.canBuildRobot(RobotType.REFINERY, temp_dir)) {
+                                //System.out.println("can build refinery");
+                                rc.buildRobot(RobotType.REFINERY, temp_dir);
+                                //System.out.println("built refinery");
+                                MapLocation robotLoc = rc.getLocation();
+                                refineryLocation.add(robotLoc.add(temp_dir));
+                                closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
+                                break;
+                            }
+                        }
+                        infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size() - 1)));
+                    }  
+                    //                System.out.println("after new refinery procedures" + Clock.getBytecodesLeft());
                 }
-//                System.out.println("after new refinery procedures" + Clock.getBytecodesLeft());
-            }
-            // if HQ is next to miner deposit
-            if (closestRefineryLocation.isAdjacentTo(rc.getLocation())) {
-                Direction soupDepositDir = rc.getLocation().directionTo(closestRefineryLocation);
-                tryRefine(soupDepositDir);
+                // if HQ is next to miner deposit
+                if (closestRefineryLocation.isAdjacentTo(rc.getLocation())) {
+                    Direction soupDepositDir = rc.getLocation().directionTo(closestRefineryLocation);
+                    tryRefine(soupDepositDir);
+                } else {
+                    if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
+                        helpMode = 1;
+//                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
+                    }
+                    else nav.bugNav(rc, closestRefineryLocation);
+                }
             } else {
-                nav.bugNav(rc, closestRefineryLocation);
-            }
-        } else {
-            if (soupLoc != null) {
-//                System.out.println("Soup is at: " + soupLoc.toString());
-                Direction locDir = rc.getLocation().directionTo(soupLoc);
-                if (rc.canMineSoup(locDir)) {
-                    rc.mineSoup(locDir);
+                if (soupLoc != null) {
+                    System.out.println("Soup is at: " + soupLoc.toString());
+                    Direction locDir = rc.getLocation().directionTo(soupLoc);
+                    if (rc.canMineSoup(locDir)) {
+                        rc.mineSoup(locDir);
+                        // pollution might make miner skip this even though it's right next to soup
+                        nav.navReset(rc, rc.getLocation());
+                    }
+                    // if we can't mine soup, go to other soups
+                    else {
+                        if (nav.needHelp(rc, turnCount, soupLoc)) {
+                            helpMode = 1;
+//                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), soupLoc));
+                        }
+                        else nav.bugNav(rc, soupLoc);
+                    }
+                } else {
+                    // scout for soup
+                    if (exploreTo == null || suspectsVisited.get(exploreTo)) {
+                        nextExplore();
+                    }
+                    nav.bugNav(rc, exploreTo);
                 }
-                // if we can't mine soup, go to other soups
-                else nav.bugNav(rc, soupLoc);
-            } else {
-                // scout for soup
-                if (exploreTo == null || suspectsVisited.get(exploreTo)) {
-                    nextExplore();
-                }
-                nav.bugNav(rc, exploreTo);
             }
         }
     }
@@ -311,15 +327,13 @@ public strictfp class RobotPlayer {
         // produce 8 drones
         Direction optDir = Direction.NORTHWEST;
         if (droneCount < maxDroneCount) {
-            for (int i=0; i<8 ; i++) {
-                if ( rc.getTeamSoup()<350){
-                    break;
-                }
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) ) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
-                }else{
-                    optDir=optDir.rotateRight();
+                    break;
+                } else {
+                    optDir = optDir.rotateRight(); 
                 }
             }
         }
@@ -329,34 +343,126 @@ public strictfp class RobotPlayer {
 
     }
 
-    static void runDeliveryDrone() throws GameActionException {
-        // find opponent units and pick up
-        if(closestEnemyUnit != null){
-            System.out.println("there is a "+closestEnemyUnit.getType()+" nearby");
+static void runDeliveryDrone() throws GameActionException {
+//        if (!helpLoc.isEmpty()) {
+//            System.out.println("My help queue is: " + helpLoc.toString());
+//        }
+    // if not helping
+    if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
+        // check for unit to help
+        // check for all of helpLoc if there's anything, if so, change helpMode and order of helpLoc
+        helpIndex = -1;
+        int closestDist = helpRadius;
+        // first prune the helpLoc list
+        ArrayList<Pair> removeHelp = new ArrayList<>();
+        for (Pair value : helpLoc) {
+            MapLocation helpAt = value.getKey();
+            if (rc.canSenseLocation(helpAt)) {
+                RobotInfo r = rc.senseRobotAtLocation(helpAt);
+                if (r == null) {
+                    removeHelp.add(value);
+                }
+            }
         }
-
-        if (!rc.isCurrentlyHoldingUnit() && closestEnemyUnit != null){
-            // System.out.println("I'm not holding any units!");
-                // if can pickup do pickup
-            if (closestEnemyUnit.getLocation().isAdjacentTo(rc.getLocation())) {
-                // System.out.println("Just picked up a " + closestEnemyUnit.getType());
-                if (rc.canPickUpUnit(closestEnemyUnit.getID())) {
-                    isCow = closestEnemyUnit.getType() == RobotType.COW;
-                    rc.pickUpUnit(closestEnemyUnit.getID());
+        for (Pair pair : removeHelp) {
+            helpLoc.remove(pair);
+        }
+        for (int i = 0; i < helpLoc.size(); i++) {
+            int helpDist = helpLoc.get(i).getKey().distanceSquaredTo(rc.getLocation());
+            if (helpDist <= closestDist) {
+                closestDist = helpDist;
+                helpIndex = i;
+            }
+        }
+        if (helpIndex != -1) {
+            helpMode = 1;
+        }
+    }
+    // if helping
+    if (helpMode != 0) {
+        System.out.println("Currently on help mode " + helpMode);
+        // helping mode on!
+        if (helpMode == 1) {
+            // 
+            MapLocation strandLoc = helpLoc.get(helpIndex).getKey();
+            if (rc.canSenseLocation(strandLoc)) {
+                RobotInfo r = rc.senseRobotAtLocation(strandLoc);
+                if (r == null) {
+                    helpLoc.remove(helpIndex);
+                    helpMode = 0;
+                } else {
+                    if (rc.getLocation().isAdjacentTo(strandLoc)) {
+                        if (rc.canPickUpUnit(r.getID())) {
+                            rc.pickUpUnit(r.getID());
+                            helpMode = 2;
+                        }
+                    }
+                }
+            }
+            System.out.println("Navigating to " + strandLoc.toString());
+            nav.bugNav(rc, strandLoc);
+        }else if (helpMode == 2) {
+            MapLocation requestLoc = helpLoc.get(helpIndex).getValue();
+            if (rc.getLocation().isAdjacentTo(requestLoc)) {
+                Direction optDir = rc.getLocation().directionTo(requestLoc);
+                for (int i = 0; i < 8; i++) {
+                    if (rc.canDropUnit(optDir) && !rc.senseFlooding(rc.getLocation().add(optDir))) {
+                        rc.dropUnit(optDir);
+                        helpLoc.remove(helpIndex);
+                        helpMode = 0;
+                        break;
+                    } else {
+                        optDir = optDir.rotateRight();
+                    }
                 }
             } else {
-                // if not navigate to that unit
-                nav.bugNav(rc, closestEnemyUnit.getLocation());
-                // System.out.println("Navigating to unit at " + closestEnemyUnit.getLocation().toString());
+                System.out.println("Navigating to " + requestLoc);
+                nav.bugNav(rc, requestLoc);
             }
-        } else if(rc.isCurrentlyHoldingUnit()){
+        }
+    } else {
+        // if not helping and no one to help
+
+        // find opponent units and pick up
+        if (!rc.isCurrentlyHoldingUnit()) {
+            System.out.println("I'm not holding any units!");
+            // find opponent units
+            RobotInfo pickup = null;
+            for (RobotInfo r : rc.senseNearbyRobots()) {
+                if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
+                    if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
+                        if (r.getType() == RobotType.COW) {
+                            if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) > 48)
+                                pickup = r;
+                        } else {
+                            if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) > GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)
+                                pickup = r;
+                        }
+                    }
+                }
+            }
+            if (pickup != null) {
+                // if can pickup do pickup
+                if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
+                    System.out.println("Just picked up a " + pickup.getType());
+                    if (rc.canPickUpUnit(pickup.getID())) {
+                        isCow = pickup.getType() == RobotType.COW;
+                        rc.pickUpUnit(pickup.getID());
+                    }
+                } else {
+                    // if not navigate to that unit
+                    nav.bugNav(rc, pickup.getLocation());
+                    System.out.println("Navigating to unit at " + pickup.getLocation().toString());
+                }
+            }
+        } else {
             // find water if not cow
-            // System.out.println("I'm holding a unit!");
+            System.out.println("I'm holding a unit!");
             if (isCow) {
                 // go to enemyHQ
                 boolean canPlace = false;
                 if (enemyHQLocation != null) {
-                    if (rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36) {
+                    if (rc.getLocation().distanceSquaredTo(enemyHQLocation) < 24) {
                         Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
                         for (int i = 0; i < 8; i++) {
                             if (rc.canDropUnit(optDir)) {
@@ -396,87 +502,89 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        System.out.println("I'm at " + phase.toString() +" phase");
-        switch(phase){
-            case NON_ATTACKING:
-                // if there are no robots nearby
-                if (enemyHQLocation != null) {
-                    if (rc.getID() % 4 == 0) {
-                        // let some drones patrol
-                        nav.bugNav(rc, enemyHQLocationSuspect);
+
+    switch(phase){
+        case NON_ATTACKING:
+            // if there are no robots nearby
+            if (enemyHQLocation != null) {
+                if (rc.getID() % 6 == 0) {
+                    // let some drones patrol
+                    nav.bugNav(rc, enemyHQLocationSuspect);
+                } else if (rc.getID() % 2 == 1) {
+                    // patrol HQ
+                    Direction rotateDir = rc.getLocation().directionTo(HQLocation);
+                    int distHQ = rc.getLocation().distanceSquaredTo(HQLocation);
+                    if (distHQ < patrolRadiusMin) {
+                        rotateDir = rotateDir.opposite();
+                    } else if (distHQ <= patrolRadiusMax) {
+                        rotateDir = rotateDir.rotateLeft();
+                        rotateDir = rotateDir.rotateLeft();
                     }
-                    else if (rc.getID() % 2 == 1) {
-                        // patrol HQ
-                        Direction rotateDir = rc.getLocation().directionTo(HQLocation);
-                        int distHQ = rc.getLocation().distanceSquaredTo(HQLocation);
-                        if (distHQ < patrolRadiusMin) {
-                            rotateDir = rotateDir.opposite();
-                        }
-                        else if (distHQ <= patrolRadiusMax) {
-                            rotateDir = rotateDir.rotateLeft();
-                            rotateDir = rotateDir.rotateLeft();
-                        }
-                        for (int i = 0; i < 8; i++) {
-                            if (nav.canGoDrone(rc, rotateDir)) rc.move(rotateDir);
-                            else rotateDir = rotateDir.rotateRight();
-                        }
-                        if (rc.canMove(rotateDir)) rc.move(rotateDir);
+                    for (int i = 0; i < 8; i++) {
+                        if (nav.canGoDrone(rc, rotateDir)) rc.move(rotateDir);
+                        else rotateDir = rotateDir.rotateRight();
                     }
-                    else nav.bugNav(rc, enemyHQLocation);
-                } else nav.bugNav(rc, enemyHQLocationSuspect);
+                    if (rc.canMove(rotateDir)) rc.move(rotateDir);
+                } else nav.bugNav(rc, enemyHQLocation);
+            } else {
+                if (nav.getWander() >= 10) {
+                    resetEnemyHQSuspect();
+                }
+                nav.bugNav(rc, enemyHQLocationSuspect);
+            }
+            break;
+        case PREPARE:
+            if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= patrolRadiusMax ){
+                // if too far, move in
+                nav.bugNav(rc, enemyHQLocation);
                 break;
-            case PREPARE:
-                if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= patrolRadiusMax ){
-                    // if too far, move in
-                    nav.bugNav(rc, enemyHQLocation);
+            }else if(enemyHQLocation.distanceSquaredTo(rc.getLocation()) < patrolRadiusMin ){
+                // if too close, move out
+                nav.bugNav(rc, HQLocation);
+            }
+            // with in the area, move to closest possible position around enemy hq
+            MapLocation minDistancedSafe = rc.getLocation();
+            int min_dist = enemyHQLocation.distanceSquaredTo(minDistancedSafe);
+            MapLocation nextPrepareLocation;
+            for (Direction dir: directions){
+                nextPrepareLocation=rc.getLocation().add(dir);
+                if (min_dist > enemyHQLocation.distanceSquaredTo(nextPrepareLocation) &&
+                    enemyHQLocation.distanceSquaredTo(nextPrepareLocation) >=25 &&
+                    rc.canMove(dir)){
+                    rc.move(dir);
                     break;
-                }else if(enemyHQLocation.distanceSquaredTo(rc.getLocation()) < patrolRadiusMin ){
-                    // if too close, move out
-                    nav.bugNav(rc, HQLocation);
                 }
-                // with in the area, move to closest possible position around enemy hq
-                MapLocation minDistancedSafe = rc.getLocation();
-                int min_dist = enemyHQLocation.distanceSquaredTo(minDistancedSafe);
-                MapLocation nextPrepareLocation;
-                for (Direction dir: directions){
-                    nextPrepareLocation=rc.getLocation().add(dir);
-                    if (min_dist > enemyHQLocation.distanceSquaredTo(nextPrepareLocation) &&
-                        enemyHQLocation.distanceSquaredTo(nextPrepareLocation) >=25 &&
-                        rc.canMove(dir)){
-                        rc.move(dir);
-                        break;
-                    }
-                }
-                break;
-            case ATTACK:
-                // gry into attack radius of enemy netgun
-                int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo( enemyHQLocation ) ;
-                MapLocation nextAttackLocation;
-                for (Direction dir: directions){
-                    nextAttackLocation=rc.getLocation().add(dir);
-                    // manhattan distaance is odd makes a lattice
-                    // even or closer make sure no dense positions
-                    // check if empty
-                    if (manhattanDistance(enemyHQLocation, nextAttackLocation)%2==1 &&
-                        (manhattanDistance(enemyHQLocation, rc.getLocation())%2==0 || nextAttackLocation.distanceSquaredTo(enemyHQLocation) <= currentDistToEnemyHQ ) &&
-                        rc.canMove(dir)){
-                        rc.move(dir);
-                        break;
-                    }
-                }
+            }
             break;
-            case SURRENDER:
-                if (rc.getLocation().distanceSquaredTo( HQLocation) < patrolRadiusMin){
-                    // if colse, move away
-                    nav.bugNav(rc, HQLocation);
-                }else{
-                    // if far, change back to normal state
-                    phase=actionPhase.NON_ATTACKING;
+        case ATTACK:
+            // gry into attack radius of enemy netgun
+            int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo( enemyHQLocation ) ;
+            MapLocation nextAttackLocation;
+            for (Direction dir: directions){
+                nextAttackLocation=rc.getLocation().add(dir);
+                // manhattan distaance is odd makes a lattice
+                // even or closer make sure no dense positions
+                // check if empty
+                if (manhattanDistance(enemyHQLocation, nextAttackLocation)%2==1 &&
+                    (manhattanDistance(enemyHQLocation, rc.getLocation())%2==0 || nextAttackLocation.distanceSquaredTo(enemyHQLocation) <= currentDistToEnemyHQ ) &&
+                    rc.canMove(dir)){
+                    rc.move(dir);
+                    break;
                 }
-            break;
-        }
-        System.out.println("I'm at " + rc.getLocation().toString());
+            }
+        break;
+        case SURRENDER:
+            if (rc.getLocation().distanceSquaredTo( HQLocation) < patrolRadiusMin){
+                // if colse, move away
+                nav.bugNav(rc, HQLocation);
+            }else{
+                // if far, change back to normal state
+                phase=actionPhase.NON_ATTACKING;
+            }
+        break;
     }
+    System.out.println("I'm at " + rc.getLocation().toString());
+}
 
     static void runNetGun() throws GameActionException {
         // find drones and shoot them
@@ -504,16 +612,6 @@ public strictfp class RobotPlayer {
             rc.depositSoup(dir, rc.getSoupCarrying());
             return true;
         } else return false;
-    }
-
-    // returns the current water level given turn count
-    static int waterLevel() {
-        double x = (double) turnCount;
-        return (int) Math.exp(0.0028 * x - 1.38 * Math.sin(0.00157 * x - 1.73) + 1.38 * Math.sin(-1.73)) - 1;
-    }
-
-    static int distSqr(int dx, int dy) {
-        return dx * dx + dy * dy;
     }
 
     // stores the closest MapLocation of soup in the robot's stored soup locations in soupLoc
@@ -619,6 +717,11 @@ public strictfp class RobotPlayer {
         exploreLoc();
     }
 
+    static void resetEnemyHQSuspect() throws GameActionException {
+        idIncrease++;
+        enemyHQLocationSuspect = suspects.get((rc.getID()+idIncrease) % 3);
+    }
+
 
 
 
@@ -670,7 +773,7 @@ public strictfp class RobotPlayer {
                         // if valid message
                         MapLocation loc = Cast.getCoord(message);
                         boolean doAdd;
-                        System.out.println(Cast.getCat(message).toString());
+//                        System.out.println(Cast.getCat(message).toString());
                         switch (Cast.getCat(message)) {
                             case HQ:
                                 HQLocation = loc;
@@ -681,6 +784,9 @@ public strictfp class RobotPlayer {
                                 break;
                             case NET_GUN:
                                 if (!nav.isThreat(loc)) nav.addThreat(loc);
+                                break;
+                            case NEW_REFINERY:
+                                if (!refineryLocation.contains(loc)) refineryLocation.add(loc);
                                 break;
                             case NEW_SOUP:
                                 // add if it's far away enough from all the other soup coords
@@ -721,17 +827,11 @@ public strictfp class RobotPlayer {
                                     }
                                 }
                                 break;
-                            case PREPARE:
-                                System.out.println("prepare to attack");
-                                phase=actionPhase.PREPARE;
-                                break;
-                            case ATTACK:
-                                phase=actionPhase.ATTACK;
-                                break;
-                            case SURRENDER:
-                                phase=actionPhase.SURRENDER;
-                                break;
-                            // TODO: other cases we need to figure out
+                            case HELP:
+                                if (rc.getType() != RobotType.DELIVERY_DRONE) break;
+                                MapLocation c1 = Cast.getC1(message);
+                                MapLocation c2 = Cast.getC2(message);
+                                helpLoc.add(new Pair(c1, c2));
                         }
                     }
                 }
@@ -749,41 +849,24 @@ public strictfp class RobotPlayer {
         RobotInfo[] robots = rc.senseNearbyRobots();
         // location of the bot
         MapLocation rloc;
-        // type of the bot
-        RobotType enemytype;
-        //
-        int r_rc_distance=1000000;
         // whether it is already in memory
         boolean saved;
         for (RobotInfo r : robots) {
             saved=false;
-            enemytype=r.getType();
-            if (rc.getType()==RobotType.DELIVERY_DRONE && r.getTeam() != rc.getTeam()) {
-                if (enemyHQLocation!=null){
-                System.out.println( "enemy base is at " +enemyHQLocation.toString());
-                }
-                System.out.println( "enemy base is at " +enemyHQLocationSuspect.toString());
-                System.out.println( "distance from cow to enemy base is " +r.getLocation().distanceSquaredTo( enemyHQLocationSuspect));
-                if (enemyHQLocation == null && enemytype == RobotType.HQ){
-                    enemyHQLocation = r.getLocation(); 
-                    infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
-                    infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
-                    if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
-                }else if (enemytype == RobotType.MINER || enemytype== RobotType.LANDSCAPER || enemytype== RobotType.COW && phase==actionPhase.NON_ATTACKING && !(enemyHQLocation == null && r.getLocation().distanceSquaredTo( enemyHQLocationSuspect)< 49 || enemyHQLocation != null && r.getLocation().distanceSquaredTo( enemyHQLocation)< 49) ) {
-                    if (closestEnemyUnit==null || rc.getLocation().distanceSquaredTo(r.getLocation())<r_rc_distance){
-                        closestEnemyUnit=r;
-                        r_rc_distance=rc.getLocation().distanceSquaredTo(r.getLocation());
-                    }
-                }
+            if (enemyHQLocation == null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
+                enemyHQLocation = r.getLocation(); 
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
+                if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
             } 
             // why is this an else if?
-            else if (rc.getType() == RobotType.MINER && (enemytype == RobotType.REFINERY || enemytype == RobotType.HQ) && r.getTeam() == rc.getTeam()){
+            else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY || r.getType() == RobotType.HQ) && r.getTeam() == rc.getTeam()){
+                refineryInVision=true;
                 rloc=r.getLocation();
                 // check for matching
                 for (MapLocation refineryLoca: refineryLocation){
                     if (refineryLoca==rloc){
                         saved=true;
-                        break;
                     }
                 }
                 // no matching => not saved => save it
@@ -845,7 +928,7 @@ public strictfp class RobotPlayer {
                 // check if robot is on the soup location and there is no soup around him
                 // if there isn't any soup around it then remove
                 findSoup();
-                if (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc)) {
+                if (rc.senseSoup(soup) == 0 && (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc))) {
                     System.out.println("There's no soup!");
                     infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, soup));
                     soupLocation.remove(soup);
