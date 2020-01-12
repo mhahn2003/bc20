@@ -170,9 +170,9 @@ public strictfp class RobotPlayer {
             }
         }
         // build all the miners we can get in the first few turns
-        // maximum of 15 miners at 280th round
+        // maximum of 10 miners at 200th round
         Direction optDir = Direction.NORTH;
-        if (minerCount < Math.max(5+rc.getRoundNum()/40, 12)) {
+        if (minerCount < Math.max(5+rc.getRoundNum()/40, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost)) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
@@ -304,7 +304,7 @@ public strictfp class RobotPlayer {
 
         // produce 5 landscapers initially to guard hq
         Direction optDir = Direction.SOUTHEAST;
-        if (landscaperCount < 5) {
+        if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);
@@ -359,7 +359,7 @@ public strictfp class RobotPlayer {
     static void runFulfillmentCenter() throws GameActionException {
         // produce 8 drones
         Direction optDir = Direction.NORTHWEST;
-        if (droneCount < 8) {
+        if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
@@ -373,46 +373,77 @@ public strictfp class RobotPlayer {
     }
 
     static void runLandscaper() throws GameActionException {
-        if (rc.getRoundNum() >= 600) {
+        if (turtle.getLandscaperState() == 0 && rc.getRoundNum() >= 600) {
             // convert to state 2 if needed
             // TODO: figure out when is optimal to change into state 2, or to change into state 3 where we can use the disruptWithCow strategy
+            System.out.println("Converting to state 2");
             turtle.setLandscaperState(2);
         }
+        System.out.println("My state is: " + turtle.getLandscaperState());
         if (turtle.getLandscaperState() == 0) {
             // TODO: maybe we can make a ENEMY_BUILDING category and have them attack in the future
             RobotInfo[] robots = rc.senseNearbyRobots();
+            boolean enemyLandscaper = false;
             for (RobotInfo r: robots) {
                 if (r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam() && r.getLocation().distanceSquaredTo(HQLocation) <= 20) {
+                    enemyLandscaper = true;
+                    System.out.println("Enemy landscapers incoming!!");
                     // if they're attacking HQ they're most likely attacking it or one of our building
                     MapLocation DFLoc = HQLocation.add(Direction.EAST);
                     MapLocation LFLoc = HQLocation.add(Direction.WEST);
                     RobotInfo LFr = rc.senseRobotAtLocation(LFLoc);
                     RobotInfo DFr = rc.senseRobotAtLocation(DFLoc);
-                    if (rc.getLocation().isAdjacentTo(HQLocation) && rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
-                    else if (rc.getLocation().isAdjacentTo(LFLoc) && rc.canDigDirt(rc.getLocation().directionTo(LFLoc)) && LFr != null && LFr.getType() == RobotType.DESIGN_SCHOOL) rc.digDirt(rc.getLocation().directionTo(LFLoc));
-                    else if (rc.getLocation().isAdjacentTo(DFLoc) && rc.canDigDirt(rc.getLocation().directionTo(DFLoc)) && DFr != null && DFr.getType() == RobotType.FULFILLMENT_CENTER) rc.digDirt(rc.getLocation().directionTo(DFLoc));
-                    else {
+                    if (rc.getLocation().isAdjacentTo(HQLocation) && rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) {
+                        System.out.println("Digging dirt from HQ");
+                        rc.digDirt(rc.getLocation().directionTo(HQLocation));
+                    } else if (rc.getLocation().isAdjacentTo(LFLoc) && rc.canDigDirt(rc.getLocation().directionTo(LFLoc)) && LFr != null && LFr.getType() == RobotType.DESIGN_SCHOOL) {
+                        System.out.println("Digging dirt from landscaper factory");
+                        rc.digDirt(rc.getLocation().directionTo(LFLoc));
+                    } else if (rc.getLocation().isAdjacentTo(DFLoc) && rc.canDigDirt(rc.getLocation().directionTo(DFLoc)) && DFr != null && DFr.getType() == RobotType.FULFILLMENT_CENTER) {
+                        System.out.println("Digging dirt from drone factory");
+                        rc.digDirt(rc.getLocation().directionTo(DFLoc));
+                    } else {
                         // if not adjacent, stay there
-                        if (!rc.getLocation().isAdjacentTo(HQLocation)) nav.bugNav(rc, HQLocation);
+                        if (!rc.getLocation().isAdjacentTo(HQLocation)) {
+                            System.out.println("Moving towards HQ");
+                            nav.bugNav(rc, HQLocation);
+                        } else {
+                            System.out.println("Not moving from HQ");
+                        }
                     }
                 }
-                if (r.getTeam() != rc.getTeam() && (r.getType() != RobotType.MINER || r.getType() != RobotType.LANDSCAPER || r.getType() != RobotType.DELIVERY_DRONE || r.getType() != RobotType.COW)) {
-                    // if it's an enemy building, bury it
-                    if (rc.getLocation().isAdjacentTo(r.getLocation())) {
-                        if (rc.getDirtCarrying() == 0) {
-                            // dig anywhere but to that robot, and preferably not downward
-                            for (Direction d: directions) {
-                                if (rc.getLocation().add(d).equals(r.getLocation())) continue;
-                                if (rc.canDigDirt(d)) rc.digDirt(d);
+            }
+            if (!enemyLandscaper) {
+                for (RobotInfo r: robots) {
+                    if (r.getTeam() != rc.getTeam() && (r.getType() != RobotType.MINER || r.getType() != RobotType.LANDSCAPER || r.getType() != RobotType.DELIVERY_DRONE || r.getType() != RobotType.COW)) {
+                        // if it's an enemy building, bury it
+                        System.out.println("Enemy building targeted");
+                        if (rc.getLocation().isAdjacentTo(r.getLocation())) {
+                            if (rc.getDirtCarrying() == 0) {
+                                // dig anywhere but to that robot, and preferably not downward
+                                System.out.println("I have no dirt");
+                                for (Direction d : directions) {
+                                    if (rc.getLocation().add(d).equals(r.getLocation())) continue;
+                                    if (rc.canDigDirt(d)) {
+                                        System.out.println("Digging towards: " + d.toString());
+                                        rc.digDirt(d);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                System.out.println("I have dirt");
+                                // fill up location
+                                Direction optDir = rc.getLocation().directionTo(r.getLocation());
+                                if (rc.canDepositDirt(optDir)) {
+                                    System.out.println("Filling up: " + optDir.toString());
+                                    rc.depositDirt(optDir);
+                                }
                             }
                         } else {
-                            // fill up location
-                            Direction optDir = rc.getLocation().directionTo(r.getLocation());
-                            if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                            // move to that location
+                            System.out.println("Moving towards enemy building");
+                            nav.bugNav(rc, r.getLocation());
                         }
-                    } else {
-                        // move to that location
-                        nav.bugNav(rc, r.getLocation());
                     }
                 }
             }
@@ -420,56 +451,77 @@ public strictfp class RobotPlayer {
             if (rc.isReady()) {
                 MapLocation patrol = turtle.findPatrol(rc);
                 if (!rc.getLocation().equals(patrol)) {
+                    System.out.println("Patrolling towards: " + patrol.toString());
                     nav.bugNav(rc, patrol);
+                } else {
+                    System.out.println("Staying at: " + patrol.toString());
                 }
             }
         } else if (turtle.getLandscaperState() == 1) {
             RobotInfo[] robots = rc.senseNearbyRobots(2);
             // check if there's anything adjacent to it that can bury
             for (RobotInfo r: robots) {
-                if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
-                    // if it's an enemy building, bury it
-                    if (rc.getDirtCarrying() == 0) {
-                        // dig anywhere but to that robot, and preferably not downward
-                        Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
-                        for (int i = 0; i < 8; i++) {
-                            if (!rc.getLocation().add(optDir).equals(r.getLocation())) {
-                                if (rc.canDigDirt(optDir)) {
-                                    rc.digDirt(optDir);
-                                    break;
-                                }
-                            }
-                            optDir = optDir.rotateRight();
-                        }
-                    } else {
-                        // fill up location
-                        Direction optDir = rc.getLocation().directionTo(r.getLocation());
-                        if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
-                    }
-                }
                 if (r.getTeam() == rc.getTeam() && r.getType().isBuilding()) {
                     // if our own building is getting buried (most likely net gun) dig out dirt
                     Direction optDir = rc.getLocation().directionTo(r.getLocation());
-                    if (rc.canDigDirt(optDir)) rc.digDirt(optDir);
+                    if (rc.canDigDirt(optDir)) {
+                        System.out.println("Building getting buried, digging out " + optDir.toString());
+                        rc.digDirt(optDir);
+                    }
                 }
             }
-            // build outer wall if no other problems
-            if (turtle.positionOut(rc.getLocation()) == -1) {
-                MapLocation left = new Vector(-1, -3).addWith(HQLocation);
-                MapLocation right = new Vector(0, -3).addWith(HQLocation);
-                if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
-                    nav.bugNav(rc, right);
-                } else {
-                    nav.bugNav(rc, left);
+            if (rc.isReady()) {
+                for (RobotInfo r : robots) {
+                    if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
+                        System.out.println("I see enemy building");
+                        // if it's an enemy building, bury it
+                        if (rc.getDirtCarrying() == 0) {
+                            // dig anywhere but to that robot, and preferably not downward
+                            System.out.println("I have no dirt");
+                            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                            for (int i = 0; i < 8; i++) {
+                                if (!rc.getLocation().add(optDir).equals(r.getLocation())) {
+                                    if (rc.canDigDirt(optDir)) {
+                                        System.out.println("Digging dirt from: " + optDir.toString());
+                                        rc.digDirt(optDir);
+                                        break;
+                                    }
+                                }
+                                optDir = optDir.rotateRight();
+                            }
+                        } else {
+                            // fill up location
+                            System.out.println("I have dirt");
+                            Direction optDir = rc.getLocation().directionTo(r.getLocation());
+                            if (rc.canDepositDirt(optDir)) {
+                                System.out.println("Depositing dirt at: " + optDir.toString());
+                                rc.depositDirt(optDir);
+                            }
+                        }
+                    }
                 }
-            } else {
-                turtle.buildFort(rc);
+                // build outer wall if no other problems
+                if (turtle.positionOut(rc.getLocation()) == -1) {
+                    MapLocation left = new Vector(-1, -3).addWith(HQLocation);
+                    MapLocation right = new Vector(0, -3).addWith(HQLocation);
+                    if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
+                        System.out.println("Going to right position");
+                        nav.bugNav(rc, right);
+                    } else {
+                        System.out.println("Going to left position");
+                        nav.bugNav(rc, left);
+                    }
+                } else {
+                    System.out.println("Building fort");
+                    turtle.buildFort(rc);
+                }
             }
         } else if (turtle.getLandscaperState() == 2) {
             RobotInfo[] robots = rc.senseNearbyRobots(2);
             // check if there's anything adjacent to it that can bury, but I really doubt it can happen at this state
             for (RobotInfo r: robots) {
                 if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
+                    System.out.println("I sense enemy building");
                     // if it's an enemy building, bury it
                     if (rc.getDirtCarrying() == 0) {
                         // dig downward because you are alpha
