@@ -20,14 +20,14 @@ public class Cast {
     }
 
     public enum InformationCategory {
+        // request help from drone
+        HELP,
         // new refinery
         NEW_REFINERY,
         // information not there anymore
         REMOVE,
         // found a soup repository
         NEW_SOUP,
-        // request help from drone
-        HELP,
         // ENEMY HQ
         ENEMY_HQ,
         // OUR HQ
@@ -36,12 +36,6 @@ public class Cast {
         WATER,
         // NET_GUN
         NET_GUN,
-        // FORM SQUADS
-        PREPARE,
-        //RUN TO ENEMY HQ
-        ATTACK,
-        // LEAVE ENEMY HQ
-        SURRENDER,
         // enemy?
         OTHER
     }
@@ -52,15 +46,12 @@ public class Cast {
         int message=0;
         switch (cat) {
             case NEW_REFINERY:
-                message += 1;
-                break;
-            case REMOVE:
                 message += 2;
                 break;
-            case NEW_SOUP:
+            case REMOVE:
                 message += 3;
                 break;
-            case HELP:
+            case NEW_SOUP:
                 message += 4;
                 break;
             case ENEMY_HQ:
@@ -74,52 +65,57 @@ public class Cast {
                 break;
             case NET_GUN:
                 message += 8;
-                break;
-            case PREPARE:
-                message += 9;
-                break;
-            case ATTACK:
-                message += 10;
-                break;
-            case SURRENDER:
-                message += 11;
-                break;
             default:
-                message += 12;
+                message += 9;
                 break;
         }
         message=addCoord(message, coord);
         return message;
     }
 
-    private static int addCoord(int message, MapLocation coord){
+    public static int getMessage(MapLocation c1, MapLocation c2) {
+        return addCoord(c1, c2);
+    }
+
+    private static int addCoord(int message, MapLocation coord) {
         return message*10000 + coord.x*100 + coord.y;
+    }
+
+    private static int addCoord(MapLocation c1, MapLocation c2) {
+        return 100000000 + c1.x*1000000 + c1.y*10000 + c2.x*100 + c2.y;
     }
 
     public static InformationCategory getCat(int message){
         switch(message/10000) {
-            case 1: return InformationCategory.NEW_REFINERY;
-            case 2: return InformationCategory.REMOVE;
-            case 3: return InformationCategory.NEW_SOUP;
-            case 4: return InformationCategory.HELP;
+            case 2: return InformationCategory.NEW_REFINERY;
+            case 3: return InformationCategory.REMOVE;
+            case 4: return InformationCategory.NEW_SOUP;
             case 5: return InformationCategory.ENEMY_HQ;
             case 6: return InformationCategory.HQ;
             case 7: return InformationCategory.WATER;
             case 8: return InformationCategory.NET_GUN;
-            case 9: return InformationCategory.PREPARE;
-            case 10: return InformationCategory.ATTACK;
-            case 11: return InformationCategory.SURRENDER;
-            default: return InformationCategory.OTHER;
+            default:
+                if (message/100000000 == 1) return InformationCategory.HELP;
+                return InformationCategory.OTHER;
         }
     }
 
-    public static MapLocation getCoord(int message){
+    public static MapLocation getCoord(int message) {
+        return new MapLocation((message%10000-message%100)/100, message%100);
+    }
+
+    public static MapLocation getC1(int message) {
+        return new MapLocation((message%100000000-message%1000000)/1000000, (message%1000000-message%10000)/10000);
+    }
+
+    public static MapLocation getC2(int message) {
         return new MapLocation((message%10000-message%100)/100, message%100);
     }
 
     // check if it's our blockChain
     public static boolean isValid(int message, RobotController rc) throws GameActionException {
-        return (message < 10000*(numCase+1) && onMap(getCoord(message), rc));
+        if (getCat(message) != InformationCategory.HELP) return (message < 10000*(numCase+1) && onMap(getCoord(message), rc));
+        else return (onMap(getC1(message), rc) && onMap(getC2(message), rc));
     }
 
     // check if location is on map
