@@ -42,7 +42,9 @@ public strictfp class RobotPlayer {
     static int waterClusterDist = 120;
     // patrol radius
     static int patrolRadiusMin = 36;
-    static int patrolRadiusMax = 45;
+    static int patrolRadiusMax = 169;
+    // unit count control
+    static int maxDroneCount = 80;
     // default cost of our transaction
     private static int defaultCost = 2;
 
@@ -56,7 +58,6 @@ public strictfp class RobotPlayer {
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     // only miners use following
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
-    static boolean refineryInVision;
     // only drones use following
     static RobotInfo closestEnemyUnit;
 
@@ -106,7 +107,6 @@ public strictfp class RobotPlayer {
                     initialize();
                 } else {
                     closestEnemyUnit=null;
-                    refineryInVision=false;
                     getInfo(rc.getRoundNum()-1);
                     collectInfo();
                 }
@@ -310,7 +310,7 @@ public strictfp class RobotPlayer {
     static void runFulfillmentCenter() throws GameActionException {
         // produce 8 drones
         Direction optDir = Direction.NORTHWEST;
-        if (droneCount < 80) {
+        if (droneCount < maxDroneCount) {
             for (int i=0; i<8 ; i++) {
                 if ( rc.getTeamSoup()<350){
                     break;
@@ -426,13 +426,15 @@ public strictfp class RobotPlayer {
                 } else nav.bugNav(rc, enemyHQLocationSuspect);
                 break;
             case PREPARE:
-                if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) > 169 ){
+                if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= patrolRadiusMax ){
+                    // if too far, move in
                     nav.bugNav(rc, enemyHQLocation);
                     break;
-                }else if(enemyHQLocation.distanceSquaredTo(rc.getLocation()) < 16 ){
+                }else if(enemyHQLocation.distanceSquaredTo(rc.getLocation()) < patrolRadiusMin ){
+                    // if too close, move out
                     nav.bugNav(rc, HQLocation);
                 }
-                
+                // with in the area, move to closest possible position around enemy hq
                 MapLocation minDistancedSafe = rc.getLocation();
                 int min_dist = enemyHQLocation.distanceSquaredTo(minDistancedSafe);
                 MapLocation nextPrepareLocation;
@@ -445,16 +447,18 @@ public strictfp class RobotPlayer {
                         break;
                     }
                 }
-
-
-            break;
+                break;
             case ATTACK:
+                // gry into attack radius of enemy netgun
                 int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo( enemyHQLocation ) ;
                 MapLocation nextAttackLocation;
                 for (Direction dir: directions){
                     nextAttackLocation=rc.getLocation().add(dir);
+                    // manhattan distaance is odd makes a lattice
+                    // even or closer make sure no dense positions
+                    // check if empty
                     if (manhattanDistance(enemyHQLocation, nextAttackLocation)%2==1 &&
-                        (currentDistToEnemyHQ%2==0 || nextAttackLocation.distanceSquaredTo(enemyHQLocation) <= currentDistToEnemyHQ ) &&
+                        (manhattanDistance(enemyHQLocation, rc.getLocation())%2==0 || nextAttackLocation.distanceSquaredTo(enemyHQLocation) <= currentDistToEnemyHQ ) &&
                         rc.canMove(dir)){
                         rc.move(dir);
                         break;
@@ -462,9 +466,14 @@ public strictfp class RobotPlayer {
                 }
             break;
             case SURRENDER:
-                nav.bugNav(rc, HQLocation);
+                if (rc.getLocation().distanceSquaredTo( HQLocation) < patrolRadiusMin){
+                    // if colse, move away
+                    nav.bugNav(rc, HQLocation);
+                }else{
+                    // if far, change back to normal state
+                    phase=actionPhase.NON_ATTACKING;
+                }
             break;
-
         }
         System.out.println("I'm at " + rc.getLocation().toString());
     }
@@ -638,9 +647,6 @@ public strictfp class RobotPlayer {
 
 
 
-
-
-
     // get information from the blocks
     static void getAllInfo() throws GameActionException {
         for (int i = 1; i < rc.getRoundNum(); i++) {
@@ -772,7 +778,6 @@ public strictfp class RobotPlayer {
             } 
             // why is this an else if?
             else if (rc.getType() == RobotType.MINER && (enemytype == RobotType.REFINERY || enemytype == RobotType.HQ) && r.getTeam() == rc.getTeam()){
-                refineryInVision=true;
                 rloc=r.getLocation();
                 // check for matching
                 for (MapLocation refineryLoca: refineryLocation){
