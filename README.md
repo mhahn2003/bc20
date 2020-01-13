@@ -85,10 +85,11 @@ Our current strategy is to:
 13. Assign a build miner (using turncount) and if round number is 200+ make it come back to HQ and it will build things right next to HQ for us
 14. ~~Make drones patrol HQ~~
 15. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
+16. drones that hold our own units has a destination flooded would stay there. (related to 2)
 LNL
-LC
- C
- C
+LCL
+LCL
+LCL
 LNL
 
 Hopefully the landscapers are enough to protect the net guns from getting buried.
