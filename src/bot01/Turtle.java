@@ -316,9 +316,10 @@ public class Turtle {
                         if (rc.getDirtCarrying() == 0) {
                             // dig
                             System.out.println("I have no dirt");
-                            if (rc.canDigDirt(Direction.CENTER)) {
-                                System.out.println("Digging towards " + Direction.CENTER.toString());
-                                rc.digDirt(Direction.CENTER);
+                            Direction digDir = rc.getLocation().directionTo(HQLocation).opposite();
+                            if (rc.canDigDirt(digDir)) {
+                                System.out.println("Digging towards " + optDir.toString());
+                                rc.digDirt(digDir);
                             }
                         } else {
                             // fill
