@@ -14,6 +14,7 @@ public class Nav {
     private MapLocation currentDest;
     private ArrayList<MapLocation> threats= new ArrayList<>();
     private MapLocation lastLoc;
+    private MapLocation lastLastLoc;
     private int travelDist;
     private int travelRound;
     private int wander;
@@ -25,6 +26,7 @@ public class Nav {
         closestDist = 1000000;
         currentDest = null;
         lastLoc = null;
+        lastLastLoc = null;
         travelDist = 0;
         travelRound = 0;
         wander = 0;
@@ -36,6 +38,9 @@ public class Nav {
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
         if (rc.getLocation() == dest) return;
         if (!rc.isReady()) return;
+        if (currentDest == null) {
+            navReset(rc, dest);
+        }
         if (currentDest != dest) {
             navSoftReset(rc, dest);
         }
@@ -47,7 +52,7 @@ public class Nav {
         if (!rc.isReady()) return;
         if (!isBugging) {
             // if the state is free
-            if (canGo(rc, optDir)) {
+            if (canGo(rc, optDir, true)) {
                 stuck = 0;
                 rc.move(optDir);
             }
@@ -57,7 +62,14 @@ public class Nav {
             // if the state is bug
             boolean canMove = false;
             for (int i = 0; i < 8; i++) {
-                if (canGo(rc, optDir)) {
+                if (i == 0) {
+                    if (canGo(rc, optDir, true)) {
+                        stuck = 0;
+                        canMove = true;
+                        break;
+                    }
+                }
+                if (canGo(rc, optDir, false)) {
                     stuck = 0;
                     canMove = true;
                     break;
@@ -65,6 +77,7 @@ public class Nav {
                 else optDir = optDir.rotateRight();
             }
             if (canMove) {
+                lastLastLoc = lastLoc;
                 lastLoc = rc.getLocation();
                 rc.move(optDir);
             }
@@ -116,18 +129,18 @@ public class Nav {
         if (rc.getLocation().isAdjacentTo(currentDest)) wander++;
     }
 
-    public boolean canGo(RobotController rc, Direction dir) throws GameActionException {
-        if (rc.getType() == RobotType.MINER) return canGoMiner(rc, dir);
+    public boolean canGo(RobotController rc, Direction dir, boolean free) throws GameActionException {
+        if (rc.getType() == RobotType.MINER) return canGoMiner(rc, dir, free);
         else if (rc.getType() == RobotType.LANDSCAPER) return canGoLandscaper(rc, dir);
         else if (rc.getType() == RobotType.DELIVERY_DRONE) return canGoDrone(rc, dir);
         return true;
     }
 
-    public boolean canGoMiner(RobotController rc, Direction dir) throws GameActionException {
+    public boolean canGoMiner(RobotController rc, Direction dir, boolean free) throws GameActionException {
         MapLocation moveTo = rc.getLocation().add(dir);
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
-        if (moveTo.equals(lastLoc)) return false;
+        if (!free && (moveTo.equals(lastLoc) || moveTo.equals(lastLastLoc))) return false;
         // run away from enemy drones
         if (droneThreat(rc, moveTo)) return false;
         return true;
@@ -138,7 +151,7 @@ public class Nav {
         MapLocation moveTo = rc.getLocation().add(dir);
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
-        if (moveTo.equals(lastLoc)) return false;
+        if (moveTo.equals(lastLoc) || moveTo.equals(lastLastLoc)) return false;
         // run away from enemy drones
         if (droneThreat(rc, moveTo)) return false;
         return true;
@@ -147,7 +160,7 @@ public class Nav {
     public boolean canGoDrone(RobotController rc, Direction dir) throws GameActionException {
         if (!rc.canMove(dir)) return false;
         MapLocation goodLoc = rc.getLocation().add(dir);
-        if (rc.getLocation().add(dir).equals(lastLoc)) return false;
+        if (goodLoc.equals(lastLoc) || goodLoc.equals(lastLastLoc)) return false;
         for (MapLocation loc: threats) {
             if (goodLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
         }
@@ -192,17 +205,17 @@ public class Nav {
         if (rc.getLocation().isAdjacentTo(currentDest)) return false;
         // if under drone attack don't call for help
         if (droneThreat(rc, rc.getLocation())) return false;
-        if (travelDist < 15) {
-            if (rc.getRoundNum()-travelRound-10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+        if (travelDist < 20) {
+            if (rc.getRoundNum()-travelRound-15 > travelDist*5 && rc.getRoundNum() >= 100 && turnCount > 25) {
                 helpReq = rc.getLocation();
-//                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
+                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
         }
         else {
-            if ((rc.getRoundNum()-travelRound)*3/2 - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+            if (rc.getRoundNum()-travelRound - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
                 helpReq = rc.getLocation();
-//                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
+                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
         }

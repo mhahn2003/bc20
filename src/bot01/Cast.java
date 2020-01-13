@@ -3,6 +3,7 @@ package bot01;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.Team;
 
 // Navigation class
 public class Cast {
@@ -125,7 +126,7 @@ public class Cast {
 
     // check if given message is valid
     // Note: messageArr can be size 2, 3, 4, 5, 6, 7. If it's 1 or any other size, immediately return false
-    public static boolean isMessageValid(int[] messageArr) {
+    public static boolean isMessageValid(RobotController rc, int[] messageArr) {
         int length = messageArr.length;
         if (length < 2 || length > 7){
             return false;
@@ -151,6 +152,7 @@ public class Cast {
                 hashedValue = ((messageArr[0]%3143-1341)^2+(messageArr[1]%5465-7876)^2+(messageArr[2]%6752-5634)^2+(messageArr[3]%6754-2435)^2+(messageArr[4]%6345-5463)^2+(messageArr[5]%4314-5234)^2)%65535;
                 break;
         }
+        hashedValue += getTeamHash(rc);
 //        System.out.println("Hashed value is supposed to be: " + hashedValue);
 //        System.out.println("Our hash value is: " + messageArr[messageArr.length-1]);
         return hashedValue == messageArr[messageArr.length-1];
@@ -159,7 +161,7 @@ public class Cast {
 
     // hash function
     // Note: messageArr can be size 1, 2, 3, 4, 5, 6
-    public static int hash(int[] messageArr) {
+    public static int hash(RobotController rc, int[] messageArr) {
         int hashedValue=0;
         switch(messageArr.length){
             case 1:
@@ -182,6 +184,11 @@ public class Cast {
                 hashedValue=((messageArr[0]%3143-1341)^2+(messageArr[1]%5465-7876)^2+(messageArr[2]%6752-5634)^2+(messageArr[3]%6754-2435)^2+(messageArr[4]%6345-5463)^2+(messageArr[5]%4314-5234)^2)%65535;
                 break;
         }
-        return hashedValue;
+        return hashedValue + getTeamHash(rc);
+    }
+
+    private static int getTeamHash(RobotController rc) {
+        if (rc.getTeam() == Team.A) return 1;
+        else return 2;
     }
 }

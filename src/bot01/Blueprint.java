@@ -3,38 +3,18 @@ package bot01;
 
 import battlecode.common.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Blueprint {
     // only the first miner will have access to this object
 
-    private Vector[] netGunLoc;
-    private Vector[] vaporatorLoc;
-    private Vector[] buildLoc;
+    // 0, 5, 6 are vaporators, 1, 2, 3, 4 are net guns
+    private Boolean[] buildComplete;
     private Vector[] minerTrail;
-    private Map<Vector, Boolean> netGunComplete;
-    private Map<Vector, Boolean> vaporatorComplete;
-    private Map<Vector, Boolean> buildComplete;
     private MapLocation HQLocation;
 
     public Blueprint(MapLocation HQLocation) {
         this.HQLocation = HQLocation;
-        netGunComplete = new HashMap<>();
-        vaporatorComplete = new HashMap<>();
-        buildComplete = new HashMap<>();
-        netGunLoc = new Vector[]{new Vector(-2, 2), new Vector(-2, -2), new Vector(2, 2), new Vector(2, -2)};
-        vaporatorLoc = new Vector[]{new Vector(1, 1), new Vector(-1,1), new Vector(-1,-1), new Vector(1, -1)};
-        buildLoc = new Vector[]{new Vector(-2, 2), new Vector(1, 1), new Vector(-1,1), new Vector(-1,-1), new Vector(1, -1), new Vector(-2, -2), new Vector(2, 2), new Vector(2, -2)};
-        for (Vector v: netGunLoc) {
-            netGunComplete.put(v, false);
-        }
-        for (Vector v: vaporatorLoc) {
-            vaporatorComplete.put(v, false);
-        }
-        for (Vector v: buildLoc) {
-            buildComplete.put(v, false);
-        }
+        buildComplete = new Boolean[7];
+        for (int i = 0; i < 7; i++) buildComplete[i] = false;
         minerTrail = new Vector[]{new Vector(2, 1), new Vector(2, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-2, 0), new Vector(-1, 1)};
     }
 
@@ -58,7 +38,7 @@ public class Blueprint {
                     if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
                         if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.WEST)) {
                             System.out.println("Built vaporator 1");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.VAPORATOR, Direction.WEST);
                         }
                     }
@@ -67,7 +47,7 @@ public class Blueprint {
                     if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+100) {
                         if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.NORTHWEST)) {
                             System.out.println("Built vaporator 1");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.VAPORATOR, Direction.NORTHWEST);
                         }
                     }
@@ -76,26 +56,12 @@ public class Blueprint {
                 }
             }
             else if (buildNext == 5) {
-                // move to index 5
-                if (currentIndex == 5) {
-                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+100) {
-                        if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.NORTHEAST)) {
-                            System.out.println("Built vaporator 2");
-                            buildComplete.replace(buildLoc[buildNext], true);
-                            rc.buildRobot(RobotType.VAPORATOR, Direction.NORTHEAST);
-                        }
-                    }
-                } else {
-                    goTo(rc, 5);
-                }
-            }
-            else if (buildNext == 6) {
                 // move to index 3
                 if (currentIndex == 3) {
                     if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+100) {
                         if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.WEST)) {
                             System.out.println("Built vaporator 3");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.VAPORATOR, Direction.WEST);
                         }
                     }
@@ -103,13 +69,13 @@ public class Blueprint {
                     goTo(rc, 3);
                 }
             }
-            else if (buildNext == 7) {
+            else if (buildNext == 6) {
                 // move to index 3
                 if (currentIndex == 3) {
                     if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+100) {
                         if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.EAST)) {
                             System.out.println("Built vaporator 3");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.VAPORATOR, Direction.EAST);
                         }
                     }
@@ -131,7 +97,7 @@ public class Blueprint {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
                         if (rc.canBuildRobot(RobotType.NET_GUN, Direction.NORTHWEST)) {
                             System.out.println("Built net gun 1");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.NET_GUN, Direction.NORTHWEST);
                         }
                     }
@@ -145,7 +111,7 @@ public class Blueprint {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
                         if (rc.canBuildRobot(RobotType.NET_GUN, Direction.SOUTHWEST)) {
                             System.out.println("Built net gun 1");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.NET_GUN, Direction.SOUTHWEST);
                         }
                     }
@@ -159,7 +125,7 @@ public class Blueprint {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
                         if (rc.canBuildRobot(RobotType.NET_GUN, Direction.NORTH)) {
                             System.out.println("Built net gun 1");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.NET_GUN, Direction.NORTH);
                         }
                     }
@@ -173,7 +139,7 @@ public class Blueprint {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
                         if (rc.canBuildRobot(RobotType.NET_GUN, Direction.SOUTHEAST)) {
                             System.out.println("Built net gun 1");
-                            buildComplete.replace(buildLoc[buildNext], true);
+                            buildComplete[buildNext] = true;
                             rc.buildRobot(RobotType.NET_GUN, Direction.SOUTHEAST);
                         }
                     }
@@ -216,8 +182,8 @@ public class Blueprint {
 
     // return the index of what to build next
     public int getBuildNext() {
-        for (int i = 0; i < 8; i++) {
-            if (!buildComplete.get(buildLoc[i])) return i;
+        for (int i = 0; i < 7; i++) {
+            if (!buildComplete[i]) return i;
         }
         return -1;
     }

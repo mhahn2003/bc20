@@ -191,7 +191,7 @@ public strictfp class RobotPlayer {
         // build all the miners we can get in the first few turns
         // maximum of 10 miners at 500th round
         Direction optDir = Direction.NORTH;
-        if (minerCount < Math.max(5+rc.getRoundNum()/100, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
+        if (minerCount < Math.min(5+rc.getRoundNum()/100, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
@@ -237,28 +237,28 @@ public strictfp class RobotPlayer {
                 // default hq
                 closestRefineryLocation = HQLocation;
                 // check select a point as reference(might be edge case?)
-                MapLocation reference_point = soupLoc;
-                if (reference_point != null) {
+                MapLocation referencePoint = soupLoc;
+                if (referencePoint != null) {
                     //                System.out.println("reference to " + reference_point.toString());
-                    int minRefineryDist = reference_point.distanceSquaredTo(HQLocation);
+                    int minRefineryDist = referencePoint.distanceSquaredTo(HQLocation);
 
                     //                System.out.println("before find min d i have" + Clock.getBytecodesLeft());
                     // check through refinery(redundancy here)
                     for (MapLocation refineryLoca : refineryLocation) {
-                        int temp_d = reference_point.distanceSquaredTo(refineryLoca);
+                        int temp_d = referencePoint.distanceSquaredTo(refineryLoca);
                         if (temp_d < minRefineryDist) {
                             closestRefineryLocation = refineryLoca;
                             minRefineryDist = temp_d;
                         }
                         //                    System.out.println("my memory contain " + refineryLoca.toString());
                     }
-                    //                System.out.println("reference to " + reference_point.toString());
-                    //                System.out.println("compare to " + closestRefineryLocation.toString());
-                    //                System.out.println("after find min d i have " + Clock.getBytecodesLeft());
-                    //                System.out.println("reference min distance to refinery " + minRefineryDist);
-                    //                System.out.println("reference min distance to bot " + reference_point.distanceSquaredTo(rc.getLocation()));
+                                    System.out.println("reference to " + referencePoint.toString());
+                                    System.out.println("compare to " + closestRefineryLocation.toString());
+                                    System.out.println("after find min d i have " + Clock.getBytecodesLeft());
+                                    System.out.println("reference min distance to refinery " + minRefineryDist);
+                                    System.out.println("reference min distance to bot " + referencePoint.distanceSquaredTo(rc.getLocation()));
                     //
-                    if (minRefineryDist >= refineryDist && reference_point.distanceSquaredTo(rc.getLocation()) < 4 && rc.getTeamSoup() >= 200) {
+                    if (minRefineryDist >= refineryDist && referencePoint.distanceSquaredTo(rc.getLocation()) < 13 && rc.getTeamSoup() >= 200) {
                         //                    System.out.println("attempt build refinery");
                         for (Direction temp_dir : directions) {
                             if (rc.canBuildRobot(RobotType.REFINERY, temp_dir)) {
@@ -279,6 +279,7 @@ public strictfp class RobotPlayer {
                 if (closestRefineryLocation.isAdjacentTo(rc.getLocation())) {
                     Direction soupDepositDir = rc.getLocation().directionTo(closestRefineryLocation);
                     tryRefine(soupDepositDir);
+                    nav.navReset(rc, rc.getLocation());
                 } else {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                         helpMode = 1;
@@ -344,6 +345,8 @@ public strictfp class RobotPlayer {
                     return;
                 }
             }
+            // if it can deposit then do deposit
+            if (rc.canDepositSoup(rc.getLocation().directionTo(HQLocation))) rc.depositSoup(rc.getLocation().directionTo(HQLocation), rc.getSoupCarrying());
         }
     }
 
@@ -358,15 +361,13 @@ public strictfp class RobotPlayer {
     static void runDesignSchool() throws GameActionException {
 
         // produce 5 landscapers initially to guard hq
-        Direction optDir = Direction.SOUTHEAST;
+        Direction[] spawnDir = new Direction[]{Direction.SOUTHEAST, Direction.SOUTH, Direction.WEST};
         if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
-            for (int i = 0; i < 8; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                    rc.buildRobot(RobotType.LANDSCAPER, optDir);
+            for (int i = 0; i < 3; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
+                    rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                     landscaperCount++;
                     break;
-                } else {
-                    optDir = optDir.rotateRight();
                 }
             }
         }
@@ -383,28 +384,24 @@ public strictfp class RobotPlayer {
         }
         if (isVaporator) {
             // produce outer layer
-            if (landscaperCount < 28) {
-                for (int i = 0; i < 8; i++) {
-                    if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                        rc.buildRobot(RobotType.LANDSCAPER, optDir);
+            if (landscaperCount < 28 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
+                for (int i = 0; i < 3; i++) {
+                    if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
+                        rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                         landscaperCount++;
                         break;
-                    } else {
-                        optDir = optDir.rotateRight();
                     }
                 }
             }
         }
         // produce inner layer of minescapers
         if (netGunCount >= 4) {
-            if (landscaperCount < 34) {
-                for (int i = 0; i < 8; i++) {
-                    if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                        rc.buildRobot(RobotType.LANDSCAPER, optDir);
+            if (landscaperCount < 34 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
+                for (int i = 0; i < 3; i++) {
+                    if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
+                        rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                         landscaperCount++;
                         break;
-                    } else {
-                        optDir = optDir.rotateRight();
                     }
                 }
             }
@@ -481,7 +478,7 @@ public strictfp class RobotPlayer {
             }
             if (!enemyLandscaper) {
                 for (RobotInfo r: robots) {
-                    if (r.getTeam() != rc.getTeam() && (r.getType() != RobotType.MINER || r.getType() != RobotType.LANDSCAPER || r.getType() != RobotType.DELIVERY_DRONE || r.getType() != RobotType.COW)) {
+                    if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
                         // if it's an enemy building, bury it
                         System.out.println("Enemy building targeted");
                         if (rc.getLocation().isAdjacentTo(r.getLocation())) {
@@ -973,7 +970,7 @@ public strictfp class RobotPlayer {
             rotateDir = rotateDir.rotateLeft();
         }
         for (int i = 0; i < 8; i++) {
-            if (nav.canGo(rc, rotateDir)) rc.move(rotateDir);
+            if (nav.canGo(rc, rotateDir, true)) rc.move(rotateDir);
             else rotateDir = rotateDir.rotateRight();
         }
         if (rc.canMove(rotateDir)) rc.move(rotateDir);
@@ -1028,7 +1025,7 @@ public strictfp class RobotPlayer {
 //        System.out.println("Getting info of round "+roundNum);
         Transaction[] info = rc.getBlock(roundNum);
         for (Transaction stuff: info) {
-            if (Cast.isMessageValid(stuff.getMessage())) {
+            if (Cast.isMessageValid(rc, stuff.getMessage())) {
                 for (int i = 0; i < stuff.getMessage().length-1; i++) {
                     int message = stuff.getMessage()[i];
 //                    System.out.println("message is: " + message);
@@ -1239,7 +1236,7 @@ public strictfp class RobotPlayer {
                 infoQ.remove(0);
             }
             // add the hash
-            info[blockSize] = Cast.hash(prepHash);
+            info[blockSize] = Cast.hash(rc, prepHash);
             if (rc.canSubmitTransaction(info, defaultCost)) {
 //                System.out.println("Submitted transaction! Message is : " + info.toString());
                 rc.submitTransaction(info, defaultCost);
