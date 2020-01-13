@@ -37,16 +37,22 @@ public strictfp class RobotPlayer {
     // help radius
     static int helpRadius = 80;
     // refinery radius
-    static int refineryDist = 48;
+    static int refineryDist = 63;
     // default cost of our transaction
     private static int defaultCost = 2;
     // how much drones can wander
     static int wanderLimit = 5;
+    // when builder returns
+    static int builderReturn = 100;
+    // when to explode drone
+    static int explodeThresh = 10;
 
     // navigation object
     static Nav nav = new Nav();
     // turtle object
     static Turtle turtle;
+    // blueprint object (only used by first miner)
+    static Blueprint blueprint;
 
     // important locations
     static MapLocation HQLocation = null;
@@ -68,9 +74,13 @@ public strictfp class RobotPlayer {
     static boolean isBuilder;
     // is miner #2
     static boolean isAttacker;
+    // countdown for landscapers to switch states
+    static int switchStateCd = -1;
 
     // booleans
     static boolean isCow = false;
+    // explode the unit
+    static boolean explode = false;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
@@ -146,7 +156,8 @@ public strictfp class RobotPlayer {
                         runNetGun();
                         break;
                 }
-
+                // if the unit wants to explode, kill it
+                if (explode) return;
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
@@ -160,6 +171,8 @@ public strictfp class RobotPlayer {
     static void runHQ() throws GameActionException {
         // find drones and shoot them
         RobotInfo[] robots = rc.senseNearbyRobots();
+        boolean isVaporator = false;
+        int netGunCount = 0;
         for (RobotInfo r : robots) {
             if (r.getTeam() != rc.getTeam() && r.getType() == RobotType.DELIVERY_DRONE) {
                 System.out.println("Shot a drone at " + r.getLocation());
@@ -168,11 +181,17 @@ public strictfp class RobotPlayer {
                     break;
                 }
             }
+            if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
+                isVaporator = true;
+            }
+            if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) {
+                netGunCount++;
+            }
         }
         // build all the miners we can get in the first few turns
-        // maximum of 10 miners at 200th round
+        // maximum of 10 miners at 500th round
         Direction optDir = Direction.NORTH;
-        if (minerCount < Math.max(5+rc.getRoundNum()/40, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost)) {
+        if (minerCount < Math.max(5+rc.getRoundNum()/100, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
@@ -185,6 +204,11 @@ public strictfp class RobotPlayer {
     static void runMiner() throws GameActionException {
         System.out.println("I have " + Clock.getBytecodesLeft());
         System.out.println("I have " + rc.getSoupCarrying());
+        if (isBuilder && rc.getRoundNum() >= builderReturn) {
+            if (rc.getRoundNum() == builderReturn) helpMode = 0;
+            runBuilder();
+            return;
+        }
         // check if it's in help mode and it moved so it can go free
         if (helpMode == 1) {
             if (nav.outOfDrone(rc)) helpMode = 0;
@@ -258,7 +282,7 @@ public strictfp class RobotPlayer {
                 } else {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                         helpMode = 1;
-//                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
                     }
                     else nav.bugNav(rc, closestRefineryLocation);
@@ -276,7 +300,7 @@ public strictfp class RobotPlayer {
                     else {
                         if (nav.needHelp(rc, turnCount, soupLoc)) {
                             helpMode = 1;
-//                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                             infoQ.add(Cast.getMessage(rc.getLocation(), soupLoc));
                         }
                         else nav.bugNav(rc, soupLoc);
@@ -286,7 +310,38 @@ public strictfp class RobotPlayer {
                     if (exploreTo == null || suspectsVisited.get(exploreTo)) {
                         nextExplore();
                     }
+                    System.out.println("Exploring to: " + exploreTo.toString());
                     nav.bugNav(rc, exploreTo);
+                }
+            }
+        }
+    }
+
+    static void runBuilder() throws GameActionException {
+        if (blueprint == null) {
+            System.out.println("blueprint is null");
+        }
+        if (helpMode == 1) {
+            if (nav.outOfDrone(rc)) helpMode = 0;
+        }
+        if (helpMode == 0) {
+            // check if it's on the miner trail
+            if (blueprint.getIndex(rc.getLocation()) == -1) {
+                // if off the rail, try to move to HQLoc + EAST 2 times
+                System.out.println("Off the trail right now");
+                MapLocation onTrail = new Vector(2, 0).addWith(HQLocation);
+                if (nav.needHelp(rc, turnCount, onTrail)) {
+                    helpMode = 1;
+//                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    infoQ.add(Cast.getMessage(rc.getLocation(), onTrail));
+                }
+                else nav.bugNav(rc, onTrail);
+            } else {
+                // on the trail
+                System.out.println("On the trail!");
+                if (!blueprint.build(rc)) {
+                    explode = true;
+                    return;
                 }
             }
         }
@@ -342,7 +397,7 @@ public strictfp class RobotPlayer {
         }
         // produce inner layer of minescapers
         if (netGunCount >= 4) {
-            if (landscaperCount < 39) {
+            if (landscaperCount < 34) {
                 for (int i = 0; i < 8; i++) {
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                         rc.buildRobot(RobotType.LANDSCAPER, optDir);
@@ -373,16 +428,27 @@ public strictfp class RobotPlayer {
     }
 
     static void runLandscaper() throws GameActionException {
-        if (turtle.getLandscaperState() == 0 && rc.getRoundNum() >= 600) {
-            // convert to state 2 if needed
-            // TODO: figure out when is optimal to change into state 2, or to change into state 3 where we can use the disruptWithCow strategy
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        RobotInfo[] robotsmall = rc.senseNearbyRobots(2);
+        if (switchStateCd == 0) {
             System.out.println("Converting to state 2");
             turtle.setLandscaperState(2);
+        } else if (switchStateCd != -1) {
+            switchStateCd--;
+        }
+        if (turtle.getLandscaperState() == 0 && switchStateCd == -1) {
+            int netGunCount = 0;
+            // convert to state 2 when it sees 3 net guns
+            for (RobotInfo r: robots) {
+                if (r.getTeam() == rc.getTeam() && r.getType() == RobotType.NET_GUN) {
+                    netGunCount++;
+                }
+            }
+            if (netGunCount >= 2) switchStateCd = 5;
         }
         System.out.println("My state is: " + turtle.getLandscaperState());
         if (turtle.getLandscaperState() == 0) {
             // TODO: maybe we can make a ENEMY_BUILDING category and have them attack in the future
-            RobotInfo[] robots = rc.senseNearbyRobots();
             boolean enemyLandscaper = false;
             for (RobotInfo r: robots) {
                 if (r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam() && r.getLocation().distanceSquaredTo(HQLocation) <= 20) {
@@ -458,9 +524,8 @@ public strictfp class RobotPlayer {
                 }
             }
         } else if (turtle.getLandscaperState() == 1) {
-            RobotInfo[] robots = rc.senseNearbyRobots(2);
             // check if there's anything adjacent to it that can bury
-            for (RobotInfo r: robots) {
+            for (RobotInfo r: robotsmall) {
                 if (r.getTeam() == rc.getTeam() && r.getType().isBuilding()) {
                     // if our own building is getting buried (most likely net gun) dig out dirt
                     Direction optDir = rc.getLocation().directionTo(r.getLocation());
@@ -471,7 +536,7 @@ public strictfp class RobotPlayer {
                 }
             }
             if (rc.isReady()) {
-                for (RobotInfo r : robots) {
+                for (RobotInfo r : robotsmall) {
                     if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
                         System.out.println("I see enemy building");
                         // if it's an enemy building, bury it
@@ -503,8 +568,13 @@ public strictfp class RobotPlayer {
                 // build outer wall if no other problems
                 if (turtle.positionOut(rc.getLocation()) == -1) {
                     MapLocation left = new Vector(-1, -3).addWith(HQLocation);
-                    MapLocation right = new Vector(0, -3).addWith(HQLocation);
-                    if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
+                    MapLocation right = new Vector(1, -3).addWith(HQLocation);
+                    MapLocation down = new Vector(0, -3).addWith(HQLocation);
+                    if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null && rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null) {
+                        System.out.println("Going to down position");
+                        nav.bugNav(rc, down);
+                    }
+                    else if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
                         System.out.println("Going to right position");
                         nav.bugNav(rc, right);
                     } else {
@@ -517,9 +587,8 @@ public strictfp class RobotPlayer {
                 }
             }
         } else if (turtle.getLandscaperState() == 2) {
-            RobotInfo[] robots = rc.senseNearbyRobots(2);
             // check if there's anything adjacent to it that can bury, but I really doubt it can happen at this state
-            for (RobotInfo r: robots) {
+            for (RobotInfo r: robotsmall) {
                 if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
                     System.out.println("I sense enemy building");
                     // if it's an enemy building, bury it
@@ -546,10 +615,15 @@ public strictfp class RobotPlayer {
                 }
             }
             // build inner wall
-            if (turtle.positionOut(rc.getLocation()) == -1) {
-                MapLocation left = new Vector(0, -2).addWith(HQLocation);
+            if (turtle.positionIn(rc.getLocation()) == -1) {
+                MapLocation left = new Vector(-1, -2).addWith(HQLocation);
                 MapLocation right = new Vector(1, -2).addWith(HQLocation);
-                if (rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null) {
+                MapLocation down = new Vector(0, -2).addWith(HQLocation);
+                if (rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null && rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
+                    System.out.println("Going to down location");
+                    nav.bugNav(rc, down);
+                }
+                else if (rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null) {
                     System.out.println("Going to left location");
                     nav.bugNav(rc, left);
                 } else {
@@ -564,9 +638,12 @@ public strictfp class RobotPlayer {
     }
 
     static void runDeliveryDrone() throws GameActionException {
-//        if (!helpLoc.isEmpty()) {
-//            System.out.println("My help queue is: " + helpLoc.toString());
-//        }
+        System.out.println("My stuck value is " + nav.getStuck());
+        // check if it needs to explode
+        if (nav.getStuck() >= explodeThresh) {
+            explode = true;
+            return;
+        }
         // check for help mode
         if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
             // check for all of helpLoc if there's anything, if so, change helpMode and order of helpLoc
@@ -708,6 +785,9 @@ public strictfp class RobotPlayer {
                         nav.bugNav(rc, enemyHQLocation);
                     }
                     if (enemyHQLocation == null) {
+                        if (nav.getWander() >= wanderLimit) {
+                            resetEnemyHQSuspect();
+                        }
                         nav.bugNav(rc, enemyHQLocationSuspect);
                     }
                 } else {
@@ -732,6 +812,9 @@ public strictfp class RobotPlayer {
                         nav.bugNav(rc, exploreTo);
                     }
                 }
+            }
+            if (nav.getWander() >= wanderLimit) {
+                resetEnemyHQSuspect();
             }
             nav.bugNav(rc, enemyHQLocationSuspect);
             System.out.println("I'm at " + rc.getLocation().toString());
@@ -898,7 +981,13 @@ public strictfp class RobotPlayer {
 
     static void findState() throws GameActionException {
         if (rc.getType() == RobotType.MINER) {
-            if (rc.getRoundNum() == 2) isBuilder = true;
+            if (rc.getRoundNum() == 2) {
+                if (HQLocation == null) {
+                    System.out.println("HQloc is null");
+                }
+                isBuilder = true;
+                blueprint = new Blueprint(HQLocation);
+            }
             if (rc.getRoundNum() == 3) isAttacker = true;
             return;
         }

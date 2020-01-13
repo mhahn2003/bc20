@@ -288,7 +288,6 @@ public class Turtle {
         for (int i = 0; i < outerLoc.length; i++) {
             if (outerLoc[i].equals(vec)) return i;
         }
-        landscaperState = 0;
         return -1;
     }
 
@@ -298,7 +297,6 @@ public class Turtle {
         for (int i = 0; i < innerLoc.length; i++) {
             if (innerLoc[i].equals(vec)) return i;
         }
-        landscaperState = 0;
         return -1;
     }
 

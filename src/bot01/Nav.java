@@ -17,6 +17,7 @@ public class Nav {
     private int travelDist;
     private int travelRound;
     private int wander;
+    private int stuck;
     private MapLocation helpReq;
 
     public Nav() {
@@ -28,10 +29,13 @@ public class Nav {
         travelRound = 0;
         wander = 0;
         helpReq = null;
+        stuck = 0;
     }
 
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
+        if (rc.getLocation() == dest) return;
+        if (!rc.isReady()) return;
         if (currentDest != dest) {
             navSoftReset(rc, dest);
         }
@@ -44,6 +48,7 @@ public class Nav {
         if (!isBugging) {
             // if the state is free
             if (canGo(rc, optDir)) {
+                stuck = 0;
                 rc.move(optDir);
             }
             else isBugging = true;
@@ -53,40 +58,58 @@ public class Nav {
             boolean canMove = false;
             for (int i = 0; i < 8; i++) {
                 if (canGo(rc, optDir)) {
+                    stuck = 0;
                     canMove = true;
                     break;
                 }
                 else optDir = optDir.rotateRight();
-                if (i == 7) return;
             }
             if (canMove) {
                 lastLoc = rc.getLocation();
                 rc.move(optDir);
             }
             else {
+                boolean isStuck = true;
                 if (!threats.isEmpty()) {
                     Direction safe = rc.getLocation().directionTo(threats.get(threats.size() - 1)).opposite();
-                    if (rc.canMove(safe)) rc.move(safe);
+                    if (rc.canMove(safe)) {
+                        stuck = 0;
+                        isStuck = false;
+                        rc.move(safe);
+                    }
                     else {
                         safe = safe.rotateLeft();
-                        if (rc.canMove(safe)) rc.move(safe);
+                        if (rc.canMove(safe)) {
+                            stuck = 0;
+                            isStuck = false;
+                            rc.move(safe);
+                        }
                         else {
                             safe = safe.rotateRight();
                             safe = safe.rotateRight();
-                            if (rc.canMove(safe)) rc.move(safe);
+                            if (rc.canMove(safe)) {
+                                stuck = 0;
+                                isStuck = false;
+                                rc.move(safe);
+                            }
                         }
                     }
                 } else {
                     for (int i = 0; i < 8; i++) {
                         if (rc.canMove(optDir)) {
+                            stuck = 0;
+                            isStuck = false;
                             rc.move(optDir);
                             break;
                         }
                         else optDir = optDir.rotateRight();
-                        if (i == 7) return;
+                        if (i == 7) {
+                            return;
+                        }
                     }
                 }
                 // if still can't move pretty screwed
+                if (isStuck) stuck++;
             }
             if (rc.getLocation().distanceSquaredTo(dest)<closestDist) isBugging = false;
         }
@@ -137,6 +160,8 @@ public class Nav {
         currentDest = dest;
         travelDist = Math.abs(rc.getLocation().x-dest.x)+Math.abs(rc.getLocation().y-dest.y);
         travelRound = rc.getRoundNum();
+        helpReq = null;
+        stuck = 0;
     }
 
     public void navSoftReset(RobotController rc, MapLocation dest) {
@@ -147,6 +172,7 @@ public class Nav {
         closestDist = 1000000;
         currentDest = dest;
         wander = 0;
+        stuck = 0;
     }
 
     public void addThreat(MapLocation loc) {
@@ -163,6 +189,7 @@ public class Nav {
 
     public boolean needHelp(RobotController rc, int turnCount, MapLocation loc) {
         if (!loc.equals(currentDest)) return false;
+        if (rc.getLocation().isAdjacentTo(currentDest)) return false;
         // if under drone attack don't call for help
         if (droneThreat(rc, rc.getLocation())) return false;
         if (travelDist < 15) {
@@ -184,7 +211,6 @@ public class Nav {
 
     public boolean outOfDrone(RobotController rc) {
         if (!rc.getLocation().equals(helpReq)) {
-            helpReq = null;
             navReset(rc, currentDest);
             return true;
         }
@@ -202,4 +228,6 @@ public class Nav {
     public int getWander() {
         return wander;
     }
+
+    public int getStuck() { return stuck; }
 }
