@@ -42,8 +42,8 @@ public strictfp class RobotPlayer {
     // how far can water be away from each other
     static int waterClusterDist = 120;
     // patrol radius
-    static int patrolRadiusMin = 36;
-    static int patrolRadiusMax = 45;
+    static int patrolRadiusMin = 25;
+    static int patrolRadiusMax = 34;
     // help radius
     static int helpRadius = 80;
     // refinery radius
@@ -338,11 +338,22 @@ public strictfp class RobotPlayer {
                     else nav.bugNav(rc, closestRefineryLocation);
                 }
             } else {
+                // try to mine soup in all directions because miner finding soup can be slightly buggy
+                boolean canMine = false;
+                for (Direction d: directions) {
+                    if (rc.canMineSoup(d)) {
+                        rc.mineSoup(d);
+                        canMine = true;
+                        break;
+                    }
+                }
+                if (rc.canMineSoup(Direction.CENTER)) {
+                    rc.mineSoup(Direction.CENTER);
+                    canMine = true;
+                }
                 if (soupLoc != null) {
 //                    System.out.println("Soup is at: " + soupLoc.toString());
-                    Direction locDir = rc.getLocation().directionTo(soupLoc);
-                    if (rc.canMineSoup(locDir)) {
-                        rc.mineSoup(locDir);
+                    if (canMine) {
                         // pollution might make miner skip this even though it's right next to soup
                         nav.navReset(rc, rc.getLocation());
                     }
@@ -458,6 +469,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runFulfillmentCenter() throws GameActionException {
+        System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
         Direction optDir = Direction.NORTHWEST;
         if (droneCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost) {
@@ -468,6 +480,17 @@ public strictfp class RobotPlayer {
                     break;
                 } else {
                     optDir = optDir.rotateRight(); 
+                }
+            }
+        }
+        if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost && helpLoc.size() >= 5) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup()>350 ){
+                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
+                    droneCount++;
+                    break;
+                } else {
+                    optDir = optDir.rotateRight();
                 }
             }
         }
@@ -488,6 +511,9 @@ public strictfp class RobotPlayer {
             // if drones are almost max then prepare attack
             if (droneCount == maxDroneCount-10) {
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, HQLocation));
+            }
+            if (droneCount == maxDroneCount) {
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, HQLocation));
             }
         }
 
@@ -788,6 +814,7 @@ public strictfp class RobotPlayer {
     }
 
     static void runDeliveryDrone() throws GameActionException {
+        System.out.println("helpLoc length is " + helpLoc.size());
         System.out.println("My stuck value is " + nav.getStuck());
         // check if it needs to explode
         if (nav.getStuck() >= explodeThresh) {
@@ -877,6 +904,8 @@ public strictfp class RobotPlayer {
                         // find opponent units
                         RobotInfo pickup = null;
                         for (RobotInfo r : rc.senseNearbyRobots()) {
+                            // check if it's inside the barrier somehow
+                            if (rc.getRoundNum() >= 450 && r.getLocation().distanceSquaredTo(HQLocation) < 8) continue;
                             if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
                                 if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
                                     if (r.getType() == RobotType.COW) {
@@ -977,11 +1006,11 @@ public strictfp class RobotPlayer {
                     }
                     break;
                 case PREPARE:
-                    if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= patrolRadiusMax ){
+                    if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= patrolRadiusMax){
                         // if too far, move in
                         nav.bugNav(rc, enemyHQLocation);
                         break;
-                    }else if(enemyHQLocation.distanceSquaredTo(rc.getLocation()) < patrolRadiusMin ){
+                    }else if(enemyHQLocation.distanceSquaredTo(rc.getLocation()) < patrolRadiusMin){
                         // if too close, move out
                         nav.bugNav(rc, HQLocation);
                     }
@@ -1408,7 +1437,7 @@ public strictfp class RobotPlayer {
                                 }
                                 break;
                             case HELP:
-                                if (rc.getType() != RobotType.DELIVERY_DRONE) break;
+                                if (rc.getType() != RobotType.DELIVERY_DRONE && rc.getType() != RobotType.FULFILLMENT_CENTER) break;
                                 MapLocation c1 = Cast.getC1(message);
                                 MapLocation c2 = Cast.getC2(message);
                                 helpLoc.add(new Pair(c1, c2));
