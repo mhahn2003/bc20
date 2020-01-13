@@ -368,11 +368,10 @@ public strictfp class RobotPlayer {
                     }
                 } else {
                     // scout for soup
-                    if (exploreTo == null || suspectsVisited.get(exploreTo)) {
-                        nextExplore();
+                    if (nav.getWander() >= wanderLimit) {
+                        resetEnemyHQSuspect();
                     }
-                    System.out.println("Exploring to: " + exploreTo.toString());
-                    nav.bugNav(rc, exploreTo);
+                    nav.bugNav(rc, enemyHQLocationSuspect);
                 }
             }
         }
@@ -955,6 +954,21 @@ public strictfp class RobotPlayer {
                             }
                         }
                     } else {
+                        System.out.println("I am adjacent to my self is " + rc.getLocation().isAdjacentTo(rc.getLocation()));
+                        System.out.println("I'm here and distance is: " + rc.getLocation().distanceSquaredTo(HQLocation));
+                        // if within distance 13 of HQ first things first move away
+                        if (rc.getLocation().distanceSquaredTo(HQLocation) <= 13) {
+                            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                            optDir = optDir.rotateLeft();
+                            for (int i = 0; i < 8; i++) {
+                                if (rc.canMove(optDir)) {
+                                    rc.move(optDir);
+                                    break;
+                                } else {
+                                    optDir = optDir.rotateLeft();
+                                }
+                            }
+                        }
                         // find water if not cow
                         System.out.println("I'm holding a unit!");
                         if (isCow) {
