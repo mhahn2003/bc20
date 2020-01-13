@@ -49,7 +49,7 @@ public strictfp class RobotPlayer {
     // refinery radius
     static int refineryDist = 63;
     // unit count control
-    static int maxDroneCount = 80;
+    static int maxDroneCount = 50;
     // attack control
     static int battlefieldRadius =169;
 
@@ -444,7 +444,7 @@ public strictfp class RobotPlayer {
         if (isVaporator) {
             // produce outer layer
             if (landscaperCount < 28 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 1; i++) {
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                         rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                         landscaperCount++;
