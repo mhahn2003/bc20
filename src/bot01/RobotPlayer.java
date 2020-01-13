@@ -15,6 +15,7 @@ public strictfp class RobotPlayer {
             RobotType.FULFILLMENT_CENTER, RobotType.NET_GUN};
 
     static int turnCount;
+    static int spawnHeight;
 
     // game map, not implemented yet
     static int[][] map;
@@ -364,7 +365,7 @@ public strictfp class RobotPlayer {
     static void runDesignSchool() throws GameActionException {
 
         // produce 5 landscapers initially to guard hq
-        Direction[] spawnDir = new Direction[]{Direction.SOUTHEAST, Direction.SOUTH, Direction.WEST};
+        Direction[] spawnDir = new Direction[]{Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST};
         if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
             for (int i = 0; i < 3; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
@@ -400,7 +401,7 @@ public strictfp class RobotPlayer {
         // produce inner layer of minescapers
         if (netGunCount >= 4) {
             if (landscaperCount < 34 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 2; i++) {
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                         rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                         landscaperCount++;
@@ -540,7 +541,7 @@ public strictfp class RobotPlayer {
             }
         } else if (turtle.getLandscaperState() == 1) {
             // check if there's anything adjacent to it that can bury
-            System.out.println("I have bytecode: " + Clock.getBytecodesLeft());
+//            System.out.println("I have bytecode: " + Clock.getBytecodesLeft());
             for (RobotInfo r: robotsmall) {
                 if (r.getTeam() == rc.getTeam() && r.getType().isBuilding()) {
                     // if our own building is getting buried (most likely net gun) dig out dirt
@@ -551,7 +552,44 @@ public strictfp class RobotPlayer {
                     }
                 }
             }
-            System.out.println("After checking if any building is getting buried, there is " + Clock.getBytecodesLeft());
+            MapLocation[] netGunLoc = new MapLocation[]{new Vector(2, 2).addWith(HQLocation), new Vector(2, -2).addWith(HQLocation), new Vector(-2, 2).addWith(HQLocation), new Vector(-2, -2).addWith(HQLocation)};
+//            System.out.println("After checking if any building is getting buried, there is " + Clock.getBytecodesLeft());
+            // check if any net guns are unbuildable by the miner
+            for (MapLocation loc: netGunLoc) {
+                if (loc.isAdjacentTo(rc.getLocation())) {
+                    if (Math.abs(spawnHeight-rc.senseElevation(loc)) > 3) {
+                        // can't spawn
+                        if (spawnHeight > rc.senseElevation(loc)) {
+                            // if lower
+                            if (rc.getDirtCarrying() == 0) {
+                                System.out.println("I have no dirt");
+                                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                                if (rc.canDigDirt(optDir)) {
+                                    System.out.println("Digging dirt from: " + optDir.toString());
+                                    rc.digDirt(optDir);
+                                    break;
+                                }
+                            } else {
+                                // fill up location
+                                System.out.println("I have dirt");
+                                Direction optDir = rc.getLocation().directionTo(loc);
+                                if (rc.canDepositDirt(optDir)) {
+                                    System.out.println("Depositing dirt at: " + optDir.toString());
+                                    rc.depositDirt(optDir);
+                                    break;
+                                }
+                            }
+                        } else {
+                            // if higher
+                            Direction optDir = rc.getLocation().directionTo(loc);
+                            if (rc.canDigDirt(optDir)) {
+                                rc.digDirt(optDir);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             if (rc.isReady()) {
                 for (RobotInfo r : robotsmall) {
                     if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
@@ -582,7 +620,7 @@ public strictfp class RobotPlayer {
                         }
                     }
                 }
-                System.out.println("After checking if any enemy building, there is " + Clock.getBytecodesLeft());
+//                System.out.println("After checking if any enemy building, there is " + Clock.getBytecodesLeft());
                 // build outer wall if no other problems
                 if (turtle.positionOut(rc.getLocation()) == -1) {
                     MapLocation left = new Vector(-1, -3).addWith(HQLocation);
@@ -601,7 +639,7 @@ public strictfp class RobotPlayer {
                     }
                 } else {
                     System.out.println("Building fort");
-                    System.out.println("Right before building fort, there is " + Clock.getBytecodesLeft());
+//                    System.out.println("Right before building fort, there is " + Clock.getBytecodesLeft());
                     turtle.buildFort(rc);
                 }
             }
@@ -963,6 +1001,7 @@ public strictfp class RobotPlayer {
 
     // when a unit is first created it calls this function
     static void initialize() throws GameActionException {
+        spawnHeight = rc.senseElevation(rc.getLocation());
         if (rc.getType() == RobotType.HQ) {
             collectInfo();
         } else {

@@ -56,7 +56,10 @@ public class Nav {
                 stuck = 0;
                 rc.move(optDir);
             }
-            else isBugging = true;
+            else {
+                tryToDig(rc, dest);
+                isBugging = true;
+            }
         }
         if (isBugging) {
             // if the state is bug
@@ -75,6 +78,7 @@ public class Nav {
                     break;
                 }
                 else optDir = optDir.rotateRight();
+                tryToDig(rc, dest);
             }
             if (canMove) {
                 lastLastLoc = lastLoc;
@@ -243,4 +247,18 @@ public class Nav {
     }
 
     public int getStuck() { return stuck; }
+
+    private void tryToDig(RobotController rc, MapLocation dest) throws GameActionException {
+        Direction optDir = rc.getLocation().directionTo(dest);
+        if (rc.isReady() && rc.getType() == RobotType.LANDSCAPER && rc.getLocation().isAdjacentTo(dest)) {
+            if (rc.senseElevation(rc.getLocation()) < rc.senseElevation(dest)) {
+                // if lower higher elevation
+                if (rc.canDigDirt(optDir)) rc.digDirt(optDir);
+            }
+            else {
+                // if higher elevation
+                if (rc.canDigDirt(Direction.CENTER)) rc.digDirt(Direction.CENTER);
+            }
+        }
+    }
 }
