@@ -1484,10 +1484,13 @@ public strictfp class RobotPlayer {
                                 break;
                             case DEFENSE:
                                 phase = actionPhase.DEFENSE;
+                                break;
                             case OUTER_LAYER:
                                 isOuterLayer = true;
+                                break;
                             case INNER_LAYER:
                                 isInnerLayer = true;
+                                break;
                         }
                     }
                 }
