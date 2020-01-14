@@ -1136,7 +1136,7 @@ public strictfp class RobotPlayer {
                                         closestEmptySpot = spots;
                                     }
                                 }
-                                
+                                // TODO: unfinihed section here
                             } else {
                                 // otherwise move in
                                 int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo(enemyHQLocation);
