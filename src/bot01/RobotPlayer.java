@@ -872,6 +872,23 @@ public strictfp class RobotPlayer {
                 }
             }
         }
+        // check if inner loc is completed then never go inside again
+        if (isInnerLayer) {
+            System.out.println("inner layer is completed!");
+            System.out.println("My distance is: " + rc.getLocation().distanceSquaredTo(HQLocation));
+            // if within distance 13 of HQ first things first move away
+            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 13) {
+                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                for (int i = 0; i < 8; i++) {
+                    if (rc.canMove(optDir)) {
+                        rc.move(optDir);
+                        break;
+                    } else {
+                        optDir = optDir.rotateRight();
+                    }
+                }
+            }
+        }
         // check for help mode
         if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
             // check for unit to help
