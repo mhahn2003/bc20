@@ -44,12 +44,14 @@ public strictfp class RobotPlayer {
     // patrol radius
     static int patrolRadiusMin = 25;
     static int patrolRadiusMax = 34;
-    // help radius
-    static int helpRadius = 80;
+    // help radius (super large for now because helping miners is pretty important)
+    static int helpRadius = 800;
     // refinery radius
     static int refineryDist = 63;
-    // unit count control
-    static int maxDroneCount = 65;
+    // drone count control
+    static int maxDroneCount = 70;
+    // landscaper count control
+    static int attackLandscaperCount = 20;
     // attack control
     static int battlefieldRadius =169;
 
@@ -81,6 +83,7 @@ public strictfp class RobotPlayer {
     // only drones use following
     static RobotInfo closestEnemyUnit;
     static ArrayList<Pair> helpLoc = new ArrayList<>();
+    // only landscapers use the following
     static Vector[] spawnPos = new Vector[]{new Vector(0, 0), new Vector(1, 0), new Vector(-1, 0), new Vector(0, 1), new Vector(-1, 1), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -1), new Vector(0, -1), new Vector(1, -1), new Vector(2, -1), new Vector(2, 0), new Vector(2, 1), new Vector(1, 1), new Vector(-1, 2), new Vector(0, 2), new Vector(1, 2), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2)};
 
     static actionPhase phase= actionPhase.NON_ATTACKING;
@@ -93,9 +96,11 @@ public strictfp class RobotPlayer {
     // is miner #1
     static boolean isBuilder;
     // is miner #2
+    // TODO: implement rush if it's not nerfed after sprint with this miner and the 5 state 0 landscapers we have
     static boolean isAttacker;
 
     // booleans
+    // is drone holding a cow
     static boolean isCow = false;
     // explode the unit
     static boolean explode = false;
@@ -515,7 +520,7 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        if (phase == actionPhase.ATTACK) {
+        if (phase == actionPhase.PREPARE) {
             if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, Direction.NORTH)) {
                 rc.buildRobot(RobotType.LANDSCAPER, Direction.NORTH);
                 landscaperCount++;
@@ -564,7 +569,7 @@ public strictfp class RobotPlayer {
                 droneCount++;
             }
             // if drones are almost max then prepare attack
-            if (droneCount == maxDroneCount-10) {
+            if (droneCount == maxDroneCount-attackLandscaperCount) {
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, HQLocation));
             }
             if (droneCount == maxDroneCount) {
@@ -844,6 +849,9 @@ public strictfp class RobotPlayer {
                 turtle.buildFort(rc);
             }
         }
+        else if (turtle.getLandscaperState() == 3) {
+            turtle.attack(rc, enemyHQLocation);
+        }
     }
 
     static void runDeliveryDrone() throws GameActionException {
@@ -892,7 +900,8 @@ public strictfp class RobotPlayer {
                 }
             }
             if (helpIndex != -1) {
-                helpMode = 1;
+                // only help people if you don't know enemy hq location or you're not bugging around enemyHQ
+                if (enemyHQLocation == null || rc.getLocation().distanceSquaredTo(enemyHQLocation) < 30) helpMode = 1;
             }
         }
         // if helping
@@ -1072,6 +1081,7 @@ public strictfp class RobotPlayer {
                         nav.bugNav(rc, HQLocation);
                     }
                     // with in the area, move to closest possible position around enemy hq
+                    // TODO: this ignores potential net guns around HQ
                     MapLocation minDistancedSafe = rc.getLocation();
                     int min_dist = enemyHQLocation.distanceSquaredTo(minDistancedSafe);
                     MapLocation nextPrepareLocation;
@@ -1079,7 +1089,7 @@ public strictfp class RobotPlayer {
                         nextPrepareLocation = rc.getLocation().add(dir);
                         if (min_dist > enemyHQLocation.distanceSquaredTo(nextPrepareLocation) &&
                                 enemyHQLocation.distanceSquaredTo(nextPrepareLocation) >= 25 &&
-                                rc.canMove(dir)) {
+                                nav.canGoDrone(rc, dir, true)) {
                             rc.move(dir);
                             break;
                         }
@@ -1087,8 +1097,7 @@ public strictfp class RobotPlayer {
                     break;
                 case ATTACK:
                     if (rc.isCurrentlyHoldingUnit() && !isAttackerBuilder) {
-                        // currently we'll just throw any unit we're holding out
-                        // TODO: if we're attacking with our own units, make a boolean to ensure that we don't throw away our own units
+                        // throw unit out if it's not our unit
                         // check the 8 adjacent tiles and see if there's any water
                         boolean unitDropped = false;
                         for (Direction d : directions) {
@@ -1121,12 +1130,18 @@ public strictfp class RobotPlayer {
                         if (isAttackerBuilder) {
                         // first, check if they can see enemyHQ
                             if (rc.canSenseLocation(enemyHQLocation)) {
+                                // empty spots
                                 ArrayList<MapLocation> emptySpots = new ArrayList<>();
+                                // non buildings and drones spot
+                                ArrayList<MapLocation> nonBuildingSpots = new ArrayList<>();
                                 // check HQ surroundings and see if there's any openings
                                 for (Direction dir: directions) {
                                     if (rc.canSenseLocation(enemyHQLocation.add(dir))) {
                                         RobotInfo r = rc.senseRobotAtLocation(enemyHQLocation.add(dir));
                                         if (r == null) emptySpots.add(enemyHQLocation.add(dir));
+                                        else if (r.getTeam() != rc.getTeam() && !r.getType().isBuilding() && r.getType() != RobotType.DELIVERY_DRONE) {
+                                            nonBuildingSpots.add(enemyHQLocation.add(dir));
+                                        }
                                     }
                                 }
                                 // find the closest empty spot next to HQ
@@ -1136,23 +1151,63 @@ public strictfp class RobotPlayer {
                                         closestEmptySpot = spots;
                                     }
                                 }
-                                // TODO: unfinihed section here
-                            } else {
-                                // otherwise move in
-                                int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo(enemyHQLocation);
-                                MapLocation nextAttackLocation;
-                                for (Direction dir : directions) {
-                                    nextAttackLocation = rc.getLocation().add(dir);
-                                    // manhattan distaance is odd makes a lattice
-                                    // even or closer make sure no dense positions
-                                    // check if empty
-                                    if (manhattanDistance(enemyHQLocation, nextAttackLocation) % 2 == 1 &&
-                                            (manhattanDistance(enemyHQLocation, rc.getLocation()) % 2 == 0 || nextAttackLocation.distanceSquaredTo(enemyHQLocation) <= currentDistToEnemyHQ) &&
-                                            rc.canMove(dir)) {
-                                        rc.move(dir);
-                                        break;
+                                MapLocation closestNonBuildingSpot = null;
+                                for (MapLocation spots: nonBuildingSpots) {
+                                    if (closestNonBuildingSpot == null || rc.getLocation().distanceSquaredTo(spots) < rc.getLocation().distanceSquaredTo(closestNonBuildingSpot)) {
+                                        closestNonBuildingSpot = spots;
                                     }
                                 }
+                                if (closestEmptySpot != null) {
+                                    // if there's an empty spot navigate there and place your unit
+                                    if (rc.getLocation().isAdjacentTo(closestEmptySpot)) {
+                                        Direction optDir = rc.getLocation().directionTo(closestEmptySpot);
+                                        if (rc.canDropUnit(optDir)) {
+                                            rc.dropUnit(optDir);
+                                            isAttackerBuilder = false;
+                                        }
+                                    } else {
+                                        // if you're placing a unit move in even manhattan distance
+                                        moveManhattan(closestEmptySpot, 0);
+                                    }
+                                }
+                                else if (closestNonBuildingSpot != null) {
+                                    // if there's an non building spot then hope that some other drone will come pick that unit up and then it'll convert to closestEmptySpot
+                                    if (rc.getLocation().isAdjacentTo(closestNonBuildingSpot)) {
+                                        Direction optDir = rc.getLocation().directionTo(closestNonBuildingSpot);
+                                        if (rc.canDropUnit(optDir)) {
+                                            rc.dropUnit(optDir);
+                                            isAttackerBuilder = false;
+                                        }
+                                    } else {
+                                        // if you're placing a unit move in even manhattan distance
+                                        moveManhattan(closestNonBuildingSpot, 0);
+                                    }
+                                }
+                                else {
+                                    // if all of HQ is enclosed, then place them somewhere on land and make them dig the buildings (just deploying will do)
+                                    if (rc.getLocation().distanceSquaredTo(enemyHQLocation) > 8) {
+                                        // if they're not close enough, move in more
+                                        moveManhattan(enemyHQLocation, 0);
+                                    } else {
+                                        // check all adjacent locations and see if they're land and placable
+                                        Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
+                                        for (int i = 0; i < 8; i++) {
+                                            if (!rc.senseFlooding(rc.getLocation().add(optDir))) {
+                                                if (rc.canDropUnit(optDir)) {
+                                                    rc.dropUnit(optDir);
+                                                    break;
+                                                }
+                                            }
+                                            optDir = optDir.rotateRight();
+                                        }
+                                        // if there's no available locations, still move manhattan
+                                        moveManhattan(enemyHQLocation, 0);
+                                    }
+                                }
+                            } else {
+                                // otherwise move in
+                                // they move with even parity because they have priority
+                                moveManhattan(enemyHQLocation, 0);
                             }
                         } else {
                             // if next to any units pick them up
@@ -1166,25 +1221,11 @@ public strictfp class RobotPlayer {
                                 }
                             }
                             // get into attack radius of enemy netgun
-                            int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo(enemyHQLocation);
-                            MapLocation nextAttackLocation;
-                            for (Direction dir : directions) {
-                                nextAttackLocation = rc.getLocation().add(dir);
-                                // manhattan distaance is odd makes a lattice
-                                // even or closer make sure no dense positions
-                                // check if empty
-                                if (manhattanDistance(enemyHQLocation, nextAttackLocation) % 2 == 1 &&
-                                        (manhattanDistance(enemyHQLocation, rc.getLocation()) % 2 == 0 || nextAttackLocation.distanceSquaredTo(enemyHQLocation) <= currentDistToEnemyHQ) &&
-                                        rc.canMove(dir)) {
-                                    rc.move(dir);
-                                    break;
-                                }
-                            }
+                            moveManhattan(enemyHQLocation, 1);
                         }
                     }
                     break;
                 case SURRENDER:
-                    // TODO: isn't this supposed to be enemyHQLocation?
                     if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < patrolRadiusMin) {
                             // if close, move away
                             nav.bugNav(rc, HQLocation);
@@ -1730,6 +1771,29 @@ public strictfp class RobotPlayer {
             }
         }
         return actualMesssage;
+    }
+
+    // move to location with the desired parity of manhattan distance
+
+    // NOTE: PARITY WITH ENEMYHQ
+    static void moveManhattan(MapLocation loc, int parity) throws GameActionException {
+        int nonparity;
+        if (parity == 0) nonparity = 1;
+        else nonparity = 0;
+        int currentDist = rc.getLocation().distanceSquaredTo(loc);
+        MapLocation nextAttackLocation;
+        for (Direction dir : directions) {
+            nextAttackLocation = rc.getLocation().add(dir);
+            // manhattan distance is odd makes a lattice
+            // even or closer make sure no dense positions
+            // check if empty
+            if (manhattanDistance(enemyHQLocation, nextAttackLocation) % 2 == parity &&
+                    (manhattanDistance(enemyHQLocation, rc.getLocation()) % 2 == nonparity || nextAttackLocation.distanceSquaredTo(loc) <= currentDist) &&
+                    rc.canMove(dir)) {
+                rc.move(dir);
+                break;
+            }
+        }
     }
 }
 

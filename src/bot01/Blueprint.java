@@ -106,20 +106,6 @@ public class Blueprint {
                 }
             }
             else if (buildNext == 2) {
-                // move to index 4
-                if (currentIndex == 4) {
-                    if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
-                        if (rc.canBuildRobot(RobotType.NET_GUN, Direction.SOUTHWEST)) {
-                            System.out.println("Built net gun 1");
-                            buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.NET_GUN, Direction.SOUTHWEST);
-                        }
-                    }
-                } else {
-                    goTo(rc, 4);
-                }
-            }
-            else if (buildNext == 3) {
                 // move to index 0
                 if (currentIndex == 0) {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
@@ -131,6 +117,20 @@ public class Blueprint {
                     }
                 } else {
                     goTo(rc, 0);
+                }
+            }
+            else if (buildNext == 3) {
+                // move to index 4
+                if (currentIndex == 4) {
+                    if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
+                        if (rc.canBuildRobot(RobotType.NET_GUN, Direction.SOUTHWEST)) {
+                            System.out.println("Built net gun 1");
+                            buildComplete[buildNext] = true;
+                            rc.buildRobot(RobotType.NET_GUN, Direction.SOUTHWEST);
+                        }
+                    }
+                } else {
+                    goTo(rc, 4);
                 }
             }
             else if (buildNext == 4) {

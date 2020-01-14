@@ -136,7 +136,7 @@ public class Nav {
     public boolean canGo(RobotController rc, Direction dir, boolean free) throws GameActionException {
         if (rc.getType() == RobotType.MINER) return canGoMiner(rc, dir, free);
         else if (rc.getType() == RobotType.LANDSCAPER) return canGoLandscaper(rc, dir);
-        else if (rc.getType() == RobotType.DELIVERY_DRONE) return canGoDrone(rc, dir);
+        else if (rc.getType() == RobotType.DELIVERY_DRONE) return canGoDrone(rc, dir, free);
         return true;
     }
 
@@ -161,10 +161,10 @@ public class Nav {
         return true;
     }
 
-    public boolean canGoDrone(RobotController rc, Direction dir) throws GameActionException {
+    public boolean canGoDrone(RobotController rc, Direction dir, boolean free) throws GameActionException {
         if (!rc.canMove(dir)) return false;
         MapLocation goodLoc = rc.getLocation().add(dir);
-        if (goodLoc.equals(lastLoc) || goodLoc.equals(lastLastLoc)) return false;
+        if (!free && goodLoc.equals(lastLoc) || goodLoc.equals(lastLastLoc)) return false;
         for (MapLocation loc: threats) {
             if (goodLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
         }

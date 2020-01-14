@@ -2,6 +2,10 @@ package bot01;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+
+import static bot01.RobotPlayer.directions;
+
 public class Turtle {
 
     // 0: patrolling and rushing enemyHQ with disruptWithCow
@@ -58,7 +62,7 @@ public class Turtle {
         if (!isOuterLayer) landscaperState = 1;
         else if (!isInnerLayer) landscaperState = 2;
         if (!isVaporator) landscaperState = 0;
-        if (landscaperState == -1) landscaperState = 3;
+        if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1))) landscaperState = 3;
         patrolLoc = new Vector[]{new Vector(1, 2), new Vector(1, -2), new Vector(-2, -1), new Vector(2, -1), new Vector(-2, 1)};
         outerLoc = new Vector[]{new Vector(-1, 3), new Vector(-2, 3), new Vector(-3, 3), new Vector(-3, 2), new Vector(-3, 1), new Vector(-3, 0), new Vector(-3, -1), new Vector(-3, -2), new Vector(-3, -3),
                 new Vector(-2, -3), new Vector(-1, -3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0), new Vector(3, -1), new Vector(3, -2),
@@ -443,7 +447,7 @@ public class Turtle {
                 Direction dir1 = Direction.SOUTHWEST;
                 MapLocation loc1 = rc.getLocation().add(dir1);
                 Direction dig = Direction.WEST;
-                trytoMove(rc, loc1, dir1, dig, dig);
+                trytoMove(rc, dir1, dig, dig);
             }
             else if (offset.equals(new Vector(-1, -1))) {
                 Direction dir1 = Direction.SOUTH;
@@ -451,8 +455,8 @@ public class Turtle {
                 Direction dir2 = Direction.SOUTHEAST;
                 MapLocation loc2 = rc.getLocation().add(dir2);
                 Direction dig = Direction.WEST;
-                trytoMove(rc, loc1, dir1, dig, dig);
-                trytoMove(rc, loc2, dir2, dig, dig);
+                trytoMove(rc, dir1, dig, dig);
+                trytoMove(rc, dir2, dig, dig);
             }
             else if (offset.equals(new Vector(0, -1))) {
                 Direction dir1 = Direction.SOUTH;
@@ -462,9 +466,9 @@ public class Turtle {
                 Direction dir3 = Direction.SOUTHEAST;
                 MapLocation loc3 = rc.getLocation().add(dir3);
                 Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, loc1, dir1, dig, dig);
-                trytoMove(rc, loc2, dir2, dig, dig);
-                trytoMove(rc, loc3, dir3, dig, dig);
+                trytoMove(rc, dir1, dig, dig);
+                trytoMove(rc, dir2, dig, dig);
+                trytoMove(rc, dir3, dig, dig);
             }
             else if (offset.equals(new Vector(-1, -2))) {
                 Direction dir1 = Direction.SOUTH;
@@ -472,8 +476,8 @@ public class Turtle {
                 Direction dir2 = Direction.SOUTHEAST;
                 MapLocation loc2 = rc.getLocation().add(dir2);
                 Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, loc1, dir1, dig, dig);
-                trytoMove(rc, loc2, dir2, dig, dig);
+                trytoMove(rc, dir1, dig, dig);
+                trytoMove(rc, dir2, dig, dig);
             }
             else if (offset.equals(new Vector(0, -2))) {
                 Direction dir1 = Direction.SOUTHEAST;
@@ -481,8 +485,8 @@ public class Turtle {
                 Direction dir2 = Direction.SOUTH;
                 MapLocation loc2 = rc.getLocation().add(dir2);
                 Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, loc1, dir1, dig, dig);
-                trytoMove(rc, loc2, dir2, dig, dig);
+                trytoMove(rc, dir1, dig, dig);
+                trytoMove(rc, dir2, dig, dig);
             } else {
                 // should not reach here
                 System.out.println("This landscaper is sad and wrong");
@@ -494,8 +498,8 @@ public class Turtle {
                 Direction dir2 = Direction.SOUTH;
                 MapLocation loc2 = rc.getLocation().add(dir2);
                 Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, loc1, dir1, dig, dig);
-                trytoMove(rc, loc2, dir2, dig, dig);
+                trytoMove(rc, dir1, dig, dig);
+                trytoMove(rc, dir2, dig, dig);
             }
             else if (offset.equals(new Vector(-1, -1))) {
                 Direction dir1 = Direction.SOUTHEAST;
@@ -503,8 +507,8 @@ public class Turtle {
                 Direction dir2 = Direction.SOUTH;
                 MapLocation loc2 = rc.getLocation().add(dir2);
                 Direction dig = Direction.WEST;
-                trytoMove(rc, loc1, dir1, dig, dig);
-                trytoMove(rc, loc2, dir2, dig, dig);
+                trytoMove(rc, dir1, dig, dig);
+                trytoMove(rc, dir2, dig, dig);
             } else {
                 // should not reach here
                 System.out.println("This landscaper is sad and wrong");
@@ -512,7 +516,8 @@ public class Turtle {
         }
     }
 
-    private void trytoMove(RobotController rc, MapLocation loc, Direction dir, Direction digFrom, Direction depositTo) throws GameActionException {
+    private void trytoMove(RobotController rc, Direction dir, Direction digFrom, Direction depositTo) throws GameActionException {
+        MapLocation loc = rc.getLocation().add(dir);
         if (rc.isReady()) {
             if (rc.canMove(dir)) rc.move(dir);
             else {
@@ -520,7 +525,7 @@ public class Turtle {
                 RobotInfo r = rc.senseRobotAtLocation(loc);
                 if (r != null) return;
                 else {
-                    if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(loc)) > 15) return;
+                    if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(loc)) > 20) return;
                     // check elevation
                     if (rc.senseElevation(rc.getLocation()) > rc.senseElevation(loc)) {
                         // if lower
@@ -545,6 +550,72 @@ public class Turtle {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    public void attack(RobotController rc, MapLocation enemyHQLocation) throws GameActionException {
+        // if next to enemy HQ bury it
+        if (rc.getLocation().isAdjacentTo(enemyHQLocation)) {
+            if (rc.getDirtCarrying() == 0) {
+                // dig dirt
+                Direction optDir = rc.getLocation().directionTo(enemyHQLocation).opposite();
+                for (int i = 0; i < 8; i++) {
+                    if (optDir != rc.getLocation().directionTo(enemyHQLocation)) {
+                        if (rc.canDigDirt(optDir)) {
+                            rc.digDirt(optDir);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
+                if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+            }
+        }
+        else {
+            // if not scan for surroundings and see if there's any open spots
+            if (rc.canSenseLocation(enemyHQLocation)) {
+                // empty spots
+                ArrayList<MapLocation> emptySpots = new ArrayList<>();
+                // non buildings and drones spot
+                ArrayList<MapLocation> nonBuildingSpots = new ArrayList<>();
+                // check enemy HQ surroundings and see if there's any openings
+                for (Direction dir : directions) {
+                    if (rc.canSenseLocation(enemyHQLocation.add(dir))) {
+                        RobotInfo r = rc.senseRobotAtLocation(enemyHQLocation.add(dir));
+                        if (r == null) emptySpots.add(enemyHQLocation.add(dir));
+                        else if (r.getTeam() != rc.getTeam() && !r.getType().isBuilding() && r.getType() != RobotType.DELIVERY_DRONE) {
+                            nonBuildingSpots.add(enemyHQLocation.add(dir));
+                        }
+                    }
+                }
+                // find the closest empty spot next to HQ
+                MapLocation closestEmptySpot = null;
+                for (MapLocation spots : emptySpots) {
+                    if (closestEmptySpot == null || rc.getLocation().distanceSquaredTo(spots) < rc.getLocation().distanceSquaredTo(closestEmptySpot)) {
+                        closestEmptySpot = spots;
+                    }
+                }
+                MapLocation closestNonBuildingSpot = null;
+                for (MapLocation spots : nonBuildingSpots) {
+                    if (closestNonBuildingSpot == null || rc.getLocation().distanceSquaredTo(spots) < rc.getLocation().distanceSquaredTo(closestNonBuildingSpot)) {
+                        closestNonBuildingSpot = spots;
+                    }
+                }
+                if (closestEmptySpot != null) {
+                    // move to that spot
+                    // TODO: finish implementing attacking
+                }
+            } else {
+                // try to move to enemyHQ
+                // but i really doubt they can't see enemy HQ
+                Direction dig = rc.getLocation().directionTo(enemyHQLocation);
+                Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
+                for (int i = 0; i < 8; i++) {
+                    trytoMove(rc, rc.getLocation().directionTo(enemyHQLocation), dig, dig);
+                    optDir = optDir.rotateLeft();
                 }
             }
         }
