@@ -918,7 +918,7 @@ public strictfp class RobotPlayer {
             }
             if (helpIndex != -1) {
                 // only help people if you don't know enemy hq location or you're not bugging around enemyHQ
-                if (enemyHQLocation == null || rc.getLocation().distanceSquaredTo(enemyHQLocation) < 30) helpMode = 1;
+                if (enemyHQLocation == null || rc.getLocation().distanceSquaredTo(enemyHQLocation) > patrolRadiusMax) helpMode = 1;
             }
         }
         // if helping

@@ -84,10 +84,11 @@ Our current strategy is to:
 12. ~~Apparently 4 vaporator is op?~~
 13. ~~Assign a build miner (using turncount) and if round number is 200+ make it come back to HQ and it will build things right next to HQ for us~~
 14. ~~Make drones patrol HQ~~
-15. If drones are patrolling to HQ and some miners are requesting for help, their request should take priority over patrolling (somewhat solved?)
+15. ~~If drones are patrolling to HQ and some miners are requesting for help, their request should take priority over patrolling (somewhat solved?)~~
 16. ~~Fix miner soup targeting~~
 17. Make landscapers wait in place before going
-18. Fix netgun build order (up-right corner second)
+18. ~~Fix netgun build order (up-right corner second)~~
+19. drone are acting weird when miners are requesting help and patrolling enemy HQ? And drones patrolling HQ doesn't seem to help
 19. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
 LNL
 LC
