@@ -103,6 +103,9 @@ public strictfp class RobotPlayer {
     static boolean explode = false;
     // is HQ under attack
     static boolean isUnderAttack = false;
+    // is outer layer and inner layer done
+    static boolean isOuterLayer = false;
+    static boolean isInnerLayer = false;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
@@ -433,6 +436,43 @@ public strictfp class RobotPlayer {
         boolean isVaporator = false;
         int netGunCount = 0;
         RobotInfo[] robots = rc.senseNearbyRobots();
+        Vector[] outerLayerConfirm = new Vector[6];
+        Vector[] innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2), new Vector(2, 1), new Vector(2, 0), new Vector(2, -1)};
+        for (int i = 0; i < 6; i++) {
+            outerLayerConfirm[i] = new Vector(i-3, -3);
+        }
+        if (!isOuterLayer) {
+            isOuterLayer = true;
+            for (Vector v : outerLayerConfirm) {
+                MapLocation loc = v.addWith(HQLocation);
+                if (rc.canSenseLocation(loc)) {
+                    RobotInfo r = rc.senseRobotAtLocation(loc);
+                    if (r == null || r.getTeam() != rc.getTeam() || r.getType() != RobotType.LANDSCAPER) {
+                        isOuterLayer = false;
+                        break;
+                    }
+                }
+            }
+            if (isOuterLayer) {
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.OUTER_LAYER, HQLocation));
+            }
+        }
+        if (!isInnerLayer) {
+            isInnerLayer = true;
+            for (Vector v : innerLayerConfirm) {
+                MapLocation loc = v.addWith(HQLocation);
+                if (rc.canSenseLocation(loc)) {
+                    RobotInfo r = rc.senseRobotAtLocation(loc);
+                    if (r == null || r.getTeam() != rc.getTeam() || r.getType() != RobotType.LANDSCAPER) {
+                        isInnerLayer = false;
+                        break;
+                    }
+                }
+            }
+            if (isInnerLayer) {
+                infoQ.add(Cast.getMessage(Cast.InformationCategory.INNER_LAYER, HQLocation));
+            }
+        }
         for (RobotInfo r: robots) {
             if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
                 isVaporator = true;
@@ -441,10 +481,10 @@ public strictfp class RobotPlayer {
                 netGunCount++;
             }
         }
-        if (isVaporator) {
+        if (isVaporator && !isOuterLayer) {
             // produce outer layer
-            if (landscaperCount < 28 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
-                for (int i = 0; i < 1; i++) {
+            if (rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
+                for (int i = 0; i < 2; i++) {
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                         rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                         landscaperCount++;
@@ -454,8 +494,8 @@ public strictfp class RobotPlayer {
             }
         }
         // produce inner layer of minescapers
-        if (netGunCount >= 4) {
-            if (landscaperCount < 34 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
+        if (netGunCount >= 4 && isOuterLayer && !isInnerLayer) {
+            if (rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
                 for (int i = 0; i < 2; i++) {
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                         rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
@@ -521,22 +561,22 @@ public strictfp class RobotPlayer {
     static void runLandscaper() throws GameActionException {
         RobotInfo[] robots = rc.senseNearbyRobots();
         RobotInfo[] robotsmall = rc.senseNearbyRobots(2);
-        if (switchStateCd == 0) {
-            System.out.println("Converting to state 2");
-            turtle.setLandscaperState(2);
-        } else if (switchStateCd != -1) {
-            switchStateCd--;
-        }
-        if (turtle.getLandscaperState() == 0 && switchStateCd == -1) {
-            int netGunCount = 0;
-            // convert to state 2 when it sees 3 net guns
-            for (RobotInfo r: robots) {
-                if (r.getTeam() == rc.getTeam() && r.getType() == RobotType.NET_GUN) {
-                    netGunCount++;
-                }
-            }
-            if (netGunCount >= 2) switchStateCd = 5;
-        }
+//        if (switchStateCd == 0) {
+//            System.out.println("Converting to state 2");
+//            turtle.setLandscaperState(2);
+//        } else if (switchStateCd != -1) {
+//            switchStateCd--;
+//        }
+//        if (turtle.getLandscaperState() == 0 && switchStateCd == -1) {
+//            int netGunCount = 0;
+//            // convert to state 2 when it sees 3 net guns
+//            for (RobotInfo r: robots) {
+//                if (r.getTeam() == rc.getTeam() && r.getType() == RobotType.NET_GUN) {
+//                    netGunCount++;
+//                }
+//            }
+//            if (netGunCount >= 2) switchStateCd = 5;
+//        }
         System.out.println("My state is: " + turtle.getLandscaperState());
         if (turtle.getLandscaperState() == 0) {
             // TODO: maybe we can make a ENEMY_BUILDING category and have them attack in the future
@@ -741,20 +781,7 @@ public strictfp class RobotPlayer {
 //                System.out.println("After checking if any enemy building, there is " + Clock.getBytecodesLeft());
                 // build outer wall if no other problems
                 if (turtle.positionOut(rc.getLocation()) == -1) {
-                    MapLocation left = new Vector(-1, -3).addWith(HQLocation);
-                    MapLocation right = new Vector(1, -3).addWith(HQLocation);
-                    MapLocation down = new Vector(0, -3).addWith(HQLocation);
-                    if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null && rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null) {
-                        System.out.println("Going to down position");
-                        nav.bugNav(rc, down);
-                    }
-                    else if (rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
-                        System.out.println("Going to right position");
-                        nav.bugNav(rc, right);
-                    } else {
-                        System.out.println("Going to left position");
-                        nav.bugNav(rc, left);
-                    }
+                    turtle.moveToTrail(rc);
                 } else {
                     System.out.println("Building fort");
 //                    System.out.println("Right before building fort, there is " + Clock.getBytecodesLeft());
@@ -791,20 +818,7 @@ public strictfp class RobotPlayer {
             }
             // build inner wall
             if (turtle.positionIn(rc.getLocation()) == -1) {
-                MapLocation left = new Vector(-1, -2).addWith(HQLocation);
-                MapLocation right = new Vector(1, -2).addWith(HQLocation);
-                MapLocation down = new Vector(0, -2).addWith(HQLocation);
-                if (rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null && rc.canSenseLocation(left) && rc.senseRobotAtLocation(left) != null) {
-                    System.out.println("Going to down location");
-                    nav.bugNav(rc, down);
-                }
-                else if (rc.canSenseLocation(right) && rc.senseRobotAtLocation(right) != null) {
-                    System.out.println("Going to left location");
-                    nav.bugNav(rc, left);
-                } else {
-                    System.out.println("Going to right location");
-                    nav.bugNav(rc, right);
-                }
+                turtle.moveToTrail(rc);
             } else {
                 System.out.println("Building fort");
                 turtle.buildFort(rc);
@@ -1382,9 +1396,10 @@ public strictfp class RobotPlayer {
 //        System.out.println("Getting info of round "+roundNum);
         Transaction[] info = rc.getBlock(roundNum);
         for (Transaction stuff: info) {
-            if (Cast.isMessageValid(rc, stuff.getMessage())) {
-                for (int i = 0; i < stuff.getMessage().length-1; i++) {
-                    int message = stuff.getMessage()[i];
+            int[] messageArr = removePad(stuff.getMessage());
+            if (Cast.isMessageValid(rc, messageArr)) {
+                for (int i = 0; i < messageArr.length-1; i++) {
+                    int message = messageArr[i];
 //                    System.out.println("message is: " + message);
 //                    System.out.println("message validness is " + Cast.isValid(message, rc));
 //                    System.out.println("message cat is" + Cast.getCat(message));
@@ -1608,11 +1623,39 @@ public strictfp class RobotPlayer {
             }
             // add the hash
             info[blockSize] = Cast.hash(rc, prepHash);
-            if (rc.canSubmitTransaction(info, defaultCost)) {
+            if (rc.canSubmitTransaction(padMessage(info), defaultCost)) {
 //                System.out.println("Submitted transaction! Message is : " + info.toString());
-                rc.submitTransaction(info, defaultCost);
+                rc.submitTransaction(padMessage(info), defaultCost);
             }
         }
+    }
+
+    static int[] padMessage(int[] arr) throws GameActionException {
+        int[] message = new int[7];
+        for (int i = 0; i < 7; i++) {
+            if (i < arr.length) {
+                message[i] = arr[i];
+            } else {
+                message[i] = 0;
+            }
+        }
+        return message;
+    }
+
+    static int[] removePad(int[] arr) throws GameActionException {
+        int nonZero = 0;
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] != 0) nonZero++;
+        }
+        int[] actualMesssage = new int[nonZero];
+        int index = 0;
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] != 0) {
+                actualMesssage[index] = arr[i];
+                index++;
+            }
+        }
+        return actualMesssage;
     }
 }
 

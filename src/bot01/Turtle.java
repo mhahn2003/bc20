@@ -7,38 +7,59 @@ public class Turtle {
     // 0: patrolling and rushing enemyHQ with disruptWithCow
     // 1: building outer wall
     // 2: building inner wall
-    // 3: disrupt with cow
+    // 3: attack
     // TODO: implement state 3
     private int landscaperState;
     private MapLocation HQLocation;
     private Vector[] patrolLoc;
     private Vector[] outerLoc;
     private Vector[] innerLoc;
+    private Vector[] outerLayerConfirm;
+    private Vector[] innerLayerConfirm;
 
     // initialize landscaper state
-    public Turtle(RobotController rc, MapLocation HQLocation) {
+    public Turtle(RobotController rc, MapLocation HQLocation) throws GameActionException {
+        landscaperState = -1;
         this.HQLocation = HQLocation;
+        outerLayerConfirm = new Vector[6];
+        innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2), new Vector(2, 1), new Vector(2, 0), new Vector(2, -1)};
+        boolean isOuterLayer = true;
+        boolean isInnerLayer = true;
+        for (int i = 0; i < 6; i++) {
+            outerLayerConfirm[i] = new Vector(i-3, -3);
+        }
+        for (Vector v: outerLayerConfirm) {
+            MapLocation loc = v.addWith(HQLocation);
+            if (rc.canSenseLocation(loc)) {
+                RobotInfo r = rc.senseRobotAtLocation(loc);
+                if (r == null || r.getTeam() != rc.getTeam() || r.getType() != RobotType.LANDSCAPER) {
+                    isOuterLayer = false;
+                    break;
+                }
+            }
+        }
+        for (Vector v: innerLayerConfirm) {
+            MapLocation loc = v.addWith(HQLocation);
+            if (rc.canSenseLocation(loc)) {
+                RobotInfo r = rc.senseRobotAtLocation(loc);
+                if (r == null || r.getTeam() != rc.getTeam() || r.getType() != RobotType.LANDSCAPER) {
+                    isInnerLayer = false;
+                    break;
+                }
+            }
+        }
         boolean isVaporator = false;
-        int netGunCount = 0;
         RobotInfo[] robots = rc.senseNearbyRobots();
         for (RobotInfo r: robots) {
             if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
                 isVaporator = true;
             }
-            if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) {
-                netGunCount++;
-            }
         }
-        if (netGunCount >= 4) {
-            landscaperState = 2;
-        }
-        else if (isVaporator) {
-            landscaperState = 1;
-        }
-        else {
-            landscaperState = 0;
-        }
-        patrolLoc = new Vector[]{new Vector(-1, 2), new Vector(1, -2), new Vector(-2, 1), new Vector(2, -1), new Vector(1, 2)};
+        if (!isOuterLayer) landscaperState = 1;
+        else if (!isInnerLayer) landscaperState = 2;
+        if (!isVaporator) landscaperState = 0;
+        if (landscaperState == -1) landscaperState = 3;
+        patrolLoc = new Vector[]{new Vector(1, 2), new Vector(1, -2), new Vector(-2, -1), new Vector(2, -1), new Vector(-2, 1)};
         outerLoc = new Vector[]{new Vector(-1, 3), new Vector(-2, 3), new Vector(-3, 3), new Vector(-3, 2), new Vector(-3, 1), new Vector(-3, 0), new Vector(-3, -1), new Vector(-3, -2), new Vector(-3, -3),
                 new Vector(-2, -3), new Vector(-1, -3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0), new Vector(3, -1), new Vector(3, -2),
                 new Vector(3, -3), new Vector(2, -3), new Vector(1, -3), new Vector(0, -3)};
@@ -333,24 +354,20 @@ public class Turtle {
                             }
                         }
                     } else {
-                        // if higher, place blocks on one self
+                        // if higher, dig that place
                         System.out.println("Elevation is higher");
-                        if (rc.getDirtCarrying() == 0) {
+                        if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
                             // dig
-                            System.out.println("I have no dirt");
                             if (rc.canDigDirt(optDir)) {
                                 System.out.println("Digging towards " + optDir.toString());
                                 rc.digDirt(optDir);
                             }
                         } else {
                             // fill
-                            if (even && rc.canDepositDirt(evenDir)) {
-                                System.out.println("Filling out " + evenDir.toString());
-                                rc.depositDirt(evenDir);
-                            }
-                            if (rc.canDepositDirt(Direction.CENTER)) {
-                                System.out.println("Filling out " + Direction.CENTER.toString());
-                                rc.depositDirt(Direction.CENTER);
+                            Direction fillDir = rc.getLocation().directionTo(HQLocation).opposite();
+                            if (rc.canDepositDirt(fillDir)) {
+                                System.out.println("Filling out " + fillDir.toString());
+                                rc.depositDirt(fillDir);
                             }
                         }
                     }
@@ -401,8 +418,6 @@ public class Turtle {
         }
     }
 
-
-
     public MapLocation findPatrol(RobotController rc) throws GameActionException {
         for (int i = 0; i < patrolLoc.length; i++) {
             MapLocation patLoc = patrolLoc[i].addWith(HQLocation);
@@ -418,5 +433,120 @@ public class Turtle {
         }
         // when they're far away and can't see anything
         return HQLocation;
+    }
+
+    public void moveToTrail(RobotController rc) throws GameActionException {
+        Vector offset = Vector.vectorSubtract(rc.getLocation(), HQLocation);
+        System.out.println("I have offset of " + offset.getX() + ", " + offset.getY());
+        if (landscaperState == 1) {
+            if (offset.equals(new Vector(-2, -1))) {
+                Direction dir1 = Direction.SOUTHWEST;
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dig = Direction.WEST;
+                trytoMove(rc, loc1, dir1, dig, dig);
+            }
+            else if (offset.equals(new Vector(-1, -1))) {
+                Direction dir1 = Direction.SOUTH;
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dir2 = Direction.SOUTHEAST;
+                MapLocation loc2 = rc.getLocation().add(dir2);
+                Direction dig = Direction.WEST;
+                trytoMove(rc, loc1, dir1, dig, dig);
+                trytoMove(rc, loc2, dir2, dig, dig);
+            }
+            else if (offset.equals(new Vector(0, -1))) {
+                Direction dir1 = Direction.SOUTH;
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dir2 = Direction.SOUTHWEST;
+                MapLocation loc2 = rc.getLocation().add(dir2);
+                Direction dir3 = Direction.SOUTHEAST;
+                MapLocation loc3 = rc.getLocation().add(dir3);
+                Direction dig = Direction.SOUTHWEST;
+                trytoMove(rc, loc1, dir1, dig, dig);
+                trytoMove(rc, loc2, dir2, dig, dig);
+                trytoMove(rc, loc3, dir3, dig, dig);
+            }
+            else if (offset.equals(new Vector(-1, -2))) {
+                Direction dir1 = Direction.SOUTH;
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dir2 = Direction.SOUTHEAST;
+                MapLocation loc2 = rc.getLocation().add(dir2);
+                Direction dig = Direction.SOUTHWEST;
+                trytoMove(rc, loc1, dir1, dig, dig);
+                trytoMove(rc, loc2, dir2, dig, dig);
+            }
+            else if (offset.equals(new Vector(0, -2))) {
+                Direction dir1 = Direction.SOUTHEAST;
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dir2 = Direction.SOUTH;
+                MapLocation loc2 = rc.getLocation().add(dir2);
+                Direction dig = Direction.SOUTHWEST;
+                trytoMove(rc, loc1, dir1, dig, dig);
+                trytoMove(rc, loc2, dir2, dig, dig);
+            } else {
+                // should not reach here
+                System.out.println("This landscaper is sad and wrong");
+            }
+        } else if (landscaperState == 2) {
+            if (offset.equals(new Vector(0, -1))) {
+                Direction dir1 = Direction.SOUTHEAST;
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dir2 = Direction.SOUTH;
+                MapLocation loc2 = rc.getLocation().add(dir2);
+                Direction dig = Direction.SOUTHWEST;
+                trytoMove(rc, loc1, dir1, dig, dig);
+                trytoMove(rc, loc2, dir2, dig, dig);
+            }
+            else if (offset.equals(new Vector(-1, -1))) {
+                Direction dir1 = Direction.SOUTHEAST;
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dir2 = Direction.SOUTH;
+                MapLocation loc2 = rc.getLocation().add(dir2);
+                Direction dig = Direction.WEST;
+                trytoMove(rc, loc1, dir1, dig, dig);
+                trytoMove(rc, loc2, dir2, dig, dig);
+            } else {
+                // should not reach here
+                System.out.println("This landscaper is sad and wrong");
+            }
+        }
+    }
+
+    private void trytoMove(RobotController rc, MapLocation loc, Direction dir, Direction digFrom, Direction depositTo) throws GameActionException {
+        if (rc.isReady()) {
+            if (rc.canMove(dir)) rc.move(dir);
+            else {
+                // if can't move, check if there is unit there
+                RobotInfo r = rc.senseRobotAtLocation(loc);
+                if (r != null) return;
+                else {
+                    if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(loc)) > 15) return;
+                    // check elevation
+                    if (rc.senseElevation(rc.getLocation()) > rc.senseElevation(loc)) {
+                        // if lower
+                        if (rc.getDirtCarrying() == 0) {
+                            if (rc.canDigDirt(digFrom)) {
+                                rc.digDirt(digFrom);
+                            }
+                        } else {
+                            if (rc.canDepositDirt(dir)) {
+                                rc.depositDirt(dir);
+                            }
+                        }
+                    } else {
+                        // if higher
+                        if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                            if (rc.canDigDirt(dir)) {
+                                rc.digDirt(dir);
+                            }
+                        } else {
+                            if (rc.canDepositDirt(depositTo)) {
+                                rc.depositDirt(depositTo);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

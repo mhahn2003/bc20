@@ -14,7 +14,7 @@ public class Cast {
     private int y_bit;
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 13;
+    private static int numCase = 15;
  
     public Cast() {
 
@@ -45,6 +45,10 @@ public class Cast {
         SURRENDER,
         // DEFENSE
         DEFENSE,
+        // OUTER LAYER
+        OUTER_LAYER,
+        // INNER LAYER
+        INNER_LAYER,
         // enemy?
         OTHER
     }
@@ -86,8 +90,12 @@ public class Cast {
                 break;
             case DEFENSE:
                 message += 12;
-            default:
+            case OUTER_LAYER:
                 message += 13;
+            case INNER_LAYER:
+                message += 14;
+            default:
+                message += 15;
                 break;
         }
         message=addCoord(message, coord);
@@ -119,6 +127,8 @@ public class Cast {
             case 10: return InformationCategory.ATTACK;
             case 11: return InformationCategory.SURRENDER;
             case 12: return InformationCategory.DEFENSE;
+            case 13: return InformationCategory.OUTER_LAYER;
+            case 14: return InformationCategory.INNER_LAYER;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 return InformationCategory.OTHER;
