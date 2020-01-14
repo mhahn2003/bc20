@@ -243,9 +243,9 @@ public strictfp class RobotPlayer {
             }
         }
         // build all the miners we can get in the first few turns
-        // maximum of 10 miners at 500th round
+        // maximum of 10 miners at 250th round
         Direction optDir = Direction.NORTH;
-        if (minerCount < Math.min(5+rc.getRoundNum()/100, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
+        if (minerCount < Math.min(5+rc.getRoundNum()/50, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
