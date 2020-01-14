@@ -453,6 +453,9 @@ public strictfp class RobotPlayer {
                         isOuterLayer = false;
                         break;
                     }
+                } else {
+                    isOuterLayer = false;
+                    break;
                 }
             }
             if (isOuterLayer) {
@@ -470,6 +473,9 @@ public strictfp class RobotPlayer {
                         isInnerLayer = false;
                         break;
                     }
+                } else {
+                    isOuterLayer = false;
+                    break;
                 }
             }
             if (isInnerLayer) {
@@ -545,7 +551,7 @@ public strictfp class RobotPlayer {
             }
         }
         // spam drones if we have a ton of soup
-        if (rc.getTeamSoup() >= 700 && isVaporator && droneCount < maxDroneCount) {
+        if (rc.getTeamSoup() >= 1000 && isVaporator && droneCount < maxDroneCount) {
             optDir = Direction.NORTHWEST;
             if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
                 rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
