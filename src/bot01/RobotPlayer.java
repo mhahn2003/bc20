@@ -421,6 +421,8 @@ public strictfp class RobotPlayer {
     }
 
     static void runDesignSchool() throws GameActionException {
+        System.out.println("isOuterLayer is: " + isOuterLayer);
+        System.out.println("isInnerLayer is: " + isInnerLayer);
 
         // produce 5 landscapers initially to guard hq
         Direction[] spawnDir = new Direction[]{Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST};
@@ -455,6 +457,7 @@ public strictfp class RobotPlayer {
             }
             if (isOuterLayer) {
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.OUTER_LAYER, HQLocation));
+                System.out.println("Sent outer layer info!");
             }
         }
         if (!isInnerLayer) {
@@ -471,6 +474,7 @@ public strictfp class RobotPlayer {
             }
             if (isInnerLayer) {
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.INNER_LAYER, HQLocation));
+                System.out.println("Sent inner layer info!");
             }
         }
         for (RobotInfo r: robots) {
@@ -559,24 +563,22 @@ public strictfp class RobotPlayer {
     }
 
     static void runLandscaper() throws GameActionException {
+        System.out.println("isOuterLayer is: " + isOuterLayer);
+        System.out.println("isInnerLayer is: " + isInnerLayer);
         RobotInfo[] robots = rc.senseNearbyRobots();
         RobotInfo[] robotsmall = rc.senseNearbyRobots(2);
-//        if (switchStateCd == 0) {
-//            System.out.println("Converting to state 2");
-//            turtle.setLandscaperState(2);
-//        } else if (switchStateCd != -1) {
-//            switchStateCd--;
-//        }
-//        if (turtle.getLandscaperState() == 0 && switchStateCd == -1) {
-//            int netGunCount = 0;
-//            // convert to state 2 when it sees 3 net guns
-//            for (RobotInfo r: robots) {
-//                if (r.getTeam() == rc.getTeam() && r.getType() == RobotType.NET_GUN) {
-//                    netGunCount++;
-//                }
-//            }
-//            if (netGunCount >= 2) switchStateCd = 5;
-//        }
+        if (turtle.getLandscaperState() < 2 && isOuterLayer) {
+            System.out.println("Checking outer layer");
+            if (turtle.getLandscaperState() == 0 || (turtle.getLandscaperState() == 1 && turtle.positionOut(rc.getLocation()) == -1)) {
+                turtle.setLandscaperState(2);
+            }
+        }
+        if (isInnerLayer) {
+            if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, -1)) || Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(0, -1))) {
+                explode = true;
+                return;
+            }
+        }
         System.out.println("My state is: " + turtle.getLandscaperState());
         if (turtle.getLandscaperState() == 0) {
             // TODO: maybe we can make a ENEMY_BUILDING category and have them attack in the future
@@ -1482,6 +1484,10 @@ public strictfp class RobotPlayer {
                                 break;
                             case DEFENSE:
                                 phase = actionPhase.DEFENSE;
+                            case OUTER_LAYER:
+                                isOuterLayer = true;
+                            case INNER_LAYER:
+                                isInnerLayer = true;
                         }
                     }
                 }

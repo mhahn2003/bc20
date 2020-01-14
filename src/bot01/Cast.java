@@ -90,10 +90,13 @@ public class Cast {
                 break;
             case DEFENSE:
                 message += 12;
+                break;
             case OUTER_LAYER:
                 message += 13;
+                break;
             case INNER_LAYER:
                 message += 14;
+                break;
             default:
                 message += 15;
                 break;
