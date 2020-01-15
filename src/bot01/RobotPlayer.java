@@ -228,7 +228,7 @@ public strictfp class RobotPlayer {
         }
         if (!isUnderAttack) {
             for (RobotInfo r : robots) {
-                if (r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam()) {
+                if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER) && r.getTeam() != rc.getTeam()) {
                     infoQ.add(Cast.getMessage(Cast.InformationCategory.DEFENSE, HQLocation));
                     isUnderAttack = true;
                     break;
@@ -237,7 +237,7 @@ public strictfp class RobotPlayer {
         } else {
             isUnderAttack = false;
             for (RobotInfo r : robots) {
-                if (r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam()) {
+                if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER) && r.getTeam() != rc.getTeam()) {
                     isUnderAttack = true;
                     break;
                 }
@@ -248,6 +248,7 @@ public strictfp class RobotPlayer {
         }
         // build all the miners we can get in the first few turns
         // maximum of 10 miners at 250th round
+        // TODO: spawn appropriate number of miners according to length of vaporator
         Direction optDir = Direction.NORTH;
         if (minerCount < Math.min(5+rc.getRoundNum()/50, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
@@ -273,8 +274,8 @@ public strictfp class RobotPlayer {
         }
         if (helpMode == 0) {
             // build drone factory if there isn't one
-            MapLocation DFLoc = HQLocation.add(Direction.EAST);
-            MapLocation LFLoc = HQLocation.add(Direction.WEST);
+            MapLocation DFLoc = new Vector(2, 1).rotate(rotateState).addWith(shiftedHQLocation);
+            MapLocation LFLoc = new Vector(1, 2).rotate(rotateState).addWith(shiftedHQLocation);
             if (rc.getRobotCount() > 4 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && rc.getLocation().isAdjacentTo(DFLoc) && !rc.getLocation().equals(DFLoc)) {
                 // build a drone factory east of hq
                 tryBuild(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(DFLoc));
@@ -293,6 +294,8 @@ public strictfp class RobotPlayer {
                 // if the robot is full or has stuff and no more soup nearby, move back to HQ
                 //            System.out.println("before going home i have " + Clock.getBytecodesLeft());
                 // default hq
+                // TODO: remove hqlocation as a possible refinery if outer layer is complete
+                // TODO: remove refinery location if enemy destroys or is flooded
                 closestRefineryLocation = HQLocation;
                 // check select a point as reference(might be edge case?)
                 MapLocation referencePoint = soupLoc;
@@ -401,7 +404,7 @@ public strictfp class RobotPlayer {
             if (blueprint.getIndex(rc.getLocation()) == -1) {
                 // if off the rail, try to move to HQLoc + EAST 2 times
 //                System.out.println("Off the trail right now");
-                MapLocation onTrail = new Vector(2, 0).addWith(HQLocation);
+                MapLocation onTrail = new Vector(-1, -1).rotate(rotateState).addWith(HQLocation);
                 if (nav.needHelp(rc, turnCount, onTrail)) {
                     helpMode = 1;
 //                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -434,9 +437,10 @@ public strictfp class RobotPlayer {
         System.out.println("isInnerLayer is: " + isInnerLayer);
 
         // produce 5 landscapers initially to guard hq
-        Direction[] spawnDir = new Direction[]{Direction.SOUTHEAST, Direction.SOUTH, Direction.SOUTHWEST};
+        Direction[] spawnDir = new Direction[]{Direction.SOUTHWEST, Direction.SOUTH, Direction.WEST};
         if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
             for (int i = 0; i < 3; i++) {
+                spawnDir[i] = rotateDir(spawnDir[i]);
                 if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                     rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                     landscaperCount++;
@@ -447,15 +451,13 @@ public strictfp class RobotPlayer {
         boolean isVaporator = false;
         int netGunCount = 0;
         RobotInfo[] robots = rc.senseNearbyRobots();
-        Vector[] outerLayerConfirm = new Vector[6];
-        Vector[] innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2), new Vector(2, 1), new Vector(2, 0), new Vector(2, -1)};
-        for (int i = 0; i < 6; i++) {
-            outerLayerConfirm[i] = new Vector(i-3, -3);
-        }
+        Vector[] outerLayerConfirm = new Vector[]{new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0)};
+        Vector[] innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 2), new Vector(-1, 2), new Vector(2, -1)};
         if (!isOuterLayer) {
             isOuterLayer = true;
             for (Vector v : outerLayerConfirm) {
-                MapLocation loc = v.addWith(HQLocation);
+                v = v.rotate(rotateState);
+                MapLocation loc = v.addWith(shiftedHQLocation);
                 if (rc.canSenseLocation(loc)) {
                     RobotInfo r = rc.senseRobotAtLocation(loc);
                     if (r == null || r.getTeam() != rc.getTeam() || r.getType() != RobotType.LANDSCAPER) {
@@ -463,6 +465,7 @@ public strictfp class RobotPlayer {
                         break;
                     }
                 } else {
+                    if (rc.onTheMap(loc)) continue;
                     isOuterLayer = false;
                     break;
                 }
@@ -475,7 +478,8 @@ public strictfp class RobotPlayer {
         if (!isInnerLayer) {
             isInnerLayer = true;
             for (Vector v : innerLayerConfirm) {
-                MapLocation loc = v.addWith(HQLocation);
+                v = v.rotate(rotateState);
+                MapLocation loc = v.addWith(shiftedHQLocation);
                 if (rc.canSenseLocation(loc)) {
                     RobotInfo r = rc.senseRobotAtLocation(loc);
                     if (r == null || r.getTeam() != rc.getTeam() || r.getType() != RobotType.LANDSCAPER) {
@@ -483,6 +487,7 @@ public strictfp class RobotPlayer {
                         break;
                     }
                 } else {
+                    if (rc.onTheMap(loc)) continue;
                     isOuterLayer = false;
                     break;
                 }
@@ -500,10 +505,12 @@ public strictfp class RobotPlayer {
                 netGunCount++;
             }
         }
+        spawnDir = new Direction[]{Direction.NORTHWEST, Direction.WEST};
         if (isVaporator && !isOuterLayer) {
             // produce outer layer
             if (rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
                 for (int i = 0; i < 2; i++) {
+                    spawnDir[i] = rotateDir(spawnDir[i]);
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                         rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                         landscaperCount++;
@@ -512,10 +519,12 @@ public strictfp class RobotPlayer {
                 }
             }
         }
+        spawnDir = new Direction[]{Direction.SOUTHWEST, Direction.SOUTH};
         // produce inner layer of minescapers
         if (netGunCount >= 4 && isOuterLayer && !isInnerLayer) {
             if (rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
                 for (int i = 0; i < 2; i++) {
+                    spawnDir[i] = rotateDir(spawnDir[i]);
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                         rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
                         landscaperCount++;
@@ -525,8 +534,8 @@ public strictfp class RobotPlayer {
             }
         }
         if (phase == actionPhase.PREPARE) {
-            if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, Direction.NORTH)) {
-                rc.buildRobot(RobotType.LANDSCAPER, Direction.NORTH);
+            if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, rotateDir(Direction.SOUTH))) {
+                rc.buildRobot(RobotType.LANDSCAPER, rotateDir(Direction.SOUTH));
                 landscaperCount++;
             }
         }
@@ -1860,6 +1869,11 @@ public strictfp class RobotPlayer {
                 break;
             }
         }
+    }
+
+    // rotate direction orientated with center
+    static Direction rotateDir(Direction dir) {
+        return Vector.getVec(dir).rotate(rotateState).getDir();
     }
 }
 
