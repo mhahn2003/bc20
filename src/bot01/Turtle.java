@@ -1,7 +1,6 @@
 package bot01;
 
 import battlecode.common.*;
-import battlecode.schema.Vec;
 
 import java.util.ArrayList;
 
@@ -67,7 +66,7 @@ public class Turtle {
         if (!isVaporator) landscaperState = 0;
         // TODO: fix this
         if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1))) landscaperState = 3;
-        patrolLoc = new Vector[]{new Vector(1, 2), new Vector(1, -2), new Vector(-2, -1), new Vector(2, -1), new Vector(-2, 1)};
+        patrolLoc = new Vector[]{new Vector(3, 3), new Vector(-2, -2), new Vector(-2, 2), new Vector(2, -2)};
         outerLoc = new Vector[]{new Vector(-3, -2), new Vector(-3, -1), new Vector(-3, 0), new Vector(-3, 1), new Vector(-3, 2), new Vector(-2, 3), new Vector(-1, 3), new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(-2, -3), new Vector(-1, -3), new Vector(0, -3), new Vector(1, -3), new Vector(2, -3), new Vector(3, -2), new Vector(3, -1), new Vector(3, 0), new Vector(3, 1), new Vector(3, 2)};
         innerLoc = new Vector[]{new Vector(0, 1), new Vector(-1,2), new Vector(-2, 2), new Vector(-2, 1), new Vector(-1, 0), new Vector(-2, -1), new Vector(-2, -2), new Vector(1, 1), new Vector(1, 0), new Vector(2, -1), new Vector(2, -2), new Vector(1, -2), new Vector(0, -1), new Vector(-1, -2)};
         for (Vector v: patrolLoc) {
@@ -95,13 +94,11 @@ public class Turtle {
 
     private boolean isEvenOuter(RobotController rc, int index) throws GameActionException {
         MapLocation nextIndex;
-        if (index != 10 && index != 22) {
+        if (index != 4 && index != 9 && index != 14 && index != 19) {
             nextIndex = outerLoc[index+1].addWith(HQLocation);
-        } else if (index == 10) {
-            nextIndex = rc.getLocation().add(Direction.EAST);
-        } else {
-            // index == 22
-            nextIndex = rc.getLocation().add(Direction.WEST);
+        }
+        else {
+            nextIndex = rc.getLocation();
         }
         System.out.println("nextIndex position is: " + nextIndex.toString());
         if (rc.canSenseLocation(nextIndex)) {
@@ -119,7 +116,7 @@ public class Turtle {
         System.out.println("Even is " + even);
         Direction evenDir = rc.getLocation().directionTo(lowestElevationOuter(rc, index));
         System.out.println("Lowest elevation direction is " + evenDir.toString());
-        if (index != 0 && index != 11) {
+        if (index != 0 && index != 10) {
             MapLocation nextSpot = outerLoc[index-1].addWith(HQLocation);
             System.out.println("Next spot is " + nextSpot.toString());
             digOrMove(rc, even, nextSpot, evenDir);
@@ -152,14 +149,33 @@ public class Turtle {
         int index = positionIn(rc.getLocation());
         if (index == -1) return;
         Direction evenDir = rc.getLocation().directionTo(lowestElevationInner(rc));
-        if (index != 0 && index != 5) {
+        if (index != 0 && index != 7 && index != 2 && index != 6 && index != 8 && index != 12) {
             MapLocation nextSpot = innerLoc[index-1].addWith(HQLocation);
             System.out.println("nextSpot is " + nextSpot.toString());
             if (rc.isReady()) {
                 Direction optDir = rc.getLocation().directionTo(nextSpot);
                 if (rc.canMove(optDir) && !rc.senseFlooding(nextSpot)) {
-                    System.out.println("Moving towards " + optDir.toString());
-                    rc.move(optDir);
+                    // move if they really need to
+                    if (rc.getLocation().x == 0 || rc.getLocation().y == 0 || rc.getLocation().x == rc.getMapWidth()-1 || rc.getLocation().y == rc.getMapHeight()-1) {
+                        // then pretend this is last position
+                        if (rc.getDirtCarrying() == 0) {
+                            // dig
+                            System.out.println("I have no dirt");
+                            if (rc.canDigDirt(Direction.CENTER)) {
+                                System.out.println("Digging towards " + Direction.CENTER.toString());
+                                rc.digDirt(Direction.CENTER);
+                            }
+                        } else {
+                            // fill
+                            if (rc.canDepositDirt(evenDir)) {
+                                System.out.println("Filling out at " + evenDir.toString());
+                                rc.depositDirt(evenDir);
+                            }
+                        }
+                    } else {
+                        System.out.println("Moving towards " + optDir.toString());
+                        rc.move(optDir);
+                    }
                 } else {
                     // if can't move, then check if we need to dig or bury
                     RobotInfo r = rc.senseRobotAtLocation(nextSpot);
@@ -170,15 +186,16 @@ public class Turtle {
                             if (rc.getDirtCarrying() == 0) {
                                 System.out.println("I don't have any dirt");
                                 // dig
-                                if (rc.canDigDirt(Direction.CENTER)) {
-                                    System.out.println("Digging towards " + Direction.CENTER.toString());
-                                    rc.digDirt(Direction.CENTER);
+                                Direction digDir = rc.getLocation().directionTo(HQLocation).opposite();
+                                if (rc.canDigDirt(digDir)) {
+                                    System.out.println("Digging towards " + digDir.toString());
+                                    rc.digDirt(digDir);
                                 }
                             } else {
                                 // fill
-                                if (rc.canDepositDirt(evenDir)) {
-                                    System.out.println("Filling out at " + evenDir.toString());
-                                    rc.depositDirt(evenDir);
+                                if (rc.canDepositDirt(optDir)) {
+                                    System.out.println("Filling out at " + optDir.toString());
+                                    rc.depositDirt(optDir);
                                 }
                             }
                         } else {
@@ -204,9 +221,10 @@ public class Turtle {
                         System.out.println("Building is in the way");
                         if (rc.getDirtCarrying() == 0) {
                             // dig
-                            if (rc.canDigDirt(Direction.CENTER)) {
-                                System.out.println("Digging towards " + Direction.CENTER.toString());
-                                rc.digDirt(Direction.CENTER);
+                            Direction digDir = rc.getLocation().directionTo(HQLocation).opposite();
+                            if (rc.canDigDirt(digDir)) {
+                                System.out.println("Digging towards " + digDir.toString());
+                                rc.digDirt(digDir);
                             }
                         } else {
                             // fill
@@ -236,7 +254,7 @@ public class Turtle {
                     }
                 }
             }
-        } else {
+        } else if (index == 0 || index == 7) {
             // if no next spot, just dig dig dig
             System.out.println("There is no next spot");
             if (rc.getDirtCarrying() == 0) {
@@ -253,16 +271,30 @@ public class Turtle {
                     rc.depositDirt(evenDir);
                 }
             }
+        } else {
+            // transition positions
+            MapLocation nextSpot = innerLoc[index-1].addWith(HQLocation);
+            System.out.println("nextSpot is " + nextSpot.toString());
+            Direction optDir = rc.getLocation().directionTo(nextSpot);
+            if (rc.canMove(optDir) && !rc.senseFlooding(nextSpot)) {
+                System.out.println("Moving towards " + optDir.toString());
+                rc.move(optDir);
+            }
         }
     }
 
     private MapLocation lowestElevationOuter(RobotController rc, int index) throws GameActionException {
         MapLocation lowest = rc.getLocation();
         MapLocation left, right;
-        if (index == 0 || index == 10 || index == 11 || index == 22) {
-            left = rc.getLocation().add(Direction.WEST);
-            right = rc.getLocation().add(Direction.EAST);
-        } else {
+        if (index == 5 || index == 9 || index == 10 || index == 14) {
+            left = rc.getLocation().add(rotateDir(Direction.WEST));
+            right = rc.getLocation().add(rotateDir(Direction.EAST));
+        }
+        else if (index == 0 || index == 4 || index == 15 || index == 19) {
+            left = rc.getLocation().add(rotateDir(Direction.NORTH));
+            right = rc.getLocation().add(rotateDir(Direction.SOUTH));
+        }
+        else {
             left = outerLoc[index-1].addWith(HQLocation);
             right = outerLoc[index+1].addWith(HQLocation);
         }
@@ -279,7 +311,14 @@ public class Turtle {
     private MapLocation lowestElevationInner(RobotController rc) throws GameActionException {
         Vector v = Vector.vectorSubtract(rc.getLocation(), HQLocation);
         MapLocation lowest, left, right;
-        if (v.getY() == 2) {
+        ArrayList<MapLocation> posLoc = new ArrayList<>();
+        if (rc.getLocation().distanceSquaredTo(HQLocation) == 8) {
+            Direction dir = rc.getLocation().directionTo(HQLocation).opposite();
+            lowest = rc.getLocation().add(dir);
+            left = rc.getLocation().add(dir.rotateLeft());
+            right = rc.getLocation().add(dir.rotateRight());
+        }
+        else if (v.getY() == 2) {
             // NORTH
             lowest = rc.getLocation().add(Direction.NORTH);
             left = rc.getLocation().add(Direction.NORTHWEST);
@@ -304,18 +343,23 @@ public class Turtle {
             right = rc.getLocation().add(Direction.SOUTHWEST);
         }
         else {
-            // this case should not happen
-            System.out.println("Something is very very wrong with this landscaper");
+            // when landscapers are in intermediate locations
+            // TODO: fix this case
             return rc.getLocation();
         }
-        if (rc.senseElevation(left) < rc.senseElevation(lowest)) {
-            lowest = left;
-        }
-        if (rc.senseElevation(right) < rc.senseElevation(lowest)) {
-            lowest = right;
+        if (rc.canSenseLocation(lowest)) posLoc.add(lowest);
+        if (rc.canSenseLocation(left)) posLoc.add(left);
+        if (rc.canSenseLocation(right)) posLoc.add(right);
+        MapLocation pos = null;
+        int curElevation = 0;
+        for (MapLocation loc: posLoc) {
+            if (pos == null || rc.senseElevation(loc) < curElevation) {
+                pos = loc;
+                curElevation = rc.senseElevation(loc);
+            }
         }
         System.out.println("Lowest is: " + lowest.toString());
-        return lowest;
+        return pos;
     }
 
     // call this to navigate to the right position initially
@@ -340,8 +384,27 @@ public class Turtle {
         if (rc.isReady()) {
             Direction optDir = rc.getLocation().directionTo(nextSpot);
             if (rc.canMove(optDir) && !rc.senseFlooding(nextSpot)) {
-                System.out.println("Moving to next spot");
-                rc.move(optDir);
+                // move if they really need to
+                if (rc.getLocation().x == 0 || rc.getLocation().y == 0 || rc.getLocation().x == rc.getMapWidth()-1 || rc.getLocation().y == rc.getMapHeight()-1) {
+                    // then pretend this is last position
+                    if (rc.getDirtCarrying() == 0) {
+                        // dig
+                        System.out.println("I have no dirt");
+                        if (rc.canDigDirt(Direction.CENTER)) {
+                            System.out.println("Digging towards " + Direction.CENTER.toString());
+                            rc.digDirt(Direction.CENTER);
+                        }
+                    } else {
+                        // fill
+                        if (rc.canDepositDirt(evenDir)) {
+                            System.out.println("Filling out at " + evenDir.toString());
+                            rc.depositDirt(evenDir);
+                        }
+                    }
+                } else {
+                    System.out.println("Moving towards " + optDir.toString());
+                    rc.move(optDir);
+                }
             } else {
                 // if can't move, then check if we need to dig or bury
                 RobotInfo r = rc.senseRobotAtLocation(nextSpot);
@@ -359,10 +422,10 @@ public class Turtle {
                             }
                         } else {
                             // fill
-                            if (even && rc.canDepositDirt(evenDir)) {
-                                System.out.println("Filling out " + evenDir.toString());
-                                rc.depositDirt(evenDir);
-                            }
+//                            if (even && rc.canDepositDirt(evenDir)) {
+//                                System.out.println("Filling out " + evenDir.toString());
+//                                rc.depositDirt(evenDir);
+//                            }
                             if (rc.canDepositDirt(optDir)) {
                                 System.out.println("Filling out " + optDir.toString());
                                 rc.depositDirt(optDir);
@@ -454,76 +517,18 @@ public class Turtle {
         Vector offset = Vector.vectorSubtract(rc.getLocation(), HQLocation);
         System.out.println("I have offset of " + offset.getX() + ", " + offset.getY());
         if (landscaperState == 1) {
-            if (offset.equals(new Vector(-2, -1))) {
-                Direction dir1 = Direction.SOUTHWEST;
+            if (offset.equals(new Vector(2, 2).rotate(rotateState))) {
+                Direction dir1 = rotateDir(Direction.EAST);
                 MapLocation loc1 = rc.getLocation().add(dir1);
-                Direction dig = Direction.WEST;
+                Direction dig = rotateDir(Direction.NORTHEAST);
                 trytoMove(rc, dir1, dig, dig);
-            }
-            else if (offset.equals(new Vector(-1, -1))) {
-                Direction dir1 = Direction.SOUTH;
-                MapLocation loc1 = rc.getLocation().add(dir1);
-                Direction dir2 = Direction.SOUTHEAST;
-                MapLocation loc2 = rc.getLocation().add(dir2);
-                Direction dig = Direction.WEST;
-                trytoMove(rc, dir1, dig, dig);
-                trytoMove(rc, dir2, dig, dig);
-            }
-            else if (offset.equals(new Vector(0, -1))) {
-                Direction dir1 = Direction.SOUTH;
-                MapLocation loc1 = rc.getLocation().add(dir1);
-                Direction dir2 = Direction.SOUTHWEST;
-                MapLocation loc2 = rc.getLocation().add(dir2);
-                Direction dir3 = Direction.SOUTHEAST;
-                MapLocation loc3 = rc.getLocation().add(dir3);
-                Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, dir1, dig, dig);
-                trytoMove(rc, dir2, dig, dig);
-                trytoMove(rc, dir3, dig, dig);
-            }
-            else if (offset.equals(new Vector(-1, -2))) {
-                Direction dir1 = Direction.SOUTH;
-                MapLocation loc1 = rc.getLocation().add(dir1);
-                Direction dir2 = Direction.SOUTHEAST;
-                MapLocation loc2 = rc.getLocation().add(dir2);
-                Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, dir1, dig, dig);
-                trytoMove(rc, dir2, dig, dig);
-            }
-            else if (offset.equals(new Vector(0, -2))) {
-                Direction dir1 = Direction.SOUTHEAST;
-                MapLocation loc1 = rc.getLocation().add(dir1);
-                Direction dir2 = Direction.SOUTH;
-                MapLocation loc2 = rc.getLocation().add(dir2);
-                Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, dir1, dig, dig);
-                trytoMove(rc, dir2, dig, dig);
             } else {
                 // should not reach here
                 System.out.println("This landscaper is sad and wrong");
             }
         } else if (landscaperState == 2) {
-            if (offset.equals(new Vector(0, -1))) {
-                Direction dir1 = Direction.SOUTHEAST;
-                MapLocation loc1 = rc.getLocation().add(dir1);
-                Direction dir2 = Direction.SOUTH;
-                MapLocation loc2 = rc.getLocation().add(dir2);
-                Direction dig = Direction.SOUTHWEST;
-                trytoMove(rc, dir1, dig, dig);
-                trytoMove(rc, dir2, dig, dig);
-            }
-            else if (offset.equals(new Vector(-1, -1))) {
-                Direction dir1 = Direction.SOUTHEAST;
-                MapLocation loc1 = rc.getLocation().add(dir1);
-                Direction dir2 = Direction.SOUTH;
-                MapLocation loc2 = rc.getLocation().add(dir2);
-                Direction dig = Direction.WEST;
-                trytoMove(rc, dir1, dig, dig);
-                trytoMove(rc, dir2, dig, dig);
-            } else {
-                // should not reach here
-                System.out.println("This landscaper is sad and wrong");
-            }
+            // should not reach here
+            System.out.println("This landscaper is sad and wrong");
         }
     }
 
@@ -630,5 +635,9 @@ public class Turtle {
                 }
             }
         }
+    }
+
+    private Direction rotateDir(Direction dir) {
+        return Vector.getVec(dir).rotate(rotateState).getDir();
     }
 }

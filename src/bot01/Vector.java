@@ -1,6 +1,9 @@
 package bot01;
 
+import battlecode.common.Direction;
 import battlecode.common.MapLocation;
+
+import static bot01.RobotPlayer.directions;
 
 public class Vector {
     private int x;
@@ -36,5 +39,17 @@ public class Vector {
         else if (rotateState == 1) return new Vector(this.y, -this.x);
         else if (rotateState == 2) return new Vector(-this.x, -this.y);
         else return new Vector(-this.y, this.x);
+    }
+
+    public static Vector getVec(Direction dir) {
+        return new Vector(dir.dx, dir.dy);
+    }
+
+    public Direction getDir() {
+        for (Direction dir: directions) {
+            if (dir.dx == x && dir.dy == y) return dir;
+        }
+        // should not get here
+        return Direction.CENTER;
     }
 }

@@ -17,9 +17,16 @@ public class Blueprint {
         this.HQLocation = HQLocation;
         this.rotateState = rotateState;
         this.isShifted = isShifted;
-        buildComplete = new Boolean[7];
-        for (int i = 0; i < 7; i++) buildComplete[i] = false;
-        minerTrail = new Vector[]{new Vector(2, 1), new Vector(2, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-2, 0), new Vector(-1, 1)};
+        buildComplete = new Boolean[10];
+        for (int i = 0; i < 10; i++) buildComplete[i] = false;
+        if (isShifted) {
+            minerTrail = new Vector[]{new Vector(0, 0), new Vector(0, -1), new Vector(-1, 0), new Vector(0, 1), new Vector(1, 0)};
+        } else {
+            minerTrail = new Vector[]{new Vector(-1, -1), new Vector(0, -1), new Vector(-1, 0), new Vector(0, 1), new Vector(1, 0)};
+        }
+        for (Vector v: minerTrail) {
+            v = v.rotate(rotateState);
+        }
     }
 
     // called every turn, build necessary things
@@ -30,29 +37,29 @@ public class Blueprint {
         // explode
         if (buildNext == -1) return false;
         if (buildNext == 0 || buildNext > 4) {
-            if (rc.getTeamSoup() < RobotType.VAPORATOR.cost+50) {
+            if (rc.getTeamSoup() < RobotType.VAPORATOR.cost-50) {
                 // only move if you have enough soup
                 // best position to be in is 2
-                goTo(rc, 2);
+                goTo(rc, 0);
             }
             // building vaporators
             else if (buildNext == 0) {
                 // move to index 0 or 1
-                if (currentIndex == 0) {
+                if (currentIndex == 1) {
                     if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
-                        if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.WEST)) {
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, rotateDir(Direction.EAST))) {
                             System.out.println("Built vaporator 1");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.VAPORATOR, Direction.WEST);
+                            rc.buildRobot(RobotType.VAPORATOR, rotateDir(Direction.EAST));
                         }
                     }
                 }
-                else if (currentIndex == 1) {
-                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+100) {
-                        if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.NORTHWEST)) {
+                else if (currentIndex == 4) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, rotateDir(Direction.SOUTH))) {
                             System.out.println("Built vaporator 1");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.VAPORATOR, Direction.NORTHWEST);
+                            rc.buildRobot(RobotType.VAPORATOR, rotateDir(Direction.SOUTH));
                         }
                     }
                 } else {
@@ -61,12 +68,21 @@ public class Blueprint {
             }
             else if (buildNext == 5) {
                 // move to index 3
-                if (currentIndex == 3) {
-                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+100) {
-                        if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.WEST)) {
-                            System.out.println("Built vaporator 3");
+                if (currentIndex == 2) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, rotateDir(Direction.NORTH))) {
+                            System.out.println("Built vaporator 2");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.VAPORATOR, Direction.WEST);
+                            rc.buildRobot(RobotType.VAPORATOR, rotateDir(Direction.NORTH));
+                        }
+                    }
+                }
+                else if (currentIndex == 3) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, rotateDir(Direction.WEST))) {
+                            System.out.println("Built vaporator 2");
+                            buildComplete[buildNext] = true;
+                            rc.buildRobot(RobotType.VAPORATOR, rotateDir(Direction.WEST));
                         }
                     }
                 } else {
@@ -74,17 +90,61 @@ public class Blueprint {
                 }
             }
             else if (buildNext == 6) {
-                // move to index 3
-                if (currentIndex == 3) {
-                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost+100) {
-                        if (rc.canBuildRobot(RobotType.VAPORATOR, Direction.EAST)) {
+                // move to index 1
+                if (currentIndex == 1) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, rotateDir(Direction.NORTHEAST))) {
                             System.out.println("Built vaporator 3");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.VAPORATOR, Direction.EAST);
+                            rc.buildRobot(RobotType.VAPORATOR, rotateDir(Direction.NORTHEAST));
                         }
                     }
                 } else {
-                    goTo(rc, 3);
+                    goTo(rc, 1);
+                }
+            }
+            else if (buildNext == 7) {
+                // move to index 2
+                if (currentIndex == 2) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, rotateDir(Direction.NORTHEAST))) {
+                            System.out.println("Built vaporator 4");
+                            buildComplete[buildNext] = true;
+                            rc.buildRobot(RobotType.VAPORATOR, rotateDir(Direction.NORTHEAST));
+                        }
+                    }
+                } else {
+                    goTo(rc, 2);
+                }
+            }
+            else if (buildNext == 8) {
+                // move to index 0
+                if (currentIndex == 0) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        Direction buildDir = rc.getLocation().directionTo(new Vector(-1, 0).rotate(rotateState).addWith(HQLocation));
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, buildDir)) {
+                            System.out.println("Built vaporator 5");
+                            buildComplete[buildNext] = true;
+                            rc.buildRobot(RobotType.VAPORATOR, buildDir);
+                        }
+                    }
+                } else {
+                    goTo(rc, 0);
+                }
+            }
+            else if (buildNext == 9) {
+                // move to index 0
+                if (currentIndex == 0) {
+                    if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                        Direction buildDir = rc.getLocation().directionTo(new Vector(0, -1).rotate(rotateState).addWith(HQLocation));
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, buildDir)) {
+                            System.out.println("Built vaporator 6");
+                            buildComplete[buildNext] = true;
+                            rc.buildRobot(RobotType.VAPORATOR, buildDir);
+                        }
+                    }
+                } else {
+                    goTo(rc, 0);
                 }
             }
         }
@@ -93,44 +153,44 @@ public class Blueprint {
             if (rc.getTeamSoup() < RobotType.NET_GUN.cost+100) {
                 // only move if you have enough soup
                 // best position to be in is 2
-                goTo(rc, 2);
+                goTo(rc, 0);
             }
             else if (buildNext == 1) {
-                // move to index 6
-                if (currentIndex == 6) {
+                // move to index 1
+                if (currentIndex == 1) {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
-                        if (rc.canBuildRobot(RobotType.NET_GUN, Direction.NORTHWEST)) {
+                        if (rc.canBuildRobot(RobotType.NET_GUN, rotateDir(Direction.SOUTH))) {
                             System.out.println("Built net gun 1");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.NET_GUN, Direction.NORTHWEST);
+                            rc.buildRobot(RobotType.NET_GUN, rotateDir(Direction.SOUTH));
                         }
                     }
                 } else {
-                    goTo(rc, 6);
+                    goTo(rc, 1);
                 }
             }
             else if (buildNext == 2) {
-                // move to index 0
-                if (currentIndex == 0) {
+                // move to index 2
+                if (currentIndex == 2) {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
-                        if (rc.canBuildRobot(RobotType.NET_GUN, Direction.NORTH)) {
-                            System.out.println("Built net gun 1");
+                        if (rc.canBuildRobot(RobotType.NET_GUN, rotateDir(Direction.WEST))) {
+                            System.out.println("Built net gun 2");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.NET_GUN, Direction.NORTH);
+                            rc.buildRobot(RobotType.NET_GUN, rotateDir(Direction.WEST));
                         }
                     }
                 } else {
-                    goTo(rc, 0);
+                    goTo(rc, 2);
                 }
             }
             else if (buildNext == 3) {
                 // move to index 4
                 if (currentIndex == 4) {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
-                        if (rc.canBuildRobot(RobotType.NET_GUN, Direction.SOUTHWEST)) {
-                            System.out.println("Built net gun 1");
+                        if (rc.canBuildRobot(RobotType.NET_GUN, rotateDir(Direction.EAST))) {
+                            System.out.println("Built net gun 3");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.NET_GUN, Direction.SOUTHWEST);
+                            rc.buildRobot(RobotType.NET_GUN, rotateDir(Direction.EAST));
                         }
                     }
                 } else {
@@ -138,17 +198,17 @@ public class Blueprint {
                 }
             }
             else if (buildNext == 4) {
-                // move to index 2
-                if (currentIndex == 2) {
+                // move to index 3
+                if (currentIndex == 3) {
                     if (rc.getTeamSoup() >= RobotType.NET_GUN.cost+150) {
-                        if (rc.canBuildRobot(RobotType.NET_GUN, Direction.SOUTHEAST)) {
+                        if (rc.canBuildRobot(RobotType.NET_GUN, rotateDir(Direction.NORTH))) {
                             System.out.println("Built net gun 1");
                             buildComplete[buildNext] = true;
-                            rc.buildRobot(RobotType.NET_GUN, Direction.SOUTHEAST);
+                            rc.buildRobot(RobotType.NET_GUN, rotateDir(Direction.NORTH));
                         }
                     }
                 } else {
-                    goTo(rc, 2);
+                    goTo(rc, 3);
                 }
             }
         }
@@ -186,9 +246,13 @@ public class Blueprint {
 
     // return the index of what to build next
     public int getBuildNext() {
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 10; i++) {
             if (!buildComplete[i]) return i;
         }
         return -1;
+    }
+
+    private Direction rotateDir(Direction dir) {
+        return Vector.getVec(dir).rotate(rotateState).getDir();
     }
 }
