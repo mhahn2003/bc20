@@ -10,12 +10,16 @@ public class Blueprint {
     private Boolean[] buildComplete;
     private Vector[] minerTrail;
     private MapLocation HQLocation;
+    private MapLocation DFLoc;
+    private MapLocation LFLoc;
     private int rotateState;
     private boolean isShifted;
 
     public Blueprint(MapLocation HQLocation, int rotateState, boolean isShifted) {
         this.HQLocation = HQLocation;
         this.rotateState = rotateState;
+        DFLoc = new Vector(2, 1).rotate(rotateState).addWith(HQLocation);
+        LFLoc = new Vector(1, 2).rotate(rotateState).addWith(HQLocation);
         this.isShifted = isShifted;
         buildComplete = new Boolean[10];
         for (int i = 0; i < 10; i++) buildComplete[i] = false;
@@ -24,8 +28,8 @@ public class Blueprint {
         } else {
             minerTrail = new Vector[]{new Vector(-1, -1), new Vector(0, -1), new Vector(-1, 0), new Vector(0, 1), new Vector(1, 0)};
         }
-        for (Vector v: minerTrail) {
-            v = v.rotate(rotateState);
+        for (int i = 0; i < minerTrail.length; i++) {
+            minerTrail[i] = minerTrail[i].rotate(rotateState);
         }
     }
 
@@ -36,6 +40,34 @@ public class Blueprint {
         int buildNext = getBuildNext();
         // explode
         if (buildNext == -1) return false;
+        if (rc.canSenseLocation(DFLoc)) {
+            RobotInfo r = rc.senseRobotAtLocation(DFLoc);
+            if (r == null) {
+                if (currentIndex == 4) {
+                    if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+100) {
+                        if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, rotateDir(Direction.NORTHEAST))) {
+                            rc.buildRobot(RobotType.FULFILLMENT_CENTER, rotateDir(Direction.NORTHEAST));
+                        }
+                    }
+                } else {
+                    goTo(rc,4);
+                }
+            }
+        }
+        if (rc.canSenseLocation(LFLoc)) {
+            RobotInfo r = rc.senseRobotAtLocation(LFLoc);
+            if (r == null) {
+                if (currentIndex == 3) {
+                    if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost+100) {
+                        if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, rotateDir(Direction.NORTHEAST))) {
+                            rc.buildRobot(RobotType.DESIGN_SCHOOL, rotateDir(Direction.NORTHEAST));
+                        }
+                    }
+                } else {
+                    goTo(rc,3);
+                }
+            }
+        }
         if (buildNext == 0 || buildNext > 4) {
             if (rc.getTeamSoup() < RobotType.VAPORATOR.cost-50) {
                 // only move if you have enough soup

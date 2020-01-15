@@ -30,7 +30,7 @@ public class Turtle {
         this.HQLocation = HQLocation;
         this.rotateState = rotateState;
         outerLayerConfirm = new Vector[]{new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0)};
-        innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 2), new Vector(-1, 2), new Vector(2, -1), new Vector(2, -2), new Vector(1, -2)};
+        innerLayerConfirm = new Vector[]{new Vector(-2, 2), new Vector(-1, 2), new Vector(2, -1), new Vector(2, -2)};
         boolean isOuterLayer = true;
         boolean isInnerLayer = true;
         for (Vector v: outerLayerConfirm) {
@@ -66,18 +66,18 @@ public class Turtle {
         else if (!isInnerLayer) landscaperState = 2;
         if (!isVaporator) landscaperState = 0;
         // TODO: fix this
-        if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1))) landscaperState = 3;
+//        if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1))) landscaperState = 3;
         patrolLoc = new Vector[]{new Vector(3, 3), new Vector(-2, -2), new Vector(-2, 2), new Vector(2, -2)};
         outerLoc = new Vector[]{new Vector(-3, -2), new Vector(-3, -1), new Vector(-3, 0), new Vector(-3, 1), new Vector(-3, 2), new Vector(-2, 3), new Vector(-1, 3), new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(-2, -3), new Vector(-1, -3), new Vector(0, -3), new Vector(1, -3), new Vector(2, -3), new Vector(3, -2), new Vector(3, -1), new Vector(3, 0), new Vector(3, 1), new Vector(3, 2)};
-        innerLoc = new Vector[]{new Vector(0, 1), new Vector(-1,2), new Vector(-2, 2), new Vector(-2, 1), new Vector(-1, 0), new Vector(-2, -1), new Vector(-2, -2), new Vector(1, 1), new Vector(1, 0), new Vector(2, -1), new Vector(2, -2), new Vector(1, -2), new Vector(0, -1), new Vector(-1, -2)};
-        for (Vector v: patrolLoc) {
-            v = v.rotate(rotateState);
+        innerLoc = new Vector[]{new Vector(-2, -2), new Vector(-2, -1), new Vector(-1, 0), new Vector(-2, 1), new Vector(-2, 2), new Vector(-1, 2), new Vector(0, 1), new Vector(-1, -2), new Vector(0, -1), new Vector(1, -2), new Vector(2, -2), new Vector(2, -1), new Vector(1, 0), new Vector(1, 1)};
+        for (int i = 0; i < patrolLoc.length; i++) {
+            patrolLoc[i] = patrolLoc[i].rotate(rotateState);
         }
-        for (Vector v: outerLoc) {
-            v = v.rotate(rotateState);
+        for (int i = 0; i < outerLoc.length; i++) {
+            outerLoc[i] = outerLoc[i].rotate(rotateState);
         }
-        for (Vector v: innerLoc) {
-            v = v.rotate(rotateState);
+        for (int i = 0; i < innerLoc.length; i++) {
+            innerLoc[i] = innerLoc[i].rotate(rotateState);
         }
     }
 
@@ -87,10 +87,10 @@ public class Turtle {
 
     public void setLandscaperState(int landscaperState) { this.landscaperState = landscaperState; }
 
-    public void buildFort(RobotController rc) throws GameActionException {
+    public void buildFort(RobotController rc, boolean isInnerLayer) throws GameActionException {
         if (landscaperState == 0) return;
         if (landscaperState == 1) buildOuterFort(rc);
-        if (landscaperState == 2) buildInnerFort(rc);
+        if (landscaperState == 2) buildInnerFort(rc, isInnerLayer);
     }
 
     private boolean isEvenOuter(RobotController rc, int index) throws GameActionException {
@@ -112,6 +112,7 @@ public class Turtle {
     // try to build the outer layer, even is when we should try to build evenly
     private void buildOuterFort(RobotController rc) throws GameActionException {
         int index = positionOut(rc.getLocation());
+        System.out.println("index is: " + index);
         if (index == -1) return;
         boolean even = isEvenOuter(rc, index);
         System.out.println("Even is " + even);
@@ -146,11 +147,28 @@ public class Turtle {
     }
 
     // when building inner fort, automatically apply even option
-    private void buildInnerFort(RobotController rc) throws GameActionException {
+    private void buildInnerFort(RobotController rc, boolean isInnerLayer) throws GameActionException {
         int index = positionIn(rc.getLocation());
         if (index == -1) return;
         Direction evenDir = rc.getLocation().directionTo(lowestElevationInner(rc));
-        if (index != 0 && index != 7 && index != 2 && index != 6 && index != 8 && index != 12 && index != 13) {
+        if (isInnerLayer && (index == 9 || index == 3)) {
+            // then pretend this is last position
+            if (rc.getDirtCarrying() == 0) {
+                // dig
+                System.out.println("I have no dirt");
+                if (rc.canDigDirt(Direction.CENTER)) {
+                    System.out.println("Digging towards " + Direction.CENTER.toString());
+                    rc.digDirt(Direction.CENTER);
+                }
+            } else {
+                // fill
+                if (rc.canDepositDirt(evenDir)) {
+                    System.out.println("Filling out at " + evenDir.toString());
+                    rc.depositDirt(evenDir);
+                }
+            }
+        }
+        else if (index != 0 && index != 7 && index != 2 && index != 6 && index != 8 && index != 12 && index != 13) {
             MapLocation nextSpot = innerLoc[index-1].addWith(HQLocation);
             System.out.println("nextSpot is " + nextSpot.toString());
             if (rc.isReady()) {
@@ -528,15 +546,22 @@ public class Turtle {
                 System.out.println("This landscaper is sad and wrong");
             }
         } else if (landscaperState == 2) {
-            // should not reach here
-            System.out.println("This landscaper is sad and wrong");
+            if (offset.equals(new Vector(2, 2).rotate(rotateState))) {
+                Direction dir1 = rotateDir(Direction.SOUTHWEST);
+                MapLocation loc1 = rc.getLocation().add(dir1);
+                Direction dig = rotateDir(Direction.NORTHEAST);
+                trytoMove(rc, dir1, dig, dig);
+            } else {
+                // should not reach here
+                System.out.println("This landscaper is sad and wrong");
+            }
         }
     }
 
     private void trytoMove(RobotController rc, Direction dir, Direction digFrom, Direction depositTo) throws GameActionException {
         MapLocation loc = rc.getLocation().add(dir);
         if (rc.isReady()) {
-            if (rc.canMove(dir)) rc.move(dir);
+            if (rc.canMove(dir) && !rc.senseFlooding(loc)) rc.move(dir);
             else {
                 // if can't move, check if there is unit there
                 RobotInfo r = rc.senseRobotAtLocation(loc);

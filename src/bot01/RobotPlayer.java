@@ -1,6 +1,7 @@
 package bot01;
 
 import battlecode.common.*;
+import battlecode.schema.Vec;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +64,7 @@ public strictfp class RobotPlayer {
     // how much drones can wander
     static int wanderLimit = 5;
     // when builder returns
-    static int builderReturn = 100;
+    static int builderReturn = 60;
     // when to explode drone
     static int explodeThresh = 10;
 
@@ -273,17 +274,6 @@ public strictfp class RobotPlayer {
             if (nav.outOfDrone(rc)) helpMode = 0;
         }
         if (helpMode == 0) {
-            // build drone factory if there isn't one
-            MapLocation DFLoc = new Vector(2, 1).rotate(rotateState).addWith(shiftedHQLocation);
-            MapLocation LFLoc = new Vector(1, 2).rotate(rotateState).addWith(shiftedHQLocation);
-            if (rc.getRobotCount() > 4 && rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && rc.getLocation().isAdjacentTo(DFLoc) && !rc.getLocation().equals(DFLoc)) {
-                // build a drone factory east of hq
-                tryBuild(RobotType.FULFILLMENT_CENTER, rc.getLocation().directionTo(DFLoc));
-            }
-            if (rc.getRobotCount() > 6 && rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost && rc.getLocation().isAdjacentTo(LFLoc) && !rc.getLocation().equals(LFLoc)) {
-                // build a landscaper factory west of hq
-                tryBuild(RobotType.DESIGN_SCHOOL, rc.getLocation().directionTo(LFLoc));
-            }
             if (soupLoc == null) {
                 // if soup location is far or we just didn't notice
                 //            System.out.println("In my soupLoc I have " + soupLocation.toString());
@@ -438,21 +428,21 @@ public strictfp class RobotPlayer {
 
         // produce 5 landscapers initially to guard hq
         Direction[] spawnDir = new Direction[]{Direction.SOUTHWEST, Direction.SOUTH, Direction.WEST};
-        if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
-            for (int i = 0; i < 3; i++) {
-                spawnDir[i] = rotateDir(spawnDir[i]);
-                if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
-                    rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
-                    landscaperCount++;
-                    break;
-                }
-            }
-        }
+//        if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
+//            for (int i = 0; i < 3; i++) {
+//                spawnDir[i] = rotateDir(spawnDir[i]);
+//                if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, rotateDir(spawnDir[i]))) {
+//                    rc.buildRobot(RobotType.LANDSCAPER, rotateDir(spawnDir[i]));
+//                    landscaperCount++;
+//                    break;
+//                }
+//            }
+//        }
         boolean isVaporator = false;
         int netGunCount = 0;
         RobotInfo[] robots = rc.senseNearbyRobots();
         Vector[] outerLayerConfirm = new Vector[]{new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0)};
-        Vector[] innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 2), new Vector(-1, 2), new Vector(2, -1)};
+        Vector[] innerLayerConfirm = new Vector[]{new Vector(-2, 2), new Vector(-1, 2), new Vector(2, -1), new Vector(2, -2)};
         if (!isOuterLayer) {
             isOuterLayer = true;
             for (Vector v : outerLayerConfirm) {
@@ -505,7 +495,7 @@ public strictfp class RobotPlayer {
                 netGunCount++;
             }
         }
-        spawnDir = new Direction[]{Direction.NORTHWEST, Direction.WEST};
+        spawnDir = new Direction[]{Direction.NORTHEAST, Direction.EAST};
         if (isVaporator && !isOuterLayer) {
             // produce outer layer
             if (rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.LANDSCAPER.cost) {
@@ -513,6 +503,7 @@ public strictfp class RobotPlayer {
                     spawnDir[i] = rotateDir(spawnDir[i]);
                     if (rc.isReady() && rc.canBuildRobot(RobotType.LANDSCAPER, spawnDir[i])) {
                         rc.buildRobot(RobotType.LANDSCAPER, spawnDir[i]);
+                        System.out.println("Spawning at: " + spawnDir[i].toString());
                         landscaperCount++;
                         break;
                     }
@@ -827,7 +818,7 @@ public strictfp class RobotPlayer {
                 } else {
                     System.out.println("Building fort");
 //                    System.out.println("Right before building fort, there is " + Clock.getBytecodesLeft());
-                    turtle.buildFort(rc);
+                    turtle.buildFort(rc, isInnerLayer);
                 }
             }
         } else if (turtle.getLandscaperState() == 2) {
@@ -863,7 +854,7 @@ public strictfp class RobotPlayer {
                 turtle.moveToTrail(rc);
             } else {
                 System.out.println("Building fort");
-                turtle.buildFort(rc);
+                turtle.buildFort(rc, isInnerLayer);
             }
         }
         else if (turtle.getLandscaperState() == 3) {
