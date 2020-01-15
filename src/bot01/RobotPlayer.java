@@ -23,8 +23,11 @@ public strictfp class RobotPlayer {
         DEFENSE
     }
 
+    // spawn variables
     static int turnCount;
     static int spawnHeight;
+    static int rotateState;
+    static boolean isShifted;
 
     // game map, not implemented yet
     static int[][] map;
@@ -74,6 +77,7 @@ public strictfp class RobotPlayer {
     // important locations
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
+    static MapLocation shiftedHQLocation = null;
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
@@ -1438,11 +1442,47 @@ public strictfp class RobotPlayer {
             getAllInfo();
         }
         exploreLoc();
+        findRotate();
         if (rc.getType() == RobotType.MINER) {
             findState();
         }
         if (rc.getType() == RobotType.LANDSCAPER) {
-            turtle = new Turtle(rc, HQLocation);
+            turtle = new Turtle(rc, shiftedHQLocation, rotateState);
+        }
+    }
+
+    // find rotation
+    static void findRotate() throws GameActionException {
+        // find rotation of map
+        MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
+        Direction dirCenter = HQLocation.directionTo(center);
+        if (dirCenter == Direction.EAST || dirCenter == Direction.NORTHEAST || dirCenter == Direction.NORTH) {
+            rotateState = 0;
+        }
+        else if (dirCenter == Direction.WEST || dirCenter == Direction.SOUTHWEST || dirCenter == Direction.SOUTH) {
+            rotateState = 2;
+        }
+        else if (dirCenter == Direction.SOUTHEAST) {
+            rotateState = 1;
+        }
+        else {
+            rotateState = 3;
+        }
+        // find if need to shift
+        isShifted = HQLocation.x < 2 || HQLocation.x > rc.getMapWidth()-3 || HQLocation.y < 2 || HQLocation.y > rc.getMapHeight()-3;
+        if (isShifted) {
+            if (rotateState == 0) {
+                shiftedHQLocation = HQLocation.add(Direction.NORTHEAST);
+            }
+            else if (rotateState == 1) {
+                shiftedHQLocation = HQLocation.add(Direction.SOUTHEAST);
+            }
+            else if (rotateState == 2) {
+                shiftedHQLocation = HQLocation.add(Direction.SOUTHWEST);
+            }
+            else {
+                shiftedHQLocation = HQLocation.add(Direction.NORTHWEST);
+            }
         }
     }
 
@@ -1474,7 +1514,7 @@ public strictfp class RobotPlayer {
                     System.out.println("HQloc is null");
                 }
                 isBuilder = true;
-                blueprint = new Blueprint(HQLocation);
+                blueprint = new Blueprint(shiftedHQLocation, rotateState, isShifted);
             }
             if (rc.getRoundNum() == 3) isAttacker = true;
             return;

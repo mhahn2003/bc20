@@ -1,6 +1,7 @@
 package bot01;
 
 import battlecode.common.*;
+import battlecode.schema.Vec;
 
 import java.util.ArrayList;
 
@@ -14,6 +15,8 @@ public class Turtle {
     // 3: attack
     // TODO: implement state 3
     private int landscaperState;
+    private int rotateState;
+    // shifted HQ Loc
     private MapLocation HQLocation;
     private Vector[] patrolLoc;
     private Vector[] outerLoc;
@@ -22,17 +25,16 @@ public class Turtle {
     private Vector[] innerLayerConfirm;
 
     // initialize landscaper state
-    public Turtle(RobotController rc, MapLocation HQLocation) throws GameActionException {
+    public Turtle(RobotController rc, MapLocation HQLocation, int rotateState) throws GameActionException {
         landscaperState = -1;
         this.HQLocation = HQLocation;
-        outerLayerConfirm = new Vector[6];
-        innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2), new Vector(2, 1), new Vector(2, 0), new Vector(2, -1)};
+        this.rotateState = rotateState;
+        outerLayerConfirm = new Vector[]{new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0)};
+        innerLayerConfirm = new Vector[]{new Vector(-2, 1), new Vector(-2, 2), new Vector(-1, 2), new Vector(2, -1), new Vector(2, -2), new Vector(1, -2)};
         boolean isOuterLayer = true;
         boolean isInnerLayer = true;
-        for (int i = 0; i < 6; i++) {
-            outerLayerConfirm[i] = new Vector(i-3, -3);
-        }
         for (Vector v: outerLayerConfirm) {
+            v = v.rotate(rotateState);
             MapLocation loc = v.addWith(HQLocation);
             if (rc.canSenseLocation(loc)) {
                 RobotInfo r = rc.senseRobotAtLocation(loc);
@@ -43,6 +45,7 @@ public class Turtle {
             }
         }
         for (Vector v: innerLayerConfirm) {
+            v = v.rotate(rotateState);
             MapLocation loc = v.addWith(HQLocation);
             if (rc.canSenseLocation(loc)) {
                 RobotInfo r = rc.senseRobotAtLocation(loc);
@@ -62,12 +65,20 @@ public class Turtle {
         if (!isOuterLayer) landscaperState = 1;
         else if (!isInnerLayer) landscaperState = 2;
         if (!isVaporator) landscaperState = 0;
+        // TODO: fix this
         if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1))) landscaperState = 3;
         patrolLoc = new Vector[]{new Vector(1, 2), new Vector(1, -2), new Vector(-2, -1), new Vector(2, -1), new Vector(-2, 1)};
-        outerLoc = new Vector[]{new Vector(-1, 3), new Vector(-2, 3), new Vector(-3, 3), new Vector(-3, 2), new Vector(-3, 1), new Vector(-3, 0), new Vector(-3, -1), new Vector(-3, -2), new Vector(-3, -3),
-                new Vector(-2, -3), new Vector(-1, -3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0), new Vector(3, -1), new Vector(3, -2),
-                new Vector(3, -3), new Vector(2, -3), new Vector(1, -3), new Vector(0, -3)};
-        innerLoc = new Vector[]{new Vector(1,2), new Vector(2,1), new Vector(2, 0), new Vector(2, -1), new Vector(1, -2), new Vector(-1, 2), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -2), new Vector(0, -2)};
+        outerLoc = new Vector[]{new Vector(-3, -2), new Vector(-3, -1), new Vector(-3, 0), new Vector(-3, 1), new Vector(-3, 2), new Vector(-2, 3), new Vector(-1, 3), new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(-2, -3), new Vector(-1, -3), new Vector(0, -3), new Vector(1, -3), new Vector(2, -3), new Vector(3, -2), new Vector(3, -1), new Vector(3, 0), new Vector(3, 1), new Vector(3, 2)};
+        innerLoc = new Vector[]{new Vector(0, 1), new Vector(-1,2), new Vector(-2, 2), new Vector(-2, 1), new Vector(-1, 0), new Vector(-2, -1), new Vector(-2, -2), new Vector(1, 1), new Vector(1, 0), new Vector(2, -1), new Vector(2, -2), new Vector(1, -2), new Vector(0, -1), new Vector(-1, -2)};
+        for (Vector v: patrolLoc) {
+            v = v.rotate(rotateState);
+        }
+        for (Vector v: outerLoc) {
+            v = v.rotate(rotateState);
+        }
+        for (Vector v: innerLoc) {
+            v = v.rotate(rotateState);
+        }
     }
 
     public int getLandscaperState() {

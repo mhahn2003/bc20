@@ -88,8 +88,13 @@ Our current strategy is to:
 16. ~~Fix miner soup targeting~~
 17. Make landscapers wait in place before going
 18. ~~Fix netgun build order (up-right corner second)~~
-19. drone are acting weird when miners are requesting help and patrolling enemy HQ? And drones patrolling HQ doesn't seem to help
-19. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
+19. ~~drone are acting weird when miners are requesting help and patrolling enemy HQ? And drones patrolling HQ doesn't seem to help~~
+20. Sometimes drones aren't dropping units off? I think it's because it keeps trying to drop in Direction.CENTER
+21. Optimize miner code
+22. Program miners so they never come into HQ after outer layer is built
+23. When refinery is destroyed removed from refineryLoc
+24. Make miners remove HQLoc from nearest refinery after outerlayer is built
+21. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
 LNL
 LC
  C

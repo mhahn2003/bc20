@@ -30,4 +30,11 @@ public class Vector {
     public boolean equals(Vector other) {
         return other.x == x && other.y == y;
     }
+
+    public Vector rotate(int rotateState) {
+        if (rotateState == 0) return this;
+        else if (rotateState == 1) return new Vector(this.y, -this.x);
+        else if (rotateState == 2) return new Vector(-this.x, -this.y);
+        else return new Vector(-this.y, this.x);
+    }
 }

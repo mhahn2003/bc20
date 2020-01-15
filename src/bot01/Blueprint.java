@@ -10,9 +10,13 @@ public class Blueprint {
     private Boolean[] buildComplete;
     private Vector[] minerTrail;
     private MapLocation HQLocation;
+    private int rotateState;
+    private boolean isShifted;
 
-    public Blueprint(MapLocation HQLocation) {
+    public Blueprint(MapLocation HQLocation, int rotateState, boolean isShifted) {
         this.HQLocation = HQLocation;
+        this.rotateState = rotateState;
+        this.isShifted = isShifted;
         buildComplete = new Boolean[7];
         for (int i = 0; i < 7; i++) buildComplete[i] = false;
         minerTrail = new Vector[]{new Vector(2, 1), new Vector(2, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-2, 0), new Vector(-1, 1)};
