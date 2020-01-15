@@ -17,6 +17,7 @@ public class Turtle {
     private int rotateState;
     // shifted HQ Loc
     private MapLocation HQLocation;
+    // TODO: extend patrol loc if they can't go there
     private Vector[] patrolLoc;
     private Vector[] outerLoc;
     private Vector[] innerLoc;
@@ -149,7 +150,7 @@ public class Turtle {
         int index = positionIn(rc.getLocation());
         if (index == -1) return;
         Direction evenDir = rc.getLocation().directionTo(lowestElevationInner(rc));
-        if (index != 0 && index != 7 && index != 2 && index != 6 && index != 8 && index != 12) {
+        if (index != 0 && index != 7 && index != 2 && index != 6 && index != 8 && index != 12 && index != 13) {
             MapLocation nextSpot = innerLoc[index-1].addWith(HQLocation);
             System.out.println("nextSpot is " + nextSpot.toString());
             if (rc.isReady()) {

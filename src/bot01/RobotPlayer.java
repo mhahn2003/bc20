@@ -45,8 +45,8 @@ public strictfp class RobotPlayer {
     // how far can water be away from each other
     static int waterClusterDist = 120;
     // patrol radius
-    static int patrolRadiusMin = 25;
-    static int patrolRadiusMax = 34;
+    static int patrolRadiusMin = 34;
+    static int patrolRadiusMax = 50;
     // help radius (super large for now because helping miners is pretty important)
     static int helpRadius = 800;
     // refinery radius
@@ -465,7 +465,7 @@ public strictfp class RobotPlayer {
                         break;
                     }
                 } else {
-                    if (rc.onTheMap(loc)) continue;
+                    if (!onMap(rc, loc)) continue;
                     isOuterLayer = false;
                     break;
                 }
@@ -487,8 +487,8 @@ public strictfp class RobotPlayer {
                         break;
                     }
                 } else {
-                    if (rc.onTheMap(loc)) continue;
-                    isOuterLayer = false;
+                    if (!onMap(rc, loc)) continue;
+                    isInnerLayer = false;
                     break;
                 }
             }
@@ -544,26 +544,27 @@ public strictfp class RobotPlayer {
     static void runFulfillmentCenter() throws GameActionException {
         System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
-        Direction optDir = Direction.NORTHWEST;
+        Direction optDir = rotateDir(Direction.NORTHEAST);
         if (droneCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost) {
-            for (int i = 0; i < 8; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup()>350 ){
+            for (int i = 0; i < 2; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup()> 350){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
                     break;
                 } else {
-                    optDir = optDir.rotateRight(); 
+                    optDir = optDir.rotateLeft();
                 }
             }
         }
+        optDir = rotateDir(Direction.NORTHEAST);
         if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost && helpLoc.size() >= 5) {
-            for (int i = 0; i < 8; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup()>350 ){
+            for (int i = 0; i < 2; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 350){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
                     break;
                 } else {
-                    optDir = optDir.rotateRight();
+                    optDir = optDir.rotateLeft();
                 }
             }
         }
@@ -575,8 +576,8 @@ public strictfp class RobotPlayer {
             }
         }
         // spam drones if we have a ton of soup
-        if (rc.getTeamSoup() >= 1000 && isVaporator && droneCount < maxDroneCount) {
-            optDir = Direction.NORTHWEST;
+        if (rc.getTeamSoup() >= 1000 && isVaporator) {
+            optDir = rotateDir(Direction.NORTH);
             if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
                 rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                 droneCount++;
@@ -605,49 +606,52 @@ public strictfp class RobotPlayer {
         }
         // explode if stuck on the inner layer trying to get to outer layer
         if (isInnerLayer) {
-            if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, -1)) || Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(0, -1))) {
+            int posIndex = turtle.positionIn(rc.getLocation());
+            if (posIndex == 2 || posIndex == 6 || posIndex == 8 || posIndex == 12 || posIndex == 13) {
                 explode = true;
                 return;
             }
         }
+        // TODO: this seems to be broken?
         // explode if command is attack but they just spawned and nobody next to them
-        if (phase == actionPhase.ATTACK && Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1)) && rc.senseRobotAtLocation(rc.getLocation().add(Direction.EAST)) == null) {
-            explode = true;
-            return;
-        }
+//        if (phase == actionPhase.ATTACK && Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1)) && rc.senseRobotAtLocation(rc.getLocation().add(Direction.EAST)) == null) {
+//            explode = true;
+//            return;
+//        }
         System.out.println("My state is: " + turtle.getLandscaperState());
         if (turtle.getLandscaperState() == 0) {
             // TODO: maybe we can make a ENEMY_BUILDING category and have them attack in the future
             boolean enemyLandscaper = false;
-            for (RobotInfo r: robots) {
-                if (r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam() && r.getLocation().distanceSquaredTo(HQLocation) <= 20) {
-                    enemyLandscaper = true;
-                    System.out.println("Enemy landscapers incoming!!");
-                    // if they're attacking HQ they're most likely attacking it or one of our building
-                    MapLocation DFLoc = HQLocation.add(Direction.EAST);
-                    MapLocation LFLoc = HQLocation.add(Direction.WEST);
-                    RobotInfo LFr = rc.senseRobotAtLocation(LFLoc);
-                    RobotInfo DFr = rc.senseRobotAtLocation(DFLoc);
-                    if (rc.getLocation().isAdjacentTo(HQLocation) && rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) {
-                        System.out.println("Digging dirt from HQ");
-                        rc.digDirt(rc.getLocation().directionTo(HQLocation));
-                    } else if (rc.getLocation().isAdjacentTo(LFLoc) && rc.canDigDirt(rc.getLocation().directionTo(LFLoc)) && LFr != null && LFr.getType() == RobotType.DESIGN_SCHOOL) {
-                        System.out.println("Digging dirt from landscaper factory");
-                        rc.digDirt(rc.getLocation().directionTo(LFLoc));
-                    } else if (rc.getLocation().isAdjacentTo(DFLoc) && rc.canDigDirt(rc.getLocation().directionTo(DFLoc)) && DFr != null && DFr.getType() == RobotType.FULFILLMENT_CENTER) {
-                        System.out.println("Digging dirt from drone factory");
-                        rc.digDirt(rc.getLocation().directionTo(DFLoc));
-                    } else {
-                        // if adjacent, stay there
-                        if (!rc.getLocation().isAdjacentTo(HQLocation)) {
-                            System.out.println("Moving towards HQ");
-                            nav.bugNav(rc, HQLocation);
-                        } else {
-                            System.out.println("Not moving from HQ");
-                        }
-                    }
-                }
-            }
+//            for (RobotInfo r: robots) {
+//                // TODO: this part is also broken
+//                if (r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam() && r.getLocation().distanceSquaredTo(HQLocation) <= 20) {
+//                    enemyLandscaper = true;
+//                    System.out.println("Enemy landscapers incoming!!");
+//                    // if they're attacking HQ they're most likely attacking it or one of our building
+//                    MapLocation DFLoc = HQLocation.add(Direction.EAST);
+//                    MapLocation LFLoc = HQLocation.add(Direction.WEST);
+//                    RobotInfo LFr = rc.senseRobotAtLocation(LFLoc);
+//                    RobotInfo DFr = rc.senseRobotAtLocation(DFLoc);
+//                    if (rc.getLocation().isAdjacentTo(HQLocation) && rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) {
+//                        System.out.println("Digging dirt from HQ");
+//                        rc.digDirt(rc.getLocation().directionTo(HQLocation));
+//                    } else if (rc.getLocation().isAdjacentTo(LFLoc) && rc.canDigDirt(rc.getLocation().directionTo(LFLoc)) && LFr != null && LFr.getType() == RobotType.DESIGN_SCHOOL) {
+//                        System.out.println("Digging dirt from landscaper factory");
+//                        rc.digDirt(rc.getLocation().directionTo(LFLoc));
+//                    } else if (rc.getLocation().isAdjacentTo(DFLoc) && rc.canDigDirt(rc.getLocation().directionTo(DFLoc)) && DFr != null && DFr.getType() == RobotType.FULFILLMENT_CENTER) {
+//                        System.out.println("Digging dirt from drone factory");
+//                        rc.digDirt(rc.getLocation().directionTo(DFLoc));
+//                    } else {
+//                        // if adjacent, stay there
+//                        if (!rc.getLocation().isAdjacentTo(HQLocation)) {
+//                            System.out.println("Moving towards HQ");
+//                            nav.bugNav(rc, HQLocation);
+//                        } else {
+//                            System.out.println("Not moving from HQ");
+//                        }
+//                    }
+//                }
+//            }
             if (!enemyLandscaper) {
                 for (RobotInfo r: robots) {
                     if (r.getTeam() != rc.getTeam() && r.getType().isBuilding()) {
@@ -682,49 +686,49 @@ public strictfp class RobotPlayer {
                     }
                 }
             }
-            // even out the spawn area
-            if (rc.isReady()) {
-                for (Vector v: spawnPos) {
-                    MapLocation modify = v.addWith(HQLocation);
-                    if (modify.isAdjacentTo(rc.getLocation())) {
-                        if (rc.canSenseLocation(modify)) {
-                            if (Math.abs(rc.senseElevation(modify)-spawnHeight) > 3) {
-                                if (rc.senseElevation(modify) > spawnHeight) {
-                                    // if higher
-                                    if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
-                                        // dig
-                                        if (rc.canDigDirt(rc.getLocation().directionTo(modify))) {
-                                            rc.digDirt(rc.getLocation().directionTo(modify));
-                                            break;
-                                        }
-                                    } else {
-                                        Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
-                                        if (rc.canDepositDirt(optDir)) {
-                                            rc.depositDirt(optDir);
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    // if lower
-                                    if (rc.getDirtCarrying() == 0) {
-                                        // dig
-                                        Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
-                                        if (rc.canDigDirt(optDir)) {
-                                            rc.digDirt(optDir);
-                                            break;
-                                        }
-                                    } else {
-                                        if (rc.canDigDirt(rc.getLocation().directionTo(modify))) {
-                                            rc.digDirt(rc.getLocation().directionTo(modify));
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+//            // even out the spawn area
+//            if (rc.isReady()) {
+//                for (Vector v: spawnPos) {
+//                    MapLocation modify = v.addWith(HQLocation);
+//                    if (modify.isAdjacentTo(rc.getLocation())) {
+//                        if (rc.canSenseLocation(modify)) {
+//                            if (Math.abs(rc.senseElevation(modify)-spawnHeight) > 3) {
+//                                if (rc.senseElevation(modify) > spawnHeight) {
+//                                    // if higher
+//                                    if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+//                                        // dig
+//                                        if (rc.canDigDirt(rc.getLocation().directionTo(modify))) {
+//                                            rc.digDirt(rc.getLocation().directionTo(modify));
+//                                            break;
+//                                        }
+//                                    } else {
+//                                        Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+//                                        if (rc.canDepositDirt(optDir)) {
+//                                            rc.depositDirt(optDir);
+//                                            break;
+//                                        }
+//                                    }
+//                                } else {
+//                                    // if lower
+//                                    if (rc.getDirtCarrying() == 0) {
+//                                        // dig
+//                                        Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+//                                        if (rc.canDigDirt(optDir)) {
+//                                            rc.digDirt(optDir);
+//                                            break;
+//                                        }
+//                                    } else {
+//                                        if (rc.canDigDirt(rc.getLocation().directionTo(modify))) {
+//                                            rc.digDirt(rc.getLocation().directionTo(modify));
+//                                            break;
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
             // if there's nothing nearby, patrol
             if (rc.isReady()) {
                 MapLocation patrol = turtle.findPatrol(rc);
@@ -748,7 +752,7 @@ public strictfp class RobotPlayer {
                     }
                 }
             }
-            MapLocation[] netGunLoc = new MapLocation[]{new Vector(2, 2).addWith(HQLocation), new Vector(2, -2).addWith(HQLocation), new Vector(-2, 2).addWith(HQLocation), new Vector(-2, -2).addWith(HQLocation)};
+            MapLocation[] netGunLoc = new MapLocation[]{new Vector(0, 2).addWith(shiftedHQLocation), new Vector(0, -2).addWith(shiftedHQLocation), new Vector(-2, 0).addWith(shiftedHQLocation), new Vector(2, 0).addWith(shiftedHQLocation)};
 //            System.out.println("After checking if any building is getting buried, there is " + Clock.getBytecodesLeft());
             // check if any net guns are unbuildable by the miner
             for (MapLocation loc: netGunLoc) {
@@ -759,7 +763,7 @@ public strictfp class RobotPlayer {
                             // if lower
                             if (rc.getDirtCarrying() == 0) {
                                 System.out.println("I have no dirt");
-                                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                                Direction optDir = rc.getLocation().directionTo(shiftedHQLocation).opposite();
                                 if (rc.canDigDirt(optDir)) {
                                     System.out.println("Digging dirt from: " + optDir.toString());
                                     rc.digDirt(optDir);
@@ -794,7 +798,7 @@ public strictfp class RobotPlayer {
                         if (rc.getDirtCarrying() == 0) {
                             // dig anywhere but to that robot, and preferably not downward
                             System.out.println("I have no dirt");
-                            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                            Direction optDir = rc.getLocation().directionTo(shiftedHQLocation).opposite();
                             for (int i = 0; i < 8; i++) {
                                 if (!rc.getLocation().add(optDir).equals(r.getLocation())) {
                                     if (rc.canDigDirt(optDir)) {
@@ -876,23 +880,24 @@ public strictfp class RobotPlayer {
             explode = true;
             return;
         }
-        // check if it is going to be carrying a landscaper for attack mode
-        if (phase == actionPhase.ATTACK && Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(0, 1))) {
-            RobotInfo r = rc.senseRobotAtLocation(rc.getLocation().add(Direction.WEST));
-            if (r != null && r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam()) {
-                isAttackerBuilder = true;
-                if (rc.canPickUpUnit(r.getID())) {
-                    rc.pickUpUnit(r.getID());
-                }
-            }
-        }
-        // check if inner loc is completed then never go inside again
-        if (isInnerLayer) {
+        // TODO: this part is bugged
+//        // check if it is going to be carrying a landscaper for attack mode
+//        if (phase == actionPhase.ATTACK && Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(0, 1))) {
+//            RobotInfo r = rc.senseRobotAtLocation(rc.getLocation().add(Direction.WEST));
+//            if (r != null && r.getType() == RobotType.LANDSCAPER && r.getTeam() != rc.getTeam()) {
+//                isAttackerBuilder = true;
+//                if (rc.canPickUpUnit(r.getID())) {
+//                    rc.pickUpUnit(r.getID());
+//                }
+//            }
+//        }
+        // check if outer layer is completed then never go inside again
+        if (isOuterLayer) {
             System.out.println("inner layer is completed!");
-            System.out.println("My distance is: " + rc.getLocation().distanceSquaredTo(HQLocation));
+            System.out.println("My distance is: " + rc.getLocation().distanceSquaredTo(shiftedHQLocation));
             // if within distance 13 of HQ first things first move away
-            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 13) {
-                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+            if (rc.getLocation().distanceSquaredTo(shiftedHQLocation) <= 13) {
+                Direction optDir = rc.getLocation().directionTo(shiftedHQLocation).opposite();
                 for (int i = 0; i < 8; i++) {
                     if (rc.canMove(optDir)) {
                         rc.move(optDir);
@@ -988,14 +993,14 @@ public strictfp class RobotPlayer {
                         RobotInfo pickup = null;
                         for (RobotInfo r : rc.senseNearbyRobots()) {
                             // check if it's inside the barrier somehow
-                            if (rc.getRoundNum() >= 450 && r.getLocation().distanceSquaredTo(HQLocation) < 8) continue;
+                            if (rc.getRoundNum() >= 450 && r.getLocation().distanceSquaredTo(shiftedHQLocation) < 8) continue;
                             if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
                                 if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
                                     if (r.getType() == RobotType.COW) {
                                         if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) > 48)
                                             pickup = r;
                                     } else {
-                                        if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) > GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED)
+                                        if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) >= 8)
                                             pickup = r;
                                     }
                                 }
@@ -1039,10 +1044,10 @@ public strictfp class RobotPlayer {
                         }
                     } else {
                         System.out.println("I am adjacent to my self is " + rc.getLocation().isAdjacentTo(rc.getLocation()));
-                        System.out.println("I'm here and distance is: " + rc.getLocation().distanceSquaredTo(HQLocation));
+                        System.out.println("I'm here and distance is: " + rc.getLocation().distanceSquaredTo(shiftedHQLocation));
                         // if within distance 13 of HQ first things first move away
-                        if (rc.getLocation().distanceSquaredTo(HQLocation) <= 13) {
-                            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                        if (rc.getLocation().distanceSquaredTo(shiftedHQLocation) <= 13) {
+                            Direction optDir = rc.getLocation().directionTo(shiftedHQLocation).opposite();
                             optDir = optDir.rotateLeft();
                             for (int i = 0; i < 8; i++) {
                                 if (rc.canMove(optDir)) {
@@ -1260,7 +1265,7 @@ public strictfp class RobotPlayer {
                 case SURRENDER:
                     if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < patrolRadiusMin) {
                             // if close, move away
-                            nav.bugNav(rc, HQLocation);
+                            nav.bugNav(rc, shiftedHQLocation);
                     } else {
                         // if far, change back to normal state
                         phase = actionPhase.NON_ATTACKING;
@@ -1421,7 +1426,7 @@ public strictfp class RobotPlayer {
 
 
     // finds the next exploring location
-    // if there is none left, return to HQ
+    // if there is none left, bother enemy
     static void nextExplore() throws GameActionException {
         int closestDist = 1000000;
         for (int i = 0; i < 8; i++) {
@@ -1432,7 +1437,7 @@ public strictfp class RobotPlayer {
                 }
             }
         }
-        if (closestDist == 1000000) exploreTo = HQLocation;
+        if (closestDist == 1000000) exploreTo = enemyHQLocation;
     }
 
     // generates locations we can explore
@@ -1464,6 +1469,7 @@ public strictfp class RobotPlayer {
 
     // find rotation
     static void findRotate() throws GameActionException {
+        System.out.println("Finding rotation");
         // find rotation of map
         MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction dirCenter = HQLocation.directionTo(center);
@@ -1494,6 +1500,8 @@ public strictfp class RobotPlayer {
             else {
                 shiftedHQLocation = HQLocation.add(Direction.NORTHWEST);
             }
+        } else {
+            shiftedHQLocation = HQLocation;
         }
     }
 
@@ -1503,8 +1511,8 @@ public strictfp class RobotPlayer {
     }
 
     static void patrolHQ() throws GameActionException {
-        Direction rotateDir = rc.getLocation().directionTo(HQLocation);
-        int distHQ = rc.getLocation().distanceSquaredTo(HQLocation);
+        Direction rotateDir = rc.getLocation().directionTo(shiftedHQLocation);
+        int distHQ = rc.getLocation().distanceSquaredTo(shiftedHQLocation);
         if (distHQ < patrolRadiusMin) {
             rotateDir = rotateDir.opposite();
         } else if (distHQ <= patrolRadiusMax) {
@@ -1521,9 +1529,6 @@ public strictfp class RobotPlayer {
     static void findState() throws GameActionException {
         if (rc.getType() == RobotType.MINER) {
             if (rc.getRoundNum() == 2) {
-                if (HQLocation == null) {
-                    System.out.println("HQloc is null");
-                }
                 isBuilder = true;
                 blueprint = new Blueprint(shiftedHQLocation, rotateState, isShifted);
             }
@@ -1874,6 +1879,11 @@ public strictfp class RobotPlayer {
     // rotate direction orientated with center
     static Direction rotateDir(Direction dir) {
         return Vector.getVec(dir).rotate(rotateState).getDir();
+    }
+
+    // returns whether location is in the map
+    static boolean onMap(RobotController rc, MapLocation loc) {
+        return loc.x >= 0 && loc.x < rc.getMapWidth() && loc.y >= 0 && loc.y < rc.getMapHeight();
     }
 }
 
