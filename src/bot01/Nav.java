@@ -36,12 +36,16 @@ public class Nav {
 
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
-        if (rc.getLocation() == dest) return;
+        if (rc.getLocation().equals(dest)) {
+            System.out.println("Location is equal");
+            wander++;
+            return;
+        }
         if (!rc.isReady()) return;
         if (currentDest == null) {
             navReset(rc, dest);
         }
-        if (currentDest != dest) {
+        if (!currentDest.equals(dest)) {
             navSoftReset(rc, dest);
         }
         // if currently getting help don't move
