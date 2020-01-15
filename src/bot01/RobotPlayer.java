@@ -855,7 +855,8 @@ public strictfp class RobotPlayer {
     }
 
     static void runDeliveryDrone() throws GameActionException {
-        System.out.println("helpLoc length is " + helpLoc.size());
+
+        System.out.println("My wander value is " + nav.getWander());
         System.out.println("My stuck value is " + nav.getStuck());
         // check if it needs to explode
         if (nav.getStuck() >= explodeThresh) {
@@ -1018,6 +1019,7 @@ public strictfp class RobotPlayer {
                                     if (nav.getWander() >= wanderLimit) {
                                         resetEnemyHQSuspect();
                                     }
+                                    System.out.println("going to enemy HQ suspect loc");
                                     nav.bugNav(rc, enemyHQLocationSuspect);
                                 }
                             }
@@ -1646,13 +1648,20 @@ public strictfp class RobotPlayer {
                 rloc=r.getLocation();
                 // check for matching
                 for (MapLocation refineryLoca: refineryLocation){
-                    if (refineryLoca==rloc){
+                    if (refineryLoca.equals(rloc)) {
                         saved=true;
                     }
                 }
                 // no matching => not saved => save it
                 if (!saved){
                     refineryLocation.add(rloc);
+                }
+            }
+            if (r.getType() == RobotType.NET_GUN && r.getTeam() != rc.getTeam()) {
+                MapLocation netGunLoc = r.getLocation();
+                if (!nav.isThreat(netGunLoc)) {
+                    infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, netGunLoc));
+                    nav.addThreat(netGunLoc);
                 }
             }
         }

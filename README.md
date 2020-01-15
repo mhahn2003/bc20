@@ -88,8 +88,9 @@ Our current strategy is to:
 16. ~~Fix miner soup targeting~~
 17. Make landscapers wait in place before going
 18. ~~Fix netgun build order (up-right corner second)~~
-19. drone are acting weird when miners are requesting help and patrolling enemy HQ? And drones patrolling HQ doesn't seem to help
-19. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
+19. ~~drone are acting weird when miners are requesting help and patrolling enemy HQ? And drones patrolling HQ doesn't seem to help~~
+20. Drones seems to not use wander
+21. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
 LNL
 LC
  C
