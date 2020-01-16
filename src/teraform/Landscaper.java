@@ -9,22 +9,31 @@ import static teraform.Util.directions;
 
 public class Landscaper extends Unit {
 
-    public MapLocation factoryLoc;
     public int factoryHeight;
     public Map<MapLocation, Boolean> holeLoc;
 
     public Landscaper(RobotController r) throws GameActionException {
         super(r);
+    }
+
+    public void initialize() throws GameActionException {
+        super.initialize();
         // find design school and record location
-        for (Direction dir: directions) {
-            MapLocation loc = rc.getLocation().add(dir);
-            if (rc.canSenseLocation(loc)) {
-                RobotInfo factory = rc.senseRobotAtLocation(loc);
-                if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
-                    factoryLoc = loc;
-                    factoryHeight = rc.senseElevation(factoryLoc);
-                    break;
+        if (factoryLocation == null) {
+            for (Direction dir : directions) {
+                MapLocation loc = rc.getLocation().add(dir);
+                if (rc.canSenseLocation(loc)) {
+                    RobotInfo factory = rc.senseRobotAtLocation(loc);
+                    if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
+                        factoryLocation = loc;
+                        factoryHeight = rc.senseElevation(factoryLocation);
+                        break;
+                    }
                 }
+            }
+        } else {
+            if (rc.canSenseLocation(factoryLocation)) {
+                factoryHeight = rc.senseElevation(factoryLocation);
             }
         }
         holeLoc = new HashMap<>();
@@ -92,7 +101,7 @@ public class Landscaper extends Unit {
     }
 
     public int optHeight(MapLocation loc) {
-        int distFromFactory = loc.distanceSquaredTo(factoryLoc);
+        int distFromFactory = loc.distanceSquaredTo(factoryLocation);
         return Math.min(15, (int) (Math.floor(Math.sqrt(distFromFactory)/3)) + factoryHeight);
     }
 

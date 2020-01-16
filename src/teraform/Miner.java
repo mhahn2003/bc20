@@ -20,6 +20,21 @@ public class Miner extends Unit {
             if (nav.outOfDrone(rc)) helpMode = 0;
         }
         if (helpMode == 0) {
+            // build landscaper factory
+            if (factoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) < 18) {
+                if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
+                    for (Direction dir: directions) {
+                        MapLocation loc = rc.getLocation().add(dir);
+                        if (loc.distanceSquaredTo(HQLocation) == 10) {
+                            if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
+                                rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (soupLoc == null) {
                 // if soup location is far or we just didn't notice
                 //            System.out.println("In my soupLoc I have " + soupLocation.toString());

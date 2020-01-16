@@ -16,7 +16,7 @@ public class Cast {
     static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 13;
+    private static int numCase = 14;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -45,6 +45,8 @@ public class Cast {
         SURRENDER,
         // DEFENSE
         DEFENSE,
+        // FACTORY LOC
+        FACTORY,
         // enemy?
         OTHER
     }
@@ -87,8 +89,11 @@ public class Cast {
             case DEFENSE:
                 message += 12;
                 break;
-            default:
+            case FACTORY:
                 message += 13;
+                break;
+            default:
+                message += 14;
                 break;
         }
         message=addCoord(message, coord);
@@ -120,6 +125,7 @@ public class Cast {
             case 10: return InformationCategory.ATTACK;
             case 11: return InformationCategory.SURRENDER;
             case 12: return InformationCategory.DEFENSE;
+            case 13: return InformationCategory.FACTORY;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 return InformationCategory.OTHER;
@@ -318,6 +324,9 @@ public class Cast {
                                 break;
                             case DEFENSE:
                                 phase = RobotPlayer.actionPhase.DEFENSE;
+                                break;
+                            case FACTORY:
+                                factoryLocation = loc;
                                 break;
                         }
                     }

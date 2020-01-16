@@ -11,7 +11,6 @@ public class Robot {
     static RobotController rc;
 
     // spawn variables
-    static int spawnHeight;
     static int turnCount = 0;
 
     // navigation object
@@ -22,6 +21,7 @@ public class Robot {
     // important locations
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
+    static MapLocation factoryLocation = null;
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
@@ -89,8 +89,7 @@ public class Robot {
     }
 
     // when a unit is first created it calls this function
-    static void initialize() throws GameActionException {
-        spawnHeight = rc.senseElevation(rc.getLocation());
+    public void initialize() throws GameActionException {
         if (rc.getType() == RobotType.HQ) {
             cast.collectInfo();
         } else {
