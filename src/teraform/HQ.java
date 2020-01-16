@@ -19,10 +19,11 @@ public class HQ extends Shooter {
             comms.sendHqLoc(rc.getLocation());
         }
         if(numMiners < 10) {
-            for (Direction dir : Util.directions)
+            for (Direction dir : Util.directions){
                 if(tryBuild(RobotType.MINER, dir)){
                     numMiners++;
                 }
+            }
         }
     }
 }

@@ -79,7 +79,7 @@ public class Robot {
         comms = new Communications(rc, this);
     }
 
-    public static void takeTurn() throws GameActionException {
+    public void takeTurn() throws GameActionException {
         turnCount += 1;
         if (turnCount == 1) {
             initialize();
