@@ -3,7 +3,7 @@ import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static teraform.Communications.infoQ;
+import static teraform.Cast.infoQ;
 import static teraform.Util.*;
 
 public class Miner extends Unit {
@@ -130,5 +130,40 @@ public class Miner extends Unit {
             rc.depositSoup(dir, rc.getSoupCarrying());
             return true;
         } else return false;
+    }
+
+    // TODO: reimplement this function
+    // stores the closest MapLocation of soup in the robot's stored soup locations in soupLoc
+    // but if within vision range, just normally find the closest soup
+    static void findSoup() throws GameActionException {
+        // try to find soup very close
+        MapLocation robotLoc = rc.getLocation();
+        int maxV = 5;
+        for (int x = -maxV; x <= maxV; x++) {
+            for (int y = -maxV; y <= maxV; y++) {
+                MapLocation check = robotLoc.translate(x, y);
+                if (rc.canSenseLocation(check)) {
+                    if (rc.senseSoup(check) > 0) {
+                        // find the closest maxmimal soup deposit
+                        int checkDist = check.distanceSquaredTo(rc.getLocation());
+                        if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
+                                || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
+                            soupLoc = check;
+                    }
+                }
+            }
+        }
+        if (soupLoc != null) return;
+        // if not, try to find closest soup according to stored soupLocation
+        int closestDist = 0;
+        if (soupLocation.isEmpty()) return;
+        for (MapLocation soup: soupLocation) {
+            // find the closest soup
+            int soupDist = soup.distanceSquaredTo(rc.getLocation());
+            if (soupLoc == null || soupDist < closestDist) {
+                closestDist = soupDist;
+                soupLoc = soup;
+            }
+        }
     }
 }

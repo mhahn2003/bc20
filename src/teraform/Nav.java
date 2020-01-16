@@ -280,4 +280,19 @@ public class Nav {
         idIncrease++;
         enemyHQLocationSuspect = suspects.get((rc.getID()+idIncrease) % 3);
     }
+
+    // finds the next exploring location
+    // if there is none left, bother enemy
+    public void nextExplore() throws GameActionException {
+        int closestDist = 1000000;
+        for (int i = 0; i < 8; i++) {
+            if (!suspectsVisited.get(suspects.get(i))) {
+                if (rc.getLocation().distanceSquaredTo(suspects.get(i)) < closestDist) {
+                    closestDist = rc.getLocation().distanceSquaredTo(suspects.get(i));
+                    exploreTo = suspects.get(i);
+                }
+            }
+        }
+        if (closestDist == 1000000) exploreTo = enemyHQLocation;
+    }
 }

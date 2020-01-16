@@ -9,7 +9,6 @@ import java.util.Map;
 
 public class Robot {
     static RobotController rc;
-    static Communications comms;
 
     // spawn variables
     static int spawnHeight;
@@ -17,11 +16,12 @@ public class Robot {
 
     // navigation object
     static Nav nav = new Nav();
+    // communication object
+    static Cast cast;
 
     // important locations
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
-    static MapLocation shiftedHQLocation = null;
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
@@ -75,8 +75,8 @@ public class Robot {
 
 
     public Robot(RobotController r) {
-        this.rc = r;
-        comms = new Communications(rc, this);
+        rc = r;
+        cast = new Cast(rc);
     }
 
     public void takeTurn() throws GameActionException {
@@ -85,8 +85,8 @@ public class Robot {
             initialize();
         } else {
             closestEnemyUnit=null;
-            comms.getInfo(rc.getRoundNum()-1);
-            comms.collectInfo();
+            cast.getInfo(rc.getRoundNum()-1);
+            cast.collectInfo();
         }
     }
 
@@ -94,9 +94,9 @@ public class Robot {
     static void initialize() throws GameActionException {
         spawnHeight = rc.senseElevation(rc.getLocation());
         if (rc.getType() == RobotType.HQ) {
-            comms.collectInfo();
+            cast.collectInfo();
         } else {
-            comms.getAllInfo();
+            cast.getAllInfo();
         }
         exploreLoc();
 //        if (rc.getType() == RobotType.MINER) {

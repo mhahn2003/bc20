@@ -2,12 +2,11 @@ package teraform;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 
-public class Landscaper extends Unit {
-
-    public Landscaper(RobotController r) {
+public class LandscaperFactory extends Building {
+    public LandscaperFactory(RobotController r) {
         super(r);
     }
 

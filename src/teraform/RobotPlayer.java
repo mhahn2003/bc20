@@ -2,11 +2,6 @@ package teraform;
 
 import battlecode.common.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 public strictfp class RobotPlayer {
     static RobotController rc;
 
@@ -29,7 +24,7 @@ public strictfp class RobotPlayer {
             case MINER:              me = new Miner(rc);        break;
             case REFINERY:           me = new Refinery(rc);     break;
             case VAPORATOR:          me = new Vaporator(rc);    break;
-            case DESIGN_SCHOOL:      me = new DesignSchool(rc); break;
+            case DESIGN_SCHOOL:      me = new LandscaperFactory(rc); break;
             case FULFILLMENT_CENTER: me = new Building(rc);     break;
             case LANDSCAPER:         me = new Landscaper(rc);   break;
             case DELIVERY_DRONE:     me = new Unit(rc);         break;

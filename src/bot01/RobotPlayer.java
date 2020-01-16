@@ -249,7 +249,7 @@ public strictfp class RobotPlayer {
         }
         // build all the miners we can get in the first few turns
         // maximum of 10 miners at 250th round
-        // TODO: spawn appropriate number of miners according to length of vaporator
+        // TODO: spawn appropriate number of miners according to length of soupLoc
         Direction optDir = Direction.NORTH;
         if (minerCount < Math.min(5+rc.getRoundNum()/50, 10) && (minerCount < 5 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
@@ -1400,7 +1400,7 @@ public strictfp class RobotPlayer {
         if (water != null) return water;
         int closestDist = 0;
         for (MapLocation w : waterLocation) {
-            // find the closest soup
+            // find the closest water
             int waterDist = w.distanceSquaredTo(rc.getLocation());
             if (water == null || waterDist < closestDist) {
                 closestDist = waterDist;
