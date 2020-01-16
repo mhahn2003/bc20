@@ -1,15 +1,22 @@
 package teraform;
 
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
+import battlecode.common.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
 
-    static int turnCount;
-    static MapLocation hqLoc;
+    public enum actionPhase{
+        NON_ATTACKING,
+        PREPARE,
+        ATTACK,
+        SURRENDER,
+        DEFENSE
+    }
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -17,7 +24,6 @@ public strictfp class RobotPlayer {
      **/
     public static void run(RobotController rc) throws GameActionException {
         Robot me = null;
-
         switch (rc.getType()) {
             case HQ:                 me = new HQ(rc);           break;
             case MINER:              me = new Miner(rc);        break;

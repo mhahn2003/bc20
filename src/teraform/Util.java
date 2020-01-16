@@ -17,12 +17,35 @@ public class Util {
         Direction.NORTHWEST
     };
 
-    /**
-     * Returns a random Direction.
-     *
-     * @return a random Direction
-     */
-    static Direction randomDirection() {
-        return directions[(int) (Math.random() * directions.length)];
-    }
+    // constants
+    // max vision of all units
+    static int maxV = 6;
+    // how many turns we wait before blockChain
+    static int waitBlock = 10;
+    // how far can soup be away from each other
+    static int soupClusterDist = 24;
+    // how far can water be away from each other
+    static int waterClusterDist = 120;
+    // patrol radius
+    static int patrolRadiusMin = 34;
+    static int patrolRadiusMax = 50;
+    // help radius (super large for now because helping miners is pretty important)
+    static int helpRadius = 800;
+    // refinery radius
+    static int refineryDist = 63;
+    // drone count control
+    static int maxDroneCount = 70;
+    // landscaper count control
+    static int attackLandscaperCount = 20;
+    // attack control
+    static int battlefieldRadius =169;
+
+    // default cost of our transaction
+    static int defaultCost = 2;
+    // how much drones can wander
+    static int wanderLimit = 5;
+    // when builder returns
+    static int builderReturn = 60;
+    // when to explode drone
+    static int explodeThresh = 10;
 }
