@@ -2,6 +2,7 @@ package teraform;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
+
 import static teraform.Util.directions;
 
 public class Vector {
