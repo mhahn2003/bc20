@@ -47,6 +47,10 @@ public class Cast {
         DEFENSE,
         // FACTORY LOC
         FACTORY,
+        // TERAFORM
+        TERAFORM,
+        // TERAFORM DONE
+        HOLE,
         // enemy?
         OTHER
     }
@@ -92,8 +96,11 @@ public class Cast {
             case FACTORY:
                 message += 13;
                 break;
-            default:
+            case HOLE:
                 message += 14;
+                break;
+            default:
+                message += 15;
                 break;
         }
         message=addCoord(message, coord);
@@ -104,12 +111,20 @@ public class Cast {
         return addCoord(c1, c2);
     }
 
+    public static int getMessage(Hole h1, Hole h2, Hole h3) {
+        return addCoord(h1, h2, h3);
+    }
+
     private static int addCoord(int message, MapLocation coord) {
         return message*10000 + coord.x*100 + coord.y;
     }
 
     private static int addCoord(MapLocation c1, MapLocation c2) {
         return 100000000 + c1.x*1000000 + c1.y*10000 + c2.x*100 + c2.y;
+    }
+
+    private static int addCoord(Hole h1, Hole h2, Hole h3) {
+        return -250000*h1.getValue()-500*h2.getValue()-h3.getValue();
     }
 
     public static InformationCategory getCat(int message){
@@ -126,8 +141,10 @@ public class Cast {
             case 11: return InformationCategory.SURRENDER;
             case 12: return InformationCategory.DEFENSE;
             case 13: return InformationCategory.FACTORY;
+            case 14: return InformationCategory.HOLE;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
+                if (message < 0) return InformationCategory.TERAFORM;
                 return InformationCategory.OTHER;
         }
     }
@@ -144,10 +161,31 @@ public class Cast {
         return new MapLocation((message%10000-message%100)/100, message%100);
     }
 
+    public static MapLocation getH1(int message) {
+        int mFlip = -message;
+        return new Hole((mFlip - mFlip % 250000)/250000).getMapLoc();
+    }
+
+    public static MapLocation getH2(int message) {
+        int mFlip = -message;
+        return new Hole((mFlip - mFlip % 500)/500).getMapLoc();
+    }
+
+    public static MapLocation getH3(int message) {
+        int mFlip = -message;
+        return new Hole((mFlip % 500)).getMapLoc();
+    }
+
+
     // check if it's our blockChain
     public static boolean isValid(int message, RobotController rc) throws GameActionException {
-        if (getCat(message) != InformationCategory.HELP) return (message < 10000*(numCase+1) && onMap(getCoord(message), rc));
-        else return (onMap(getC1(message), rc) && onMap(getC2(message), rc));
+        InformationCategory info = getCat(message);
+        if (info != InformationCategory.HELP && info != InformationCategory.TERAFORM) return (message < 10000*(numCase+1) && onMap(getCoord(message), rc));
+        else if (info == InformationCategory.HELP) return (onMap(getC1(message), rc) && onMap(getC2(message), rc));
+        else if (info == InformationCategory.TERAFORM) return rc.onTheMap(getH1(message)) && rc.onTheMap(getH2(message)) && rc.onTheMap(getH3(message));
+        else {
+            return false;
+        }
     }
 
     // check if location is on map
@@ -328,6 +366,14 @@ public class Cast {
                             case FACTORY:
                                 factoryLocation = loc;
                                 break;
+                            case TERAFORM:
+                                if (rc.getType() != RobotType.LANDSCAPER) break;
+                                MapLocation h1 = Cast.getH1(message);
+                                MapLocation h2 = Cast.getH2(message);
+                                MapLocation h3 = Cast.getH3(message);
+                                teraformLoc[0] = h1;
+                                teraformLoc[1] = h2;
+                                teraformLoc[2] = h3;
                         }
                     }
                 }
@@ -348,24 +394,25 @@ public class Cast {
         // whether it is already in memory
         boolean saved;
         for (RobotInfo r : robots) {
-            saved=false;
+            saved = false;
             if (enemyHQLocation == null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
                 enemyHQLocation = r.getLocation();
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
-                if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
+                if (rc.getType() == RobotType.DELIVERY_DRONE)
+                    if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
             }
             // why is this an else if?
-            else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY || r.getType() == RobotType.HQ) && r.getTeam() == rc.getTeam()){
-                rloc=r.getLocation();
+            else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY || r.getType() == RobotType.HQ) && r.getTeam() == rc.getTeam()) {
+                rloc = r.getLocation();
                 // check for matching
-                for (MapLocation refineryLoca: refineryLocation){
+                for (MapLocation refineryLoca : refineryLocation) {
                     if (refineryLoca.equals(rloc)) {
-                        saved=true;
+                        saved = true;
                     }
                 }
                 // no matching => not saved => save it
-                if (!saved){
+                if (!saved) {
                     refineryLocation.add(rloc);
                 }
             }
@@ -377,95 +424,100 @@ public class Cast {
                 }
             }
         }
-        boolean doAdd;
-        soupLoc = null;
-        for (int x = -maxV; x <= maxV; x+=2) {
-            for (int y = -maxV; y <= maxV; y+=2) {
-                // running out of bytecode so exiting early
+        if (rc.getType() != RobotType.LANDSCAPER) {
+            boolean doAdd;
+            soupLoc = null;
+            for (int x = -maxV; x <= maxV; x += 2) {
+                for (int y = -maxV; y <= maxV; y += 2) {
+                    // running out of bytecode so exiting early
+                    if (Clock.getBytecodesLeft() < 1000) break;
+                    MapLocation check = robotLoc.translate(x, y);
+                    if (rc.canSenseLocation(check)) {
+                        // for now only check soup on dry land
+                        if (rc.senseSoup(check) > 0 && !rc.senseFlooding(check)) {
+                            int checkDist = check.distanceSquaredTo(rc.getLocation());
+                            if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
+                                    || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
+                                soupLoc = check;
+                            doAdd = true;
+                            for (MapLocation soup : soupLocation) {
+                                if (soup.distanceSquaredTo(check) <= soupClusterDist) {
+                                    doAdd = false;
+                                    break;
+                                }
+                            }
+                            if (doAdd) {
+                                soupLocation.add(check);
+                                infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_SOUP, check));
+                            }
+                        }
+                        if ((rc.getRoundNum() <= 300 || (x % 3 == 0 && y % 3 == 0)) && rc.senseFlooding(check)) {
+                            doAdd = true;
+                            for (MapLocation water : waterLocation) {
+                                if (water.distanceSquaredTo(check) <= waterClusterDist) {
+                                    doAdd = false;
+                                    break;
+                                }
+                            }
+                            if (doAdd) {
+                                waterLocation.add(check);
+                                infoQ.add(Cast.getMessage(Cast.InformationCategory.WATER, check));
+                            }
+                        }
+                    }
+                }
                 if (Clock.getBytecodesLeft() < 1000) break;
-                MapLocation check = robotLoc.translate(x, y);
-                if (rc.canSenseLocation(check)) {
-                    // for now only check soup on dry land
-                    if (rc.senseSoup(check) > 0 && !rc.senseFlooding(check)) {
-                        int checkDist = check.distanceSquaredTo(rc.getLocation());
-                        if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
-                                || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
-                            soupLoc = check;
-                        doAdd = true;
-                        for (MapLocation soup: soupLocation) {
-                            if (soup.distanceSquaredTo(check) <= soupClusterDist) {
-                                doAdd = false;
-                                break;
-                            }
-                        }
-                        if (doAdd) {
-                            soupLocation.add(check);
-                            infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_SOUP, check));
-                        }
-                    }
-                    if ((rc.getRoundNum() <= 300 || (x % 3 == 0 && y % 3 == 0)) && rc.senseFlooding(check)) {
-                        doAdd = true;
-                        for (MapLocation water: waterLocation) {
-                            if (water.distanceSquaredTo(check) <= waterClusterDist) {
-                                doAdd = false;
-                                break;
-                            }
-                        }
-                        if (doAdd) {
-                            waterLocation.add(check);
-                            infoQ.add(Cast.getMessage(Cast.InformationCategory.WATER, check));
-                        }
-                    }
+            }
+            for (MapLocation water : waterLocation) {
+                if (rc.canSenseLocation(water)) {
+                    if (!rc.senseFlooding(water)) infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, water));
                 }
             }
-            if (Clock.getBytecodesLeft() < 1000) break;
-        }
-        for (MapLocation water: waterLocation) {
-            if (rc.canSenseLocation(water)) {
-                if (!rc.senseFlooding(water)) infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, water));
-            }
-        }
-        for (MapLocation soup: soupLocation) {
-            if (rc.getLocation().equals(soup)) {
-                // check if robot is on the soup location and there is no soup around him
-                // if there isn't any soup around it then remove
-                // TODO: reimplement with the new documentation
-                findSoup();
-                if (rc.senseSoup(soup) == 0 && (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc))) {
-                    System.out.println("There's no soup!");
-                    infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, soup));
-                    soupLocation.remove(soup);
+            for (MapLocation soup : soupLocation) {
+                if (rc.getLocation().equals(soup)) {
+                    // check if robot is on the soup location and there is no soup around him
+                    // if there isn't any soup around it then remove
+                    // TODO: reimplement with the new documentation
+                    findSoup();
+                    if (rc.senseSoup(soup) == 0 && (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc))) {
+                        System.out.println("There's no soup!");
+                        infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, soup));
+                        soupLocation.remove(soup);
+                    }
+                    break;
                 }
-                break;
             }
-        }
-        if (suspects != null) {
-            for (MapLocation l: suspects) {
-                if (suspectsVisited.get(l)) {
-                    if (rc.getLocation().equals(l)) {
-                        suspectsVisited.replace(l, true);
-                        infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
-                    } else if (rc.canSenseLocation(l)) {
-                        RobotInfo r = rc.senseRobotAtLocation(l);
-                        if (r != null) {
-                            RobotType t = r.getType();
-                            if (r.getTeam() != rc.getTeam() && (t == RobotType.HQ || t == RobotType.NET_GUN)) {
-                                suspectsVisited.replace(l, true);
-                                infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
-                            } else if (rc.getLocation().distanceSquaredTo(l) < 9) {
-                                suspectsVisited.replace(l, true);
-                                infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
+            if (suspects != null) {
+                for (MapLocation l : suspects) {
+                    if (suspectsVisited.get(l)) {
+                        if (rc.getLocation().equals(l)) {
+                            suspectsVisited.replace(l, true);
+                            infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
+                        } else if (rc.canSenseLocation(l)) {
+                            RobotInfo r = rc.senseRobotAtLocation(l);
+                            if (r != null) {
+                                RobotType t = r.getType();
+                                if (r.getTeam() != rc.getTeam() && (t == RobotType.HQ || t == RobotType.NET_GUN)) {
+                                    suspectsVisited.replace(l, true);
+                                    infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
+                                } else if (rc.getLocation().distanceSquaredTo(l) < 9) {
+                                    suspectsVisited.replace(l, true);
+                                    infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
+                                }
                             }
                         }
                     }
                 }
             }
+        } else {
+            // TODO: send information that landscapers will send
         }
         if (rc.getRoundNum() % waitBlock == 1) sendInfo();
     }
 
     // send information collected to the blockchain
     public void sendInfo() throws GameActionException {
+        if (rc.getType() == RobotType.HQ) exploreHole();
         if (!infoQ.isEmpty())  {
             int blockSize = Math.min(6, infoQ.size());
             int[] info = new int[blockSize+1];
@@ -545,5 +597,64 @@ public class Cast {
                 soupLoc = soup;
             }
         }
+    }
+
+    // HQ will find explorable hole locations
+    public void exploreHole() {
+        Hole h1 = null;
+        Hole h2 = null;
+        Hole h3 = null;
+        int d1 = 0;
+        int d2 = 0;
+        int d3 = 0;
+        for (int i = 0; i < sizeX; i++) {
+            for (int j = 0; j < sizeY; j++) {
+                if (!holeLocation[i][j]) {
+                    Hole temp = new Hole(i, j);
+                    int tempD = HQLocation.distanceSquaredTo(temp.getMapLoc());
+                    if (h1 == null || tempD < d1) {
+                        h1 = temp;
+                        d1 = tempD;
+                    }
+                }
+            }
+        }
+        if (h1 == null) {
+            return;
+        }
+        for (int i = 0; i < sizeX; i++) {
+            for (int j = 0; j < sizeY; j++) {
+                if (!holeLocation[i][j]) {
+                    Hole temp = new Hole(i, j);
+                    if (temp.getValue() == h1.getValue()) continue;
+                    int tempD = HQLocation.distanceSquaredTo(temp.getMapLoc());
+                    if (h2 == null || tempD < d2) {
+                        h2 = temp;
+                        d2= tempD;
+                    }
+                }
+            }
+        }
+        if (h2 == null) {
+            return;
+        }
+        for (int i = 0; i < sizeX; i++) {
+            for (int j = 0; j < sizeY; j++) {
+                if (!holeLocation[i][j]) {
+                    Hole temp = new Hole(i, j);
+                    if (temp.getValue() == h1.getValue()) continue;
+                    if (temp.getValue() == h2.getValue()) continue;
+                    int tempD = HQLocation.distanceSquaredTo(temp.getMapLoc());
+                    if (h3 == null || tempD < d3) {
+                        h3 = temp;
+                        d3 = tempD;
+                    }
+                }
+            }
+        }
+        if (h3 == null) {
+            return;
+        }
+        infoQ.add(getMessage(h1, h2, h3));
     }
 }

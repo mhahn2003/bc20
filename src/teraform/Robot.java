@@ -1,9 +1,7 @@
 package teraform;
 
 import battlecode.common.*;
-import bot01.Blueprint;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,13 +14,18 @@ public class Robot {
 
     // spawn variables
     static int turnCount = 0;
-    public int factoryHeight;
+    static int factoryHeight;
+    static int sizeX;
+    static int sizeY;
+
 
     // navigation object
     static Nav nav = new Nav();
     // communication object
     static Cast cast;
 
+    // hole array
+    static boolean[][] holeLocation;
 
     // important locations
     static MapLocation HQLocation = null;
@@ -31,6 +34,7 @@ public class Robot {
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
+    static MapLocation[] teraformLoc;
     // only miners use the following
     static MapLocation soupLoc = null;
     static MapLocation closestRefineryLocation = null;
@@ -38,7 +42,6 @@ public class Robot {
     static RobotInfo closestEnemyUnit;
     static ArrayList<Pair> helpLoc = new ArrayList<>();
     // only landscapers use the following
-    static Vector[] spawnPos = new Vector[]{new Vector(0, 0), new Vector(1, 0), new Vector(-1, 0), new Vector(0, 1), new Vector(-1, 1), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -1), new Vector(0, -1), new Vector(1, -1), new Vector(2, -1), new Vector(2, 0), new Vector(2, 1), new Vector(1, 1), new Vector(-1, 2), new Vector(0, 2), new Vector(1, 2), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2)};
     static ArrayList<MapLocation> holeLoc = new ArrayList<>();
 
     static RobotPlayer.actionPhase phase= RobotPlayer.actionPhase.NON_ATTACKING;
@@ -101,6 +104,7 @@ public class Robot {
     // when a unit is first created it calls this function
     public void initialize() throws GameActionException {
         if (rc.getType() == RobotType.HQ) {
+            findHoleSize();
             cast.collectInfo();
         } else {
             cast.getAllInfo();
@@ -114,6 +118,7 @@ public class Robot {
             return;
         }
         if (rc.getType() == RobotType.LANDSCAPER) {
+            teraformLoc = new MapLocation[3];
             // find design school and record location
             if (factoryLocation == null) {
                 for (Direction dir : directions) {
@@ -157,5 +162,22 @@ public class Robot {
             suspectsVisited.put(loc, false);
         }
         enemyHQLocationSuspect = suspects.get(rc.getID() % 3);
+    }
+
+    // find how many holes can fit in the map and initialize the array
+    static void findHoleSize() {
+        int minX = HQLocation.x % 3;
+        int minY = HQLocation.y % 3;
+        int maxX = HQLocation.x;
+        int maxY = HQLocation.y;
+        while (maxX < rc.getMapWidth()) {
+            maxX += 3;
+        }
+        while (maxY < rc.getMapHeight()) {
+            maxY += 3;
+        }
+        sizeX = (maxX-minX+3)/3;
+        sizeY = (maxY-minY+3)/3;
+        holeLocation = new boolean[sizeX][sizeY];
     }
 }
