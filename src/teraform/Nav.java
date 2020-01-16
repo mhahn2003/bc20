@@ -5,6 +5,8 @@ import battlecode.common.*;
 import java.util.ArrayList;
 
 import static java.lang.Math.min;
+import static teraform.Util.*;
+import static teraform.Robot.*;
 
 // Navigation class
 public class Nav {
@@ -265,5 +267,17 @@ public class Nav {
                 }
             }
         }
+    }
+
+    public void searchEnemyHQ(RobotController rc) throws GameActionException {
+        if (wander >= wanderLimit) {
+            resetEnemyHQSuspect();
+        }
+        bugNav(rc, enemyHQLocationSuspect);
+    }
+
+    public void resetEnemyHQSuspect() {
+        idIncrease++;
+        enemyHQLocationSuspect = suspects.get((rc.getID()+idIncrease) % 3);
     }
 }

@@ -3,10 +3,10 @@ import battlecode.common.*;
 
 import java.util.ArrayList;
 
-public class Miner extends Unit {
+import static teraform.Communications.infoQ;
+import static teraform.Util.*;
 
-    int numDesignSchools = 0;
-    ArrayList<MapLocation> soupLocations = new ArrayList<MapLocation>();
+public class Miner extends Unit {
 
     public Miner(RobotController r) {
         super(r);
@@ -15,74 +15,120 @@ public class Miner extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        numDesignSchools += comms.getNewDesignSchoolCount();
-        comms.updateSoupLocations(soupLocations);
-        checkIfSoupGone();
+        // check if it's in help mode and it moved so it can go free
+        if (helpMode == 1) {
+            if (nav.outOfDrone(rc)) helpMode = 0;
+        }
+        if (helpMode == 0) {
+            if (soupLoc == null) {
+                // if soup location is far or we just didn't notice
+                //            System.out.println("In my soupLoc I have " + soupLocation.toString());
+                findSoup();
+            }
+            //        System.out.println("After finding soup, I have " + Clock.getBytecodesLeft());
+            if (rc.getSoupCarrying() == RobotType.MINER.soupLimit || (soupLoc == null && rc.getSoupCarrying() > 0)) {
+                // if the robot is full or has stuff and no more soup nearby, move back to HQ
+                //            System.out.println("before going home i have " + Clock.getBytecodesLeft());
+                // default hq
+                // TODO: remove hqlocation as a possible refinery if outer layer is complete
+                // TODO: remove refinery location if enemy destroys or is flooded
+                closestRefineryLocation = HQLocation;
+                // check select a point as reference(might be edge case?)
+                MapLocation referencePoint = soupLoc;
+                if (referencePoint != null) {
+                    //                System.out.println("reference to " + reference_point.toString());
+                    int minRefineryDist = referencePoint.distanceSquaredTo(HQLocation);
 
-        for (Direction dir : Util.directions)
-            if (tryRefine(dir))
-                System.out.println("I refined soup! " + rc.getTeamSoup());
-        for (Direction dir : Util.directions)
-            if (tryMine(dir)) {
-                System.out.println("I mined soup! " + rc.getSoupCarrying());
-                MapLocation soupLoc = rc.getLocation().add(dir);
-                if (!soupLocations.contains(soupLoc)) {
-                    comms.broadcastSoupLocation(soupLoc);
+                    //                System.out.println("before find min d i have" + Clock.getBytecodesLeft());
+                    // check through refinery(redundancy here)
+                    for (MapLocation refineryLoca : refineryLocation) {
+                        int temp_d = referencePoint.distanceSquaredTo(refineryLoca);
+                        if (temp_d < minRefineryDist) {
+                            closestRefineryLocation = refineryLoca;
+                            minRefineryDist = temp_d;
+                        }
+                        //                    System.out.println("my memory contain " + refineryLoca.toString());
+                    }
+//                                    System.out.println("reference to " + referencePoint.toString());
+//                                    System.out.println("compare to " + closestRefineryLocation.toString());
+//                                    System.out.println("after find min d i have " + Clock.getBytecodesLeft());
+//                                    System.out.println("reference min distance to refinery " + minRefineryDist);
+//                                    System.out.println("reference min distance to bot " + referencePoint.distanceSquaredTo(rc.getLocation()));
+                    //
+                    if (minRefineryDist >= refineryDist && referencePoint.distanceSquaredTo(rc.getLocation()) < 13 && rc.getTeamSoup() >= 200) {
+                        //                    System.out.println("attempt build refinery");
+                        Direction optDir = rc.getLocation().directionTo(referencePoint);
+                        for (int i = 0; i < 8; i++) {
+                            if (rc.canBuildRobot(RobotType.REFINERY, optDir)) {
+                                //                            System.out.println("can build refinery");
+                                rc.buildRobot(RobotType.REFINERY, optDir);
+                                //                            System.out.println("built refinery");
+                                MapLocation robotLoc = rc.getLocation();
+                                refineryLocation.add(robotLoc.add(optDir));
+                                closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
+                                break;
+                            } else {
+                                optDir = optDir.rotateRight();
+                            }
+                        }
+                        infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size() - 1)));
+                    }
+                    //                System.out.println("after new refinery procedures" + Clock.getBytecodesLeft());
+                }
+                // if HQ is next to miner deposit
+                if (closestRefineryLocation.isAdjacentTo(rc.getLocation())) {
+                    Direction soupDepositDir = rc.getLocation().directionTo(closestRefineryLocation);
+                    tryRefine(soupDepositDir);
+                    nav.navReset(rc, rc.getLocation());
+                } else {
+                    if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
+                        helpMode = 1;
+                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        infoQ.add(bot01.Cast.getMessage(rc.getLocation(), closestRefineryLocation));
+                    }
+                    else nav.bugNav(rc, closestRefineryLocation);
+                }
+            } else {
+                // try to mine soup in all directions because miner finding soup can be slightly buggy
+                boolean canMine = false;
+                for (Direction d: directions) {
+                    if (rc.canMineSoup(d)) {
+                        rc.mineSoup(d);
+                        canMine = true;
+                        break;
+                    }
+                }
+                if (rc.canMineSoup(Direction.CENTER)) {
+                    rc.mineSoup(Direction.CENTER);
+                    canMine = true;
+                }
+                if (soupLoc != null) {
+//                    System.out.println("Soup is at: " + soupLoc.toString());
+                    if (canMine) {
+                        // pollution might make miner skip this even though it's right next to soup
+                        nav.navReset(rc, rc.getLocation());
+                    }
+                    // if we can't mine soup, go to other soups
+                    else {
+                        if (nav.needHelp(rc, turnCount, soupLoc)) {
+                            helpMode = 1;
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), soupLoc));
+                        }
+                        else nav.bugNav(rc, soupLoc);
+                    }
+                } else {
+                    // scout for soup
+                    nav.searchEnemyHQ(rc);
                 }
             }
-        if (numDesignSchools < 3){
-            if(tryBuild(RobotType.DESIGN_SCHOOL, Util.randomDirection()))
-                System.out.println("created a design school");
-        }
-
-        if (rc.getSoupCarrying() == RobotType.MINER.soupLimit) {
-            // time to go back to the HQ
-            if(nav.goTo(hqLoc))
-                System.out.println("moved towards HQ");
-        } else if (soupLocations.size() > 0) {
-            nav.goTo(soupLocations.get(0));
-            rc.setIndicatorLine(rc.getLocation(), soupLocations.get(0), 255, 255, 0);
-        } else if (nav.goTo(Util.randomDirection())) {
-            // otherwise, move randomly as usual
-            System.out.println("I moved randomly!");
         }
     }
 
-    /**
-     * Attempts to mine soup in a given direction.
-     *
-     * @param dir The intended direction of mining
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
-    boolean tryMine(Direction dir) throws GameActionException {
-        if (rc.isReady() && rc.canMineSoup(dir)) {
-            rc.mineSoup(dir);
-            return true;
-        } else return false;
-    }
-
-    /**
-     * Attempts to refine soup in a given direction.
-     *
-     * @param dir The intended direction of refining
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
-    boolean tryRefine(Direction dir) throws GameActionException {
+    static boolean tryRefine(Direction dir) throws GameActionException {
         if (rc.isReady() && rc.canDepositSoup(dir)) {
             rc.depositSoup(dir, rc.getSoupCarrying());
             return true;
         } else return false;
-    }
-
-    void checkIfSoupGone() throws GameActionException {
-        if (soupLocations.size() > 0) {
-            MapLocation targetSoupLoc = soupLocations.get(0);
-            if (rc.canSenseLocation(targetSoupLoc)
-                    && rc.senseSoup(targetSoupLoc) == 0) {
-                soupLocations.remove(0);
-            }
-        }
     }
 }
