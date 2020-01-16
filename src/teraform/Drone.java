@@ -59,7 +59,7 @@ public class Drone extends Unit {
                 MapLocation helpAt = value.getKey();
                 if (rc.canSenseLocation(helpAt)) {
                     RobotInfo r = rc.senseRobotAtLocation(helpAt);
-                    if (r == null || r.getType() != RobotType.MINER || r.getTeam() != rc.getTeam()) {
+                    if (r == null || (r.getType() != RobotType.MINER && r.getType() != RobotType.LANDSCAPER) || r.getTeam() != rc.getTeam()) {
                         removeHelp.add(value);
                     }
                 }

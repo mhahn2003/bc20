@@ -38,7 +38,9 @@ public class Util {
     // landscaper count control
     static int attackLandscaperCount = 20;
     // attack control
-    static int battlefieldRadius =169;
+    static int battlefieldRadius = 169;
+    // teraform height
+    static int teraformHeight = 10;
 
     // default cost of our transaction
     static int defaultCost = 2;

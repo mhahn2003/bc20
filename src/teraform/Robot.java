@@ -41,11 +41,9 @@ public class Robot {
     // for miners:   0: normal        1: requesting help
     static int helpMode = 0;
     static int helpIndex = -1;
-    // is miner #1
-    static boolean isBuilder;
-    // is miner #2
-    // TODO: implement rush if it's not nerfed after sprint with this miner and the 5 state 0 landscapers we have
-    static boolean isAttacker;
+
+    // for landscapers:    0: building teraform   1: building 5x5 turtle
+    static int teraformMode = 0;
 
     // booleans
     // is drone holding a cow
