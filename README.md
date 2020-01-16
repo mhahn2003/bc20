@@ -70,25 +70,11 @@ Our current strategy is to:
 
 ### Need to Fix
 
-1. ~~Improve scouting mechanism of searching for soup~~
+1. Improve scouting mechanism of searching for soup
 2. How to check if the area is inacessible without landscapers?
 3. Create path objects each with an id(for future modification, need to be set unique in some way), so if nothing happend, just render the path
 4. Install net guns near miners to protect them
-5. ~~Broadcast encrypted HQ location on turn 1 so everyone can access~~
-6. Copy enemy's broadcast to trick them
-7. ~~When we remove a location by broadcasting, we can accidentally remove both water and soup locations~~
-8. ~~If enemy is smart enough to spam block on turn 1, then miners might throw an exception in trying to call findHQ() and could die~~
-9. Refactor code because RobotPlayer.java currently looks very ugly
-10. ~~Implement exploreTo() completely~~
 11. Build net guns next to refineries?
-12. ~~Apparently 4 vaporator is op?~~
-13. ~~Assign a build miner (using turncount) and if round number is 200+ make it come back to HQ and it will build things right next to HQ for us~~
-14. ~~Make drones patrol HQ~~
-15. ~~If drones are patrolling to HQ and some miners are requesting for help, their request should take priority over patrolling (somewhat solved?)~~
-16. ~~Fix miner soup targeting~~
-17. Make landscapers wait in place before going
-18. ~~Fix netgun build order (up-right corner second)~~
-19. ~~drone are acting weird when miners are requesting help and patrolling enemy HQ? And drones patrolling HQ doesn't seem to help~~
 20. Sometimes drones aren't dropping units off? I think it's because it keeps trying to drop in Direction.CENTER
 21. Optimize miner code
 22. Program miners so they never come into HQ after outer layer is built
