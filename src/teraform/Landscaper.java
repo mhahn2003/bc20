@@ -2,15 +2,12 @@ package teraform;
 
 import battlecode.common.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 import static teraform.Util.directions;
 
 public class Landscaper extends Unit {
-
-    public int factoryHeight;
-    public Map<MapLocation, Boolean> holeLoc;
 
     public Landscaper(RobotController r) throws GameActionException {
         super(r);
@@ -18,81 +15,87 @@ public class Landscaper extends Unit {
 
     public void initialize() throws GameActionException {
         super.initialize();
-        // find design school and record location
-        if (factoryLocation == null) {
-            for (Direction dir : directions) {
-                MapLocation loc = rc.getLocation().add(dir);
-                if (rc.canSenseLocation(loc)) {
-                    RobotInfo factory = rc.senseRobotAtLocation(loc);
-                    if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
-                        factoryLocation = loc;
-                        factoryHeight = rc.senseElevation(factoryLocation);
-                        break;
-                    }
-                }
-            }
-        } else {
-            if (rc.canSenseLocation(factoryLocation)) {
-                factoryHeight = rc.senseElevation(factoryLocation);
-            }
-        }
-        holeLoc = new HashMap<>();
-        // generate possible holes
-        for (int i = 0; i < rc.getMapWidth(); i++) {
-            for (int j = 0; j < rc.getMapHeight(); j++) {
-                if (HQLocation.x-i % 3 == 0 && HQLocation.y-j % 3 == 0) {
-                    MapLocation hole = new MapLocation(i, j);
-                    if (hole.equals(HQLocation)) continue;
-                    holeLoc.put(hole, false);
-                }
-            }
-        }
     }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        // TODO: implement landscapers
         if (teraformMode == 0) {
-            // build the teraform
-            // assume landscaper factory is distance 10 away from HQ
-            if (rc.getLocation().distanceSquaredTo(HQLocation) > 18 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
-                Direction fill = fillTo();
-                Direction dig = digFrom();
-                if (fill == null) {
-                    // no place to fill, check if we need to shave off height instead
-                    Direction digLoc = digTo();
-                    if (digLoc == null) {
-                        // nothing to do here, move onto another location after crossing this one out
-                        MapLocation closeHole = rc.getLocation().add(dig);
-                        holeLoc.replace(closeHole, true);
-                        MapLocation hole = closestHole();
-                        moveTo(hole);
-                    } else {
-                        if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
-                            if (rc.canDigDirt(digLoc)) rc.digDirt(digLoc);
+            System.out.println("Initially I have: " + Clock.getBytecodesLeft());
+            // if in position to build turtle, build it instead
+            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) teraformMode = 1;
+            else {
+                // build the teraform
+                // assume landscaper factory is distance 10 away from HQ
+                if (rc.getLocation().distanceSquaredTo(HQLocation) >= 9 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
+                    Direction fill = fillTo();
+                    Direction dig = holeTo();
+                    if (fill == null) {
+                        // no place to fill, check if we need to shave off height instead
+                        Direction digLoc = digTo();
+                        System.out.println("After checking digging locations, I have: " + Clock.getBytecodesLeft());
+                        if (digLoc == null) {
+                            // nothing to do here, move onto another location after crossing this one out
+                            MapLocation closeHole = rc.getLocation().add(dig);
+                            if (!holeLoc.contains(closeHole)) holeLoc.add(closeHole);
+                            MapLocation hole = closestHole();
+                            System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+                            if (hole != null) {
+                                System.out.println("closest hole is: " + hole);
+                                moveTo(hole);
+                            } else {
+                                moveTo(enemyHQLocationSuspect);
+                            }
                         } else {
-                            if (rc.canDepositDirt(dig)) rc.depositDirt(dig);
+                            if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                                if (rc.canDigDirt(digLoc)) rc.digDirt(digLoc);
+                            } else {
+                                if (rc.canDepositDirt(dig)) rc.depositDirt(dig);
+                            }
+                        }
+
+                    } else {
+                        if (rc.getDirtCarrying() == 0) {
+                            if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                        } else {
+                            if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
                         }
                     }
-
                 } else {
-                    if (rc.getDirtCarrying() == 0) {
-                        if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                    MapLocation hole = closestHole();
+                    System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+                    if (hole != null) {
+                        System.out.println("closest hole is: " + hole);
+                        moveTo(hole);
                     } else {
-                        if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
+                        moveTo(enemyHQLocationSuspect);
                     }
                 }
             }
         }
-        else if (teraformMode == 1) {
+        if (teraformMode == 1) {
             // build the turtle
+            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 2) {
+                // if adjacent, dig under
+                if (rc.getDirtCarrying() == 0) {
+                    if (rc.canDigDirt(Direction.CENTER)) rc.digDirt(Direction.CENTER);
+                }
+                else {
+                    Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                    if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                }
+            }
+            else if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) {
+                // dig from opposite
+            }
         }
     }
 
-    public Direction digFrom() {
+    public Direction holeTo() {
+        int modX = HQLocation.x % 3;
+        int modY = HQLocation.y % 3;
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
-            if (HQLocation.x-dig.x % 3 == 0 && HQLocation.y-dig.y % 3 == 0) {
+            if (dig.x % 3 == modX && dig.y % 3 == modY) {
                 return dir;
             }
         }
@@ -102,11 +105,11 @@ public class Landscaper extends Unit {
 
     public int optHeight(MapLocation loc) {
         int distFromFactory = loc.distanceSquaredTo(factoryLocation);
-        return Math.min(15, (int) (Math.floor(Math.sqrt(distFromFactory)/3)) + factoryHeight);
+        return Math.min(12, (int) (Math.floor(Math.sqrt(distFromFactory)/2)) + factoryHeight);
     }
 
     public Direction fillTo() throws GameActionException {
-        Direction dig = digFrom();
+        Direction dig = holeTo();
         for (Direction dir: directions) {
             if (dig.equals(dir)) continue;
             MapLocation fill = rc.getLocation().add(dir);
@@ -119,7 +122,7 @@ public class Landscaper extends Unit {
     }
 
     public Direction digTo() throws GameActionException {
-        Direction dig = digFrom();
+        Direction dig = holeTo();
         for (Direction dir: directions) {
             if (dig.equals(dir)) continue;
             MapLocation fill = rc.getLocation().add(dir);
@@ -130,17 +133,18 @@ public class Landscaper extends Unit {
         // if can't find anything
         return null;
     }
-
+    // only scans the 9 nearest holes
     public MapLocation closestHole() throws GameActionException {
         MapLocation closest = null;
         int heuristic = 0;
-        for (MapLocation hole: holeLoc.keySet()) {
-            if (!holeLoc.get(hole)) {
-                int holeH = rc.getLocation().distanceSquaredTo(hole)+HQLocation.distanceSquaredTo(hole);
-                if (closest == null || holeH < heuristic) {
-                    closest = hole;
-                    heuristic = holeH;
-                }
+        ArrayList<MapLocation> nearbyHoles = scanNearbyHoles();
+
+        if (nearbyHoles.isEmpty()) return null;
+        for (MapLocation hole: scanNearbyHoles()) {
+            int holeH = rc.getLocation().distanceSquaredTo(hole)+HQLocation.distanceSquaredTo(hole);
+            if (closest == null || holeH < heuristic) {
+                closest = hole;
+                heuristic = holeH;
             }
         }
         return closest;
@@ -168,7 +172,32 @@ public class Landscaper extends Unit {
     }
 
     public boolean canMove(Direction dir) throws GameActionException {
+        Direction hole = holeTo();
         MapLocation loc = rc.getLocation().add(dir);
-        return rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc);
+        return !hole.equals(dir) && rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc);
+    }
+
+    public ArrayList<MapLocation> scanNearbyHoles() throws GameActionException {
+        ArrayList<MapLocation> closeHoles = new ArrayList<>();
+        MapLocation loc = rc.getLocation().add(holeTo());
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                boolean flag = true;
+                MapLocation hole = loc.translate(i*3, j*3);
+                if (hole.equals(HQLocation)) continue;
+                if (rc.onTheMap(hole)) {
+                    for (MapLocation h: holeLoc) {
+                        if (hole.equals(h)) {
+                            flag = false;
+                            break;
+                        }
+                    }
+                    if (flag) {
+                        closeHoles.add(hole);
+                    }
+                }
+            }
+        }
+        return closeHoles;
     }
 }

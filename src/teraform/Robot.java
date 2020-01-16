@@ -1,22 +1,28 @@
 package teraform;
 
 import battlecode.common.*;
+import bot01.Blueprint;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import static teraform.Util.directions;
 
 public class Robot {
     static RobotController rc;
 
     // spawn variables
     static int turnCount = 0;
+    public int factoryHeight;
 
     // navigation object
     static Nav nav = new Nav();
     // communication object
     static Cast cast;
+
 
     // important locations
     static MapLocation HQLocation = null;
@@ -33,6 +39,7 @@ public class Robot {
     static ArrayList<Pair> helpLoc = new ArrayList<>();
     // only landscapers use the following
     static Vector[] spawnPos = new Vector[]{new Vector(0, 0), new Vector(1, 0), new Vector(-1, 0), new Vector(0, 1), new Vector(-1, 1), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-1, -1), new Vector(0, -1), new Vector(1, -1), new Vector(2, -1), new Vector(2, 0), new Vector(2, 1), new Vector(1, 1), new Vector(-1, 2), new Vector(0, 2), new Vector(1, 2), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2)};
+    static ArrayList<MapLocation> holeLoc = new ArrayList<>();
 
     static RobotPlayer.actionPhase phase= RobotPlayer.actionPhase.NON_ATTACKING;
 
@@ -44,6 +51,9 @@ public class Robot {
 
     // for landscapers:    0: building teraform   1: building 5x5 turtle
     static int teraformMode = 0;
+
+    static boolean isBuilder;
+    static boolean isAttacker;
 
     // booleans
     // is drone holding a cow
@@ -96,9 +106,34 @@ public class Robot {
             cast.getAllInfo();
         }
         exploreLoc();
-//        if (rc.getType() == RobotType.MINER) {
-//            findState();
-//        }
+        if (rc.getType() == RobotType.MINER) {
+            if (rc.getRoundNum() == 2) {
+                isBuilder = true;
+            }
+            if (rc.getRoundNum() == 3) isAttacker = true;
+            return;
+        }
+        if (rc.getType() == RobotType.LANDSCAPER) {
+            // find design school and record location
+            if (factoryLocation == null) {
+                for (Direction dir : directions) {
+                    MapLocation loc = rc.getLocation().add(dir);
+                    if (rc.canSenseLocation(loc)) {
+                        RobotInfo factory = rc.senseRobotAtLocation(loc);
+                        if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
+                            factoryLocation = loc;
+                            factoryHeight = rc.senseElevation(factoryLocation);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                if (rc.canSenseLocation(factoryLocation)) {
+                    factoryHeight = rc.senseElevation(factoryLocation);
+                }
+            }
+            holeLoc = new ArrayList<>();
+        }
     }
 
 

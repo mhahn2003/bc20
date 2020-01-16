@@ -12,10 +12,6 @@ public class Unit extends Robot {
         nav = new Nav();
     }
 
-    public void takeTurn() throws GameActionException {
-        super.takeTurn();
-    }
-
     public void initialize() throws GameActionException {
         super.initialize();
     }
