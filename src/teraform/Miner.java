@@ -1,10 +1,9 @@
 package teraform;
 import battlecode.common.*;
 
-import java.util.ArrayList;
-
 import static teraform.Cast.infoQ;
-import static teraform.Util.*;
+import static teraform.Util.directions;
+import static teraform.Util.refineryDist;
 
 public class Miner extends Unit {
 
@@ -29,6 +28,21 @@ public class Miner extends Unit {
                             if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
                                 rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
                                 factoryLocation = rc.getLocation().add(dir);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            // build drone factory
+            if (droneFactoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) < 18 && isBuilder) {
+                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
+                    for (Direction dir: directions) {
+                        MapLocation loc = rc.getLocation().add(dir);
+                        if (loc.distanceSquaredTo(HQLocation) == 10) {
+                            if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
+                                rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
+                                droneFactoryLocation = rc.getLocation().add(dir);
                                 break;
                             }
                         }

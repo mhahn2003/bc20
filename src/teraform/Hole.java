@@ -8,8 +8,8 @@ public class Hole {
     int x;
     int y;
     int value;
-    int dx;
-    int dy;
+    static int dx;
+    static int dy;
 
 
     public Hole(int x, int y) {
@@ -33,4 +33,15 @@ public class Hole {
     }
 
     public int getValue() { return value; }
+
+    public int getX() { return x; }
+
+    public int getY() { return y; }
+
+    public static Hole getHole(MapLocation loc) {
+        dx = HQLocation.x % 3;
+        dy = HQLocation.y % 3;
+        return new Hole((loc.x-dx)/3, (loc.y-dy)/3);
+    }
 }
+

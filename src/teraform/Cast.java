@@ -374,6 +374,11 @@ public class Cast {
                                 teraformLoc[0] = h1;
                                 teraformLoc[1] = h2;
                                 teraformLoc[2] = h3;
+                            case HOLE:
+                                if (rc.getType() != RobotType.HQ) break;
+                                Hole h = Hole.getHole(loc);
+                                System.out.println("I got hole location: " + h.getX() + " " + h.getY());
+                                holeLocation[h.getX()][h.getY()] = true;
                         }
                     }
                 }
@@ -424,7 +429,8 @@ public class Cast {
                 }
             }
         }
-        if (rc.getType() != RobotType.LANDSCAPER) {
+        if (!(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
+            System.out.println("Getting soup!");
             boolean doAdd;
             soupLoc = null;
             for (int x = -maxV; x <= maxV; x += 2) {
@@ -601,60 +607,57 @@ public class Cast {
 
     // HQ will find explorable hole locations
     public void exploreHole() {
+        // on the first return don't call this
+        if (rc.getRoundNum() == 1) return;
         Hole h1 = null;
         Hole h2 = null;
         Hole h3 = null;
-        int d1 = 0;
-        int d2 = 0;
-        int d3 = 0;
-        for (int i = 0; i < sizeX; i++) {
-            for (int j = 0; j < sizeY; j++) {
+        int d1 = 1000000;
+        int d2 = 1000000;
+        int d3 = 1000000;
+        int HQHx = HQLocation.x/3;
+        int HQHy = HQLocation.y/3;
+//        System.out.println("HQHx: " + HQHx);
+//        System.out.println("HQHy: " + HQHy);
+        int maxV = 6;
+//        System.out.println("sizeX: " + sizeX);
+//        System.out.println("sizeY: " + sizeY);
+//        System.out.println("Start x at: " + Math.max(0, HQHx-maxV));
+//        System.out.println("End x at: " + Math.min(HQHx+maxV, sizeX-1));
+//        System.out.println("Start y at: " + Math.max(0, HQHy-maxV));
+//        System.out.println("End y at: " + Math.min(HQHy+maxV, sizeY-1));
+        for (int i = Math.max(0, HQHx-maxV); i <= Math.min(HQHx+maxV, sizeX-1); i++) {
+            for (int j = Math.max(0, HQHy-maxV); j <= Math.min(HQHy+maxV, sizeY-1); j++) {
+                if (i == HQHx && j == HQHy) continue;
+//                System.out.println("iterating i: " + i + " j: " + j);
                 if (!holeLocation[i][j]) {
+                    int dist = Math.max(d1, Math.max(d2, d3));
                     Hole temp = new Hole(i, j);
+//                    System.out.println("calculated temp");
                     int tempD = HQLocation.distanceSquaredTo(temp.getMapLoc());
-                    if (h1 == null || tempD < d1) {
-                        h1 = temp;
-                        d1 = tempD;
+                    if (tempD < dist) {
+//                        System.out.println("Case happened");
+                        if (dist == d1) {
+                            d1 = tempD;
+                            h1 = temp;
+//                            System.out.println("I updated!");
+                        }
+                        else if (dist == d2) {
+                            d2 = tempD;
+                            h2 = temp;
+                        }
+                        else {
+                            d3 = tempD;
+                            h3 = temp;
+                        }
                     }
                 }
             }
         }
-        if (h1 == null) {
-            return;
-        }
-        for (int i = 0; i < sizeX; i++) {
-            for (int j = 0; j < sizeY; j++) {
-                if (!holeLocation[i][j]) {
-                    Hole temp = new Hole(i, j);
-                    if (temp.getValue() == h1.getValue()) continue;
-                    int tempD = HQLocation.distanceSquaredTo(temp.getMapLoc());
-                    if (h2 == null || tempD < d2) {
-                        h2 = temp;
-                        d2= tempD;
-                    }
-                }
-            }
-        }
-        if (h2 == null) {
-            return;
-        }
-        for (int i = 0; i < sizeX; i++) {
-            for (int j = 0; j < sizeY; j++) {
-                if (!holeLocation[i][j]) {
-                    Hole temp = new Hole(i, j);
-                    if (temp.getValue() == h1.getValue()) continue;
-                    if (temp.getValue() == h2.getValue()) continue;
-                    int tempD = HQLocation.distanceSquaredTo(temp.getMapLoc());
-                    if (h3 == null || tempD < d3) {
-                        h3 = temp;
-                        d3 = tempD;
-                    }
-                }
-            }
-        }
-        if (h3 == null) {
-            return;
-        }
+//        System.out.println("Sending hole locations");
+//        System.out.println("h1 is: " + h1.getMapLoc().toString());
+//        System.out.println("h2 is: " + h2.getMapLoc().toString());
+//        System.out.println("h3 is: " + h3.getMapLoc().toString());
         infoQ.add(getMessage(h1, h2, h3));
     }
 }

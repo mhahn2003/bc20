@@ -31,6 +31,7 @@ public class Robot {
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
     static MapLocation factoryLocation = null;
+    static MapLocation droneFactoryLocation = null;
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
@@ -41,8 +42,6 @@ public class Robot {
     // only drones use following
     static RobotInfo closestEnemyUnit;
     static ArrayList<Pair> helpLoc = new ArrayList<>();
-    // only landscapers use the following
-    static ArrayList<MapLocation> holeLoc = new ArrayList<>();
 
     static RobotPlayer.actionPhase phase= RobotPlayer.actionPhase.NON_ATTACKING;
 
@@ -104,8 +103,8 @@ public class Robot {
     // when a unit is first created it calls this function
     public void initialize() throws GameActionException {
         if (rc.getType() == RobotType.HQ) {
-            findHoleSize();
             cast.collectInfo();
+            findHoleSize();
         } else {
             cast.getAllInfo();
         }
@@ -119,6 +118,9 @@ public class Robot {
         }
         if (rc.getType() == RobotType.LANDSCAPER) {
             teraformLoc = new MapLocation[3];
+            teraformLoc[0] = null;
+            teraformLoc[1] = null;
+            teraformLoc[2] = null;
             // find design school and record location
             if (factoryLocation == null) {
                 for (Direction dir : directions) {
@@ -137,7 +139,6 @@ public class Robot {
                     factoryHeight = rc.senseElevation(factoryLocation);
                 }
             }
-            holeLoc = new ArrayList<>();
         }
     }
 
@@ -176,8 +177,15 @@ public class Robot {
         while (maxY < rc.getMapHeight()) {
             maxY += 3;
         }
+        System.out.println("maxX: " + maxX);
+        System.out.println("minX: " + minX);
+        System.out.println("maxY: " + maxY);
+        System.out.println("minY: " + minY);
+
         sizeX = (maxX-minX+3)/3;
         sizeY = (maxY-minY+3)/3;
+        System.out.println("sizeX: " + sizeX);
+        System.out.println("sizeY: " + sizeY);
         holeLocation = new boolean[sizeX][sizeY];
     }
 }
