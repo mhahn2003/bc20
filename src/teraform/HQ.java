@@ -2,7 +2,9 @@ package teraform;
 
 import battlecode.common.*;
 
+import static teraform.Cast.getMessage;
 import static teraform.Cast.infoQ;
+import static teraform.Util.directions;
 
 public class HQ extends Shooter {
     static int numMiners = 0;
@@ -13,6 +15,25 @@ public class HQ extends Shooter {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        // if HQ is surrounded by complete turtle then send turtle signal
+        if (!isTurtle) {
+            int landscapers = 0;
+            int space = 0;
+            for (Direction dir : directions) {
+                MapLocation loc = rc.getLocation().add(dir);
+                if (rc.canSenseLocation(loc)) {
+                    space++;
+                    RobotInfo rob = rc.senseRobotAtLocation(loc);
+                    if (rob != null && rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam()) {
+                        landscapers++;
+                    }
+                }
+            }
+            if (landscapers == space) {
+                // broadcast turtle
+                infoQ.add(getMessage(Cast.InformationCategory.TURTLE, HQLocation));
+            }
+        }
 
         // find drones and shoot them
 //        System.out.println("enemy hq might be at " + enemyHQLocationSuspect.toString());

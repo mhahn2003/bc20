@@ -16,7 +16,7 @@ public class Cast {
     static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 14;
+    private static int numCase = 15;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -51,6 +51,8 @@ public class Cast {
         TERAFORM,
         // TERAFORM DONE
         HOLE,
+        // TURTLE DONe
+        TURTLE,
         // enemy?
         OTHER
     }
@@ -99,8 +101,11 @@ public class Cast {
             case HOLE:
                 message += 14;
                 break;
-            default:
+            case TURTLE:
                 message += 15;
+                break;
+            default:
+                message += 16;
                 break;
         }
         message=addCoord(message, coord);
@@ -142,6 +147,7 @@ public class Cast {
             case 12: return InformationCategory.DEFENSE;
             case 13: return InformationCategory.FACTORY;
             case 14: return InformationCategory.HOLE;
+            case 15: return InformationCategory.TURTLE;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -340,7 +346,7 @@ public class Cast {
                             case REMOVE:
                                 soupLocation.remove(loc);
                                 waterLocation.remove(loc);
-                                nav.removeThreat(loc);
+//                                nav.removeThreat(loc);
                                 if (suspects != null) {
                                     for (MapLocation l : suspects) {
                                         if (l.equals(loc)) {
@@ -381,11 +387,16 @@ public class Cast {
                                 teraformLoc[0] = h1;
                                 teraformLoc[1] = h2;
                                 teraformLoc[2] = h3;
+                                break;
                             case HOLE:
                                 if (rc.getType() != RobotType.HQ) break;
                                 Hole h = Hole.getHole(loc);
                                 System.out.println("I got hole location: " + h.getX() + " " + h.getY());
                                 holeLocation[h.getX()][h.getY()] = true;
+                                break;
+                            case TURTLE:
+                                isTurtle = true;
+                                break;
                         }
                     }
                 }

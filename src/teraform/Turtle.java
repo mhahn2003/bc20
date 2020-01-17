@@ -65,23 +65,6 @@ public class Turtle {
         return false;
     }
 
-    private boolean isEvenInner(RobotController rc) throws GameActionException {
-        // TODO: fix this function later
-        return false;
-//        MapLocation nextIndex, prevIndex;
-//        Direction dir = HQLocation.directionTo(rc.getLocation());
-//        nextIndex = HQLocation.add(dir.rotateRight());
-//        prevIndex = HQLocation.add(dir.rotateLeft());
-//        System.out.println("nextIndex position is: " + nextIndex.toString());
-//        System.out.println("prevIndex position is: " + prevIndex.toString());
-//        if (rc.canSenseLocation(nextIndex) && rc.canSenseLocation(prevIndex)) {
-//            RobotInfo r1 = rc.senseRobotAtLocation(nextIndex);
-//            RobotInfo r2 = rc.senseRobotAtLocation(prevIndex);
-//            return r1 != null && r1.getType() == RobotType.LANDSCAPER && r1.getTeam() == rc.getTeam() && r2 != null && r2.getType() == RobotType.LANDSCAPER && r2.getTeam() == rc.getTeam();
-//        }
-//        return false;
-    }
-
     // try to build the outer layer, even is when we should try to build evenly
     private void buildOuterFort(RobotController rc) throws GameActionException {
         int index = positionOut(rc.getLocation());
@@ -123,7 +106,7 @@ public class Turtle {
     private void buildInnerFort(RobotController rc) throws GameActionException {
         int index = positionIn(rc.getLocation());
         if (index == -1) return;
-        boolean even = isEvenInner(rc);
+        boolean even = isTurtle;
         Direction evenDir = rc.getLocation().directionTo(lowestElevationInner(rc));
         if (index == 0 || index == 4) {
             // last position

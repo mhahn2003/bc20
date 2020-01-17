@@ -1,10 +1,10 @@
 package teraform;
 
 import battlecode.common.*;
-import static teraform.Util.*;
-import static teraform.Robot.*;
 
 import java.util.ArrayList;
+
+import static teraform.Util.*;
 
 public class Drone extends Unit {
 
@@ -104,7 +104,7 @@ public class Drone extends Unit {
                 nav.bugNav(rc, strandLoc);
             } else if (helpMode == 2) {
                 MapLocation requestLoc = helpLoc.get(helpIndex).getValue();
-                if (rc.getLocation().isAdjacentTo(requestLoc)) {
+                if (requestLoc.equals(HQLocation) && isTurtle || rc.getLocation().isAdjacentTo(requestLoc)) {
                     Direction optDir = rc.getLocation().directionTo(requestLoc);
                     for (int i = 0; i < 8; i++) {
                         if (rc.canDropUnit(optDir) && !rc.senseFlooding(rc.getLocation().add(optDir))) {

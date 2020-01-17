@@ -71,6 +71,8 @@ public class Robot {
     static boolean isUnderAttack = false;
     // is drone carrying another attacker unit
     static boolean isAttackerBuilder = false;
+    // is the turtle around HQ done
+    static boolean isTurtle = false;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
