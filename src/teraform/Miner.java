@@ -121,16 +121,28 @@ public class Miner extends Unit {
             } else {
                 // try to mine soup in all directions because miner finding soup can be slightly buggy
                 boolean canMine = false;
+                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                if (rc.canMineSoup(Direction.CENTER)) {
+                    // don't suffocate HQ (infinity map)
+                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
+                        if (rc.canMove(optDir)) {
+                            rc.move(optDir);
+                        }
+                    }
+                    rc.mineSoup(Direction.CENTER);
+                    canMine = true;
+                }
                 for (Direction d: directions) {
+                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
+                        if (rc.canMove(optDir)) {
+                            rc.move(optDir);
+                        }
+                    }
                     if (rc.canMineSoup(d)) {
                         rc.mineSoup(d);
                         canMine = true;
                         break;
                     }
-                }
-                if (rc.canMineSoup(Direction.CENTER)) {
-                    rc.mineSoup(Direction.CENTER);
-                    canMine = true;
                 }
                 if (soupLoc != null) {
 //                    System.out.println("Soup is at: " + soupLoc.toString());

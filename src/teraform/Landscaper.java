@@ -2,14 +2,19 @@ package teraform;
 
 import battlecode.common.*;
 
+import java.util.ArrayList;
+
 import static teraform.Cast.getMessage;
 import static teraform.Cast.infoQ;
 import static teraform.Util.directions;
 
 public class Landscaper extends Unit {
 
+    private ArrayList<MapLocation> visitedHole;
+
     public Landscaper(RobotController r) throws GameActionException {
         super(r);
+        visitedHole = new ArrayList<>();
     }
 
     public void initialize() throws GameActionException {
@@ -48,11 +53,10 @@ public class Landscaper extends Unit {
                             System.out.println("There's more to do!");
                             moveTo(closeHole);
                         } else {
-                            System.out.println("Sending hole");
-                            infoQ.add(getMessage(Cast.InformationCategory.HOLE, closeHole));
+                            sendHole(closeHole);
                             MapLocation hole = closestHole();
                             System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
-                            if (rc.getID() % 2 == 0) {
+                            if (rc.getID() % 3 != 0) {
                                 if (hole != null) {
                                     System.out.println("closest hole is: " + hole);
                                     moveTo(hole);
@@ -130,9 +134,15 @@ public class Landscaper extends Unit {
         return Direction.CENTER;
     }
 
-    public int optHeight(MapLocation loc) {
+    // returns the optimal height of a location. Adds 2 to the height if near water.
+    public int optHeight(MapLocation loc) throws GameActionException {
         int distFromFactory = loc.distanceSquaredTo(factoryLocation);
-        return Math.min(12, (int) (Math.floor(Math.sqrt(distFromFactory)/2)) + factoryHeight);
+        int waterHeight = 0;
+        for (Direction dir: directions) {
+            MapLocation posWater = loc.add(dir);
+            if (rc.canSenseLocation(posWater) && rc.senseFlooding(posWater)) waterHeight = 2;
+        }
+        return Math.min(12, (int) (Math.floor(Math.sqrt(distFromFactory)/1.3)) + factoryHeight)+waterHeight;
     }
 
     public Direction fillTo() throws GameActionException {
@@ -226,5 +236,30 @@ public class Landscaper extends Unit {
             }
         }
         return false;
+    }
+
+    public void sendHole(MapLocation closeHole) throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots(8, rc.getTeam());
+        for (MapLocation loc: visitedHole) {
+            if (loc.equals(closeHole)) return;
+        }
+        replaceOrAdd(closeHole);
+        boolean alreadySent = false;
+        for (RobotInfo rob: robots) {
+            if (rob.getType() == RobotType.LANDSCAPER && rob.getLocation().isAdjacentTo(closeHole) && rob.getID() < rc.getID()) {
+                alreadySent = true;
+                break;
+            }
+        }
+        if (alreadySent) return;
+        System.out.println("Sending hole");
+        infoQ.add(getMessage(Cast.InformationCategory.HOLE, closeHole));
+    }
+
+    public void replaceOrAdd(MapLocation loc) {
+        if (visitedHole.size() >= 5) {
+            visitedHole.remove(0);
+        }
+        visitedHole.add(loc);
     }
 }

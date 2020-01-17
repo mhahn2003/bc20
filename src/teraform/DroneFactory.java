@@ -15,9 +15,9 @@ public class DroneFactory extends Building {
         System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
         Direction optDir = Direction.NORTHEAST;
-        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost) {
+        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 250) {
             for (int i = 0; i < 2; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup()> 350){
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 400){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
                     break;
