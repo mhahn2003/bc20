@@ -80,6 +80,8 @@ Our current strategy is to:
 22. Program miners so they never come into HQ after outer layer is built
 23. When refinery is destroyed removed from refineryLoc
 24. Make miners remove HQLoc from nearest refinery after outerlayer is built
+25. Check all 4 directions on where the design school can be placed
+26. Check if there's any height 1- nearby hq, if so, just 3x3 turtle immediately
 21. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
 LNL
 LC
