@@ -94,8 +94,9 @@ public class Landscaper extends Unit {
             }
         }
         if (teraformMode == 2) {
-            // you're adjacent to the hq
+            if (rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
             // build the turtle
+            turtle.buildFort(rc);
         }
     }
 

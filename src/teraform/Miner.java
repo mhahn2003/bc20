@@ -20,11 +20,12 @@ public class Miner extends Unit {
         }
         if (helpMode == 0) {
             // build landscaper factory
-            if (factoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) < 18 && isBuilder) {
+            MapLocation LFLoc = new Vector(2, 2).rotate(rotateState).addWith(HQLocation);
+            if (factoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) <= 18 && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) == 8) {
+                        if (loc.equals(LFLoc)) {
                             if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
                                 rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
                                 factoryLocation = rc.getLocation().add(dir);
@@ -32,6 +33,7 @@ public class Miner extends Unit {
                             }
                         }
                     }
+                    nav.bugNav(rc, LFLoc);
                 }
             }
             // build drone factory

@@ -66,18 +66,20 @@ public class Turtle {
     }
 
     private boolean isEvenInner(RobotController rc) throws GameActionException {
-        MapLocation nextIndex, prevIndex;
-        Direction dir = HQLocation.directionTo(rc.getLocation());
-        nextIndex = HQLocation.add(dir.rotateRight());
-        prevIndex = HQLocation.add(dir.rotateLeft());
-        System.out.println("nextIndex position is: " + nextIndex.toString());
-        System.out.println("prevIndex position is: " + prevIndex.toString());
-        if (rc.canSenseLocation(nextIndex) && rc.canSenseLocation(prevIndex)) {
-            RobotInfo r1 = rc.senseRobotAtLocation(nextIndex);
-            RobotInfo r2 = rc.senseRobotAtLocation(prevIndex);
-            return r1 != null && r1.getType() == RobotType.LANDSCAPER && r1.getTeam() == rc.getTeam() && r2 != null && r2.getType() == RobotType.LANDSCAPER && r2.getTeam() == rc.getTeam();
-        }
+        // TODO: fix this function later
         return false;
+//        MapLocation nextIndex, prevIndex;
+//        Direction dir = HQLocation.directionTo(rc.getLocation());
+//        nextIndex = HQLocation.add(dir.rotateRight());
+//        prevIndex = HQLocation.add(dir.rotateLeft());
+//        System.out.println("nextIndex position is: " + nextIndex.toString());
+//        System.out.println("prevIndex position is: " + prevIndex.toString());
+//        if (rc.canSenseLocation(nextIndex) && rc.canSenseLocation(prevIndex)) {
+//            RobotInfo r1 = rc.senseRobotAtLocation(nextIndex);
+//            RobotInfo r2 = rc.senseRobotAtLocation(prevIndex);
+//            return r1 != null && r1.getType() == RobotType.LANDSCAPER && r1.getTeam() == rc.getTeam() && r2 != null && r2.getType() == RobotType.LANDSCAPER && r2.getTeam() == rc.getTeam();
+//        }
+//        return false;
     }
 
     // try to build the outer layer, even is when we should try to build evenly
@@ -355,7 +357,7 @@ public class Turtle {
                         }
                     }
                     // if team is same or it's like an enemy unit or something
-                    else {
+                    else if (!(r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam())){
                         System.out.println("A unit, so now check the other spot");
                         nextSpot = innerLoc[3].addWith(HQLocation);
                         if (rc.isReady()) {
@@ -448,7 +450,7 @@ public class Turtle {
                                     }
                                 }
                                 // if team is same or it's like an enemy unit or something
-                                else {
+                                else if (!(r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam())) {
                                     System.out.println("A unit, so just dig normally");
                                     if (rc.getDirtCarrying() == 0) {
                                         // dig

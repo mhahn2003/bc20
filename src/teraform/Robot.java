@@ -138,13 +138,23 @@ public class Robot {
                         if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
                             factoryLocation = loc;
                             factoryHeight = rc.senseElevation(factoryLocation);
-                            if (dir.equals(rotateDir(Direction.NORTHEAST))) teraformMode = 2;
+                            System.out.println("direction of factory is: " + dir.toString());
+                            if (dir.equals(rotateDir(Direction.NORTHEAST))) {
+                                System.out.println("My mode is 2!");
+                                teraformMode = 2;
+                                turtle = new Turtle(rc, HQLocation, rotateState);
+                            }
                             break;
                         }
                     }
                 }
             } else {
                 if (rc.canSenseLocation(factoryLocation)) {
+                    if (rc.getLocation().directionTo(factoryLocation).equals(rotateDir(Direction.NORTHEAST))) {
+                        System.out.println("My mode is 2!");
+                        teraformMode = 2;
+                        turtle = new Turtle(rc, HQLocation, rotateState);
+                    }
                     factoryHeight = rc.senseElevation(factoryLocation);
                 }
             }
