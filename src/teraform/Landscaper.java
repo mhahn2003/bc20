@@ -31,26 +31,34 @@ public class Landscaper extends Unit {
 //            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) teraformMode = 1;
                 // build the teraform
                 // assume landscaper factory is distance 10 away from HQ
-            if (rc.getLocation().distanceSquaredTo(HQLocation) >= 9 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
+            if (rc.getLocation().distanceSquaredTo(HQLocation) > 2 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
+                System.out.println("Case 1");
                 Direction fill = fillTo();
                 Direction dig = holeTo();
                 if (fill == null) {
+                    System.out.println("No place to fill");
                     // no place to fill, check if we need to shave off height instead
                     Direction digLoc = digTo();
                     System.out.println("After checking digging locations, I have: " + Clock.getBytecodesLeft());
                     if (digLoc == null) {
+                        System.out.println("No place to dig");
                         // nothing to do here, move onto another location after crossing this one out
                         MapLocation closeHole = rc.getLocation().add(dig);
                         if (fillMore(closeHole)) {
+                            System.out.println("There's more to do!");
                             moveTo(closeHole);
                         } else {
                             System.out.println("Sending hole");
                             infoQ.add(getMessage(Cast.InformationCategory.HOLE, closeHole));
                             MapLocation hole = closestHole();
                             System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
-                            if (hole != null) {
-                                System.out.println("closest hole is: " + hole);
-                                moveTo(hole);
+                            if (rc.getID() % 2 == 0) {
+                                if (hole != null) {
+                                    System.out.println("closest hole is: " + hole);
+                                    moveTo(hole);
+                                } else {
+                                    moveTo(enemyHQLocationSuspect);
+                                }
                             } else {
                                 moveTo(enemyHQLocationSuspect);
                             }
@@ -157,6 +165,7 @@ public class Landscaper extends Unit {
     }
     // scans teraformLoc and checks
     public MapLocation closestHole() throws GameActionException {
+        if (teraformLoc[0] == null) return null;
         MapLocation closest = null;
         int heuristic = 0;
         for (MapLocation hole: teraformLoc) {
@@ -172,22 +181,24 @@ public class Landscaper extends Unit {
     // because we reduced everything (except deep tiles or super tall tiles) we should be able to move pretty freely
     public void moveTo(MapLocation loc) throws GameActionException {
         Direction optDir = rc.getLocation().directionTo(loc);
-        if (canMove(optDir)) {
-            rc.move(optDir);
-        } else {
-            optDir = optDir.rotateLeft();
-            if (canMove(optDir)) {
-                rc.move(optDir);
-            } else {
-                optDir = optDir.rotateRight().rotateRight();
-                if (canMove(optDir)) {
-                    rc.move(optDir);
-                } else {
-                    // TODO: call for drone help
-                }
-            }
+        Direction left = optDir.rotateLeft();
+        Direction right = optDir.rotateRight();
+        Direction leftLeft = left.rotateLeft();
+        Direction rightRight = right.rotateRight();
+        Direction leftLeftLeft = leftLeft.rotateLeft();
+        Direction rightRightRight = rightRight.rotateRight();
+        Direction op = optDir.opposite();
+        if (canMove(optDir)) rc.move(optDir);
+        else if (canMove(left)) rc.move(left);
+        else if (canMove(right)) rc.move(right);
+        else if (canMove(leftLeft)) rc.move(leftLeft);
+        else if (canMove(rightRight)) rc.move(rightRight);
+        else if (canMove(leftLeftLeft)) rc.move(leftLeftLeft);
+        else if (canMove(rightRightRight)) rc.move(rightRightRight);
+        else if (canMove(op)) rc.move(op);
+        else {
+            // TODO: call for drone help
         }
-
     }
 
     public boolean canMove(Direction dir) throws GameActionException {
@@ -196,37 +207,20 @@ public class Landscaper extends Unit {
         return !hole.equals(dir) && rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc);
     }
 
-//    public ArrayList<MapLocation> scanNearbyHoles() throws GameActionException {
-//        ArrayList<MapLocation> closeHoles = new ArrayList<>();
-//        MapLocation loc = rc.getLocation().add(holeTo());
-//        for (int i = -1; i <= 1; i++) {
-//            for (int j = -1; j <= 1; j++) {
-//                boolean flag = true;
-//                MapLocation hole = loc.translate(i*3, j*3);
-//                if (hole.equals(HQLocation)) continue;
-//                if (rc.onTheMap(hole)) {
-//                    for (MapLocation h: holeLoc) {
-//                        if (hole.equals(h)) {
-//                            flag = false;
-//                            break;
-//                        }
-//                    }
-//                    if (flag) {
-//                        closeHoles.add(hole);
-//                    }
-//                }
-//            }
-//        }
-//        return closeHoles;
-//    }
-
     public boolean fillMore(MapLocation hole) throws GameActionException {
         for (Direction dir: directions) {
-            MapLocation fill = rc.getLocation().add(dir);
+            MapLocation fill = hole.add(dir);
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
-                if ((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)) || (rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) ||
-                        (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) {
+                if (((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)) || (rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) ||
+                        (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0))
+                && !(rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying == 0)){
+                    if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)) System.out.println("first");
+                    if (rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) System.out.println("second");
+                    if (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) System.out.println("third");
+                    if (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0) System.out.println("fourth");
+                    System.out.println("Direction " + dir + " looks ok");
+                    System.out.println("optimal height is " + optHeight(fill));
                     return true;
                 }
             }

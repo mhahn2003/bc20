@@ -35,7 +35,7 @@ public class Robot {
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
-    static MapLocation[] teraformLoc;
+    static MapLocation[] teraformLoc = new MapLocation[3];
     // only miners use the following
     static MapLocation soupLoc = null;
     static MapLocation closestRefineryLocation = null;
@@ -117,7 +117,7 @@ public class Robot {
             return;
         }
         if (rc.getType() == RobotType.LANDSCAPER) {
-            teraformLoc = new MapLocation[3];
+            System.out.println("Initialized teraform!");
             teraformLoc[0] = null;
             teraformLoc[1] = null;
             teraformLoc[2] = null;

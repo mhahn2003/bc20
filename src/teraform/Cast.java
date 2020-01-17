@@ -168,7 +168,7 @@ public class Cast {
 
     public static MapLocation getH2(int message) {
         int mFlip = -message;
-        return new Hole((mFlip - mFlip % 500)/500).getMapLoc();
+        return new Hole((mFlip % 250000 - mFlip % 500)/500).getMapLoc();
     }
 
     public static MapLocation getH3(int message) {
@@ -182,7 +182,12 @@ public class Cast {
         InformationCategory info = getCat(message);
         if (info != InformationCategory.HELP && info != InformationCategory.TERAFORM) return (message < 10000*(numCase+1) && onMap(getCoord(message), rc));
         else if (info == InformationCategory.HELP) return (onMap(getC1(message), rc) && onMap(getC2(message), rc));
-        else if (info == InformationCategory.TERAFORM) return rc.onTheMap(getH1(message)) && rc.onTheMap(getH2(message)) && rc.onTheMap(getH3(message));
+        else if (info == InformationCategory.TERAFORM) {
+//            System.out.println("H1 is: " + getH1(message).toString());
+//            System.out.println("H2 is: " + getH2(message).toString());
+//            System.out.println("H3 is: " + getH3(message).toString());
+            return rc.onTheMap(getH1(message)) && rc.onTheMap(getH2(message)) && rc.onTheMap(getH3(message));
+        }
         else {
             return false;
         }
@@ -368,9 +373,11 @@ public class Cast {
                                 break;
                             case TERAFORM:
                                 if (rc.getType() != RobotType.LANDSCAPER) break;
+                                System.out.println("I got teraform!");
                                 MapLocation h1 = Cast.getH1(message);
                                 MapLocation h2 = Cast.getH2(message);
                                 MapLocation h3 = Cast.getH3(message);
+
                                 teraformLoc[0] = h1;
                                 teraformLoc[1] = h2;
                                 teraformLoc[2] = h3;
@@ -619,7 +626,7 @@ public class Cast {
         int HQHy = HQLocation.y/3;
 //        System.out.println("HQHx: " + HQHx);
 //        System.out.println("HQHy: " + HQHy);
-        int maxV = 6;
+        int maxV = 7;
 //        System.out.println("sizeX: " + sizeX);
 //        System.out.println("sizeY: " + sizeY);
 //        System.out.println("Start x at: " + Math.max(0, HQHx-maxV));
@@ -658,6 +665,7 @@ public class Cast {
 //        System.out.println("h1 is: " + h1.getMapLoc().toString());
 //        System.out.println("h2 is: " + h2.getMapLoc().toString());
 //        System.out.println("h3 is: " + h3.getMapLoc().toString());
+        System.out.println("Adding holes");
         infoQ.add(getMessage(h1, h2, h3));
     }
 }
