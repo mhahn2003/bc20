@@ -76,23 +76,24 @@ public class Landscaper extends Unit {
                             } else {
                                 moveTo(enemyHQLocationSuspect);
                             }
-                        }
-                        if (fillMore(closeHole)) {
-                            System.out.println("There's more to do!");
-                            moveTo(closeHole);
                         } else {
-                            sendHole(closeHole);
-                            MapLocation hole = closestHole();
-                            System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
-                            if (rc.getID() % 3 != 0) {
-                                if (hole != null) {
-                                    System.out.println("closest hole is: " + hole);
-                                    moveTo(hole);
+                            if (fillMore(closeHole)) {
+                                System.out.println("There's more to do!");
+                                moveTo(closeHole);
+                            } else {
+                                sendHole(closeHole);
+                                MapLocation hole = closestHole();
+                                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+                                if (rc.getID() % 3 != 0) {
+                                    if (hole != null) {
+                                        System.out.println("closest hole is: " + hole);
+                                        moveTo(hole);
+                                    } else {
+                                        moveTo(enemyHQLocationSuspect);
+                                    }
                                 } else {
                                     moveTo(enemyHQLocationSuspect);
                                 }
-                            } else {
-                                moveTo(enemyHQLocationSuspect);
                             }
                         }
                     } else {
@@ -186,9 +187,15 @@ public class Landscaper extends Unit {
             if (bad) continue;
             RobotInfo rob = rc.senseRobotAtLocation(fill);
             if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)
-                    && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) this.fill = dir;
+                    && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) {
+                this.fill = dir;
+                return;
+            }
             if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40)
-                    || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) this.digLoc = dir;
+                    || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) {
+                this.digLoc = dir;
+                return;
+            }
         }
     }
 
@@ -216,6 +223,7 @@ public class Landscaper extends Unit {
         MapLocation closest = null;
         int heuristic = 0;
         for (MapLocation hole: teraformLoc) {
+            if (visitedHole.contains(hole)) continue;
             int holeH = rc.getLocation().distanceSquaredTo(hole)+HQLocation.distanceSquaredTo(hole);
             if (closest == null || holeH < heuristic) {
                 closest = hole;
@@ -270,14 +278,14 @@ public class Landscaper extends Unit {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
                 if (((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < 40 && rc.senseElevation(fill) != optHeight(fill)) ||
                         (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0))
-                && !(rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying == 0)){
-                    if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)) System.out.println("first");
-                    if (rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) System.out.println("second");
-                    if (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) System.out.println("third");
-                    if (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0) System.out.println("fourth");
-                    System.out.println("Direction " + dir + " looks ok");
-                    System.out.println("optimal height is " + optHeight(fill));
-                    System.out.println("After completing fillMore I have: " + Clock.getBytecodesLeft());
+                && !(rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying == 0)) {
+//                    if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)) System.out.println("first");
+//                    if (rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) System.out.println("second");
+//                    if (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) System.out.println("third");
+//                    if (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0) System.out.println("fourth");
+//                    System.out.println("Direction " + dir + " looks ok");
+//                    System.out.println("optimal height is " + optHeight(fill));
+//                    System.out.println("After completing fillMore I have: " + Clock.getBytecodesLeft());
                     return true;
                 }
             }

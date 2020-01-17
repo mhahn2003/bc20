@@ -19,6 +19,10 @@ public class Miner extends Unit {
             if (nav.outOfDrone(rc)) helpMode = 0;
         }
         if (helpMode == 0) {
+            // try not to suffocate HQ
+            if (rc.getLocation().isAdjacentTo(HQLocation) && rc.getSoupCarrying() == 0) {
+                nav.bugNav(rc, rc.getLocation().add(rc.getLocation().directionTo(HQLocation).opposite()));
+            }
             // build landscaper factory
             MapLocation LFLoc = new Vector(2, 2).rotate(rotateState).addWith(HQLocation);
             if (factoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) <= 18 && isBuilder) {
@@ -125,21 +129,10 @@ public class Miner extends Unit {
                 boolean canMine = false;
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 if (rc.canMineSoup(Direction.CENTER)) {
-                    // don't suffocate HQ (infinity map)
-                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
-                        if (rc.canMove(optDir)) {
-                            rc.move(optDir);
-                        }
-                    }
                     rc.mineSoup(Direction.CENTER);
                     canMine = true;
                 }
                 for (Direction d: directions) {
-                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
-                        if (rc.canMove(optDir)) {
-                            rc.move(optDir);
-                        }
-                    }
                     if (rc.canMineSoup(d)) {
                         rc.mineSoup(d);
                         canMine = true;

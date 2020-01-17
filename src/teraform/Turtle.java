@@ -239,7 +239,7 @@ public class Turtle {
                         }
                     }
                     // if team is same or it's like an enemy unit or something
-                    else {
+                    else if (!(r.getType() == RobotType.MINER && r.getTeam() == rc.getTeam())) {
                         System.out.println("A unit, so just dig normally");
                         if (rc.getDirtCarrying() == 0) {
                             // dig
@@ -357,7 +357,7 @@ public class Turtle {
                         }
                     }
                     // if team is same or it's like an enemy unit or something
-                    else if (!(r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam())){
+                    else if (!(r.getType() == RobotType.MINER && r.getTeam() == rc.getTeam())){
                         System.out.println("A unit, so now check the other spot");
                         nextSpot = innerLoc[3].addWith(HQLocation);
                         if (rc.isReady()) {
@@ -450,7 +450,7 @@ public class Turtle {
                                     }
                                 }
                                 // if team is same or it's like an enemy unit or something
-                                else if (!(r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam())) {
+                                else if (!(r.getType() == RobotType.MINER && r.getTeam() == rc.getTeam())) {
                                     System.out.println("A unit, so just dig normally");
                                     if (rc.getDirtCarrying() == 0) {
                                         // dig
