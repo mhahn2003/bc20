@@ -148,7 +148,7 @@ public class Miner extends Unit {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                         helpMode = 1;
                         System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        infoQ.add(bot01.Cast.getMessage(rc.getLocation(), closestRefineryLocation));
+                        infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
                     }
                     else nav.bugNav(rc, closestRefineryLocation);
                 }
