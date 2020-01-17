@@ -17,12 +17,17 @@ public class Robot {
     static int factoryHeight;
     static int sizeX;
     static int sizeY;
+    static int rotateState;
 
 
     // navigation object
     static Nav nav = new Nav();
     // communication object
     static Cast cast;
+    // turtle object
+    static Turtle turtle;
+    // blueprint object (only the first miner will have this)
+    static Blueprint blueprint;
 
     // hole array
     static boolean[][] holeLocation;
@@ -108,7 +113,9 @@ public class Robot {
         } else {
             cast.getAllInfo();
         }
+        findRotate();
         exploreLoc();
+
         if (rc.getType() == RobotType.MINER) {
             if (rc.getRoundNum() == 2) {
                 isBuilder = true;
@@ -117,6 +124,7 @@ public class Robot {
             return;
         }
         if (rc.getType() == RobotType.LANDSCAPER) {
+            turtle = new Turtle(rc, HQLocation, rotateState);
             System.out.println("Initialized teraform!");
             teraformLoc[0] = null;
             teraformLoc[1] = null;
@@ -130,6 +138,7 @@ public class Robot {
                         if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
                             factoryLocation = loc;
                             factoryHeight = rc.senseElevation(factoryLocation);
+                            if (dir.equals(rotateDir(Direction.NORTHEAST))) teraformMode = 2;
                             break;
                         }
                     }
@@ -139,6 +148,30 @@ public class Robot {
                     factoryHeight = rc.senseElevation(factoryLocation);
                 }
             }
+        }
+    }
+
+    // find rotation
+    static void findRotate() throws GameActionException {
+        System.out.println("Finding rotation");
+        // find rotation of map
+        MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
+        Direction dirCenter = HQLocation.directionTo(center);
+        if (dirCenter == Direction.EAST || dirCenter == Direction.NORTHEAST || dirCenter == Direction.NORTH) {
+            rotateState = 0;
+        }
+        else if (dirCenter == Direction.WEST || dirCenter == Direction.SOUTHWEST || dirCenter == Direction.SOUTH) {
+            rotateState = 2;
+        }
+        else if (dirCenter == Direction.SOUTHEAST) {
+            rotateState = 1;
+        }
+        else {
+            rotateState = 3;
+        }
+        if (HQLocation.x >= 9 && HQLocation.x <= rc.getMapWidth()-10 && HQLocation.y >= 9 && HQLocation.y <= rc.getMapHeight()-10) {
+            rotateState += 2;
+            rotateState %= 2;
         }
     }
 
@@ -187,5 +220,10 @@ public class Robot {
         System.out.println("sizeX: " + sizeX);
         System.out.println("sizeY: " + sizeY);
         holeLocation = new boolean[sizeX][sizeY];
+    }
+
+    // rotate direction orientated with center
+    static Direction rotateDir(Direction dir) {
+        return Vector.getVec(dir).rotate(rotateState).getDir();
     }
 }

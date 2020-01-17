@@ -626,7 +626,7 @@ public class Cast {
         int HQHy = HQLocation.y/3;
 //        System.out.println("HQHx: " + HQHx);
 //        System.out.println("HQHy: " + HQHy);
-        int maxV = 7;
+        int maxV = 4;
 //        System.out.println("sizeX: " + sizeX);
 //        System.out.println("sizeY: " + sizeY);
 //        System.out.println("Start x at: " + Math.max(0, HQHx-maxV));
@@ -665,7 +665,9 @@ public class Cast {
 //        System.out.println("h1 is: " + h1.getMapLoc().toString());
 //        System.out.println("h2 is: " + h2.getMapLoc().toString());
 //        System.out.println("h3 is: " + h3.getMapLoc().toString());
-        System.out.println("Adding holes");
-        infoQ.add(getMessage(h1, h2, h3));
+        if (h3 != null) {
+            System.out.println("Adding holes");
+            infoQ.add(getMessage(h1, h2, h3));
+        }
     }
 }

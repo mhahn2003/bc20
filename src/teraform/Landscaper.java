@@ -93,31 +93,9 @@ public class Landscaper extends Unit {
                 }
             }
         }
-        if (teraformMode == 1) {
+        if (teraformMode == 2) {
+            // you're adjacent to the hq
             // build the turtle
-//            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 2) {
-//                // if adjacent, dig under
-//                if (rc.getDirtCarrying() == 0) {
-//                    if (rc.canDigDirt(Direction.CENTER)) rc.digDirt(Direction.CENTER);
-//                }
-//                else {
-//                    Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
-//                    if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
-//                }
-//            }
-//            else if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) {
-//                // dig from opposite
-//                if (rc.getDirtCarrying() == 0) {
-//                    Direction digDir = rc.getLocation().directionTo(HQLocation);
-//                    if (rc.canDigDirt(digDir)) {
-//                        rc.digDirt(digDir);
-//                    }
-//                } else {
-//                    if (rc.canDepositDirt(Direction.CENTER)) {
-//                        rc.depositDirt(Direction.CENTER);
-//                    }
-//                }
-//            }
         }
     }
 
