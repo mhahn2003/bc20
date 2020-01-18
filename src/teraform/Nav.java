@@ -240,6 +240,11 @@ public class Nav {
                 System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
+            if (rc.getRoundNum()-travelRound-15 > travelDist*5 && areDrones && turnCount > 25) {
+                helpReq = rc.getLocation();
+                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
+                return true;
+            }
         }
         else {
             if (rc.getRoundNum()-travelRound - 10 > travelDist*7/4 && areDrones && turnCount > 25) {

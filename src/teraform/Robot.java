@@ -192,6 +192,10 @@ public class Robot {
         else {
             rotateState = 6;
         }
+        if ((HQLocation.x < 6 || HQLocation.x > rc.getMapWidth()-7) && (HQLocation.y < 6 || HQLocation.y > rc.getMapHeight()-7)) {
+            rotateState += 4;
+            rotateState %= 8;
+        }
         System.out.println("Initial rotateState was: " + rotateState);
         Vector[] buildLoc = new Vector[]{new Vector(-2, -2), new Vector(-2, 0), new Vector(0, -2), new Vector(2, -2), new Vector(-2, 2), new Vector(0, 2), new Vector(2, 0), new Vector(2, 2)};
         int spawnHeight = rc.senseElevation(HQLocation);

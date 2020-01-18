@@ -63,7 +63,7 @@ public class Miner extends Unit {
                 }
             }
             // build drone factory
-            if (droneFactoryLocation == null && isBuilder) {
+            if (droneFactoryLocation == null && isBuilder && isTurtle) {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+60) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
@@ -175,6 +175,28 @@ public class Miner extends Unit {
                     nav.navReset(rc, rc.getLocation());
                 } else {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
+                        // just build a refinery?
+                        if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
+                            Direction optDir = rc.getLocation().directionTo(referencePoint);
+                            for (int i = 0; i < 8; i++) {
+                                MapLocation robotLoc = rc.getLocation();
+                                MapLocation placeLoc = robotLoc.add(optDir);
+                                if (placeLoc.x % 3 == HQLocation.x && placeLoc.y % 3 == HQLocation.y) {
+                                    optDir = optDir.rotateRight();
+                                    continue;
+                                }
+                                if (rc.canBuildRobot(RobotType.REFINERY, optDir)) {
+                                    //                            System.out.println("can build refinery");
+                                    rc.buildRobot(RobotType.REFINERY, optDir);
+                                    //                            System.out.println("built refinery");
+                                    refineryLocation.add(placeLoc);
+                                    closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
+                                    return;
+                                } else {
+                                    optDir = optDir.rotateRight();
+                                }
+                            }
+                        }
                         helpMode = 1;
                         System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
