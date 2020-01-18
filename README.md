@@ -77,17 +77,7 @@ Our current strategy is to:
 11. Build net guns next to refineries?
 20. Sometimes drones aren't dropping units off? I think it's because it keeps trying to drop in Direction.CENTER
 23. When refinery is destroyed removed from refineryLoc
-24. Make miners remove HQLoc from nearest refinery after outerlayer is built
 26. If a building that we want to bury is in a hole, then we should dig center location
-28. Remove soupLoc from empty adjacent positions because miners are trying to get to the holes the landscapers dig
 29. Miners timing out
-30. teraform is broken on these maps: Soup, InADitch, IsThisProcedural
-21. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
-LNL
-LC
- C
- C
-LNL
-
-Hopefully the landscapers are enough to protect the net guns from getting buried.
-Install net guns to protect the landscapers, and landscapers protect the net guns from getting potentially buried by enemy landscapers. The landscapers dig a pit where the cows are going to be, and drones come and place the cows in there. 
+30. teraform is broken on these maps: GSF, IsThisProcedural
+31. Miners doing weird thing with refineries? On Soup map and SoupOnTheSide
