@@ -16,27 +16,23 @@ public class LandscaperFactory extends Building {
             factoryLocation = rc.getLocation();
             infoQ.add(Cast.getMessage(Cast.InformationCategory.FACTORY, factoryLocation));
         }
-        if (hardTurtle && landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+150) {
+        // spawning 5 turtle landscapers with a bit of leeway for refineries
+        if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+150) {
             Direction optDir = rc.getLocation().directionTo(HQLocation);
             if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                 rc.buildRobot(RobotType.LANDSCAPER, optDir);
                 landscaperCount++;
             }
         }
-        if (hardTurtle && landscaperCount < 8 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
+        // spawning the other 3 to complete the turtle as soon as we have enough money
+        if (landscaperCount < 8 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
             Direction optDir = rc.getLocation().directionTo(HQLocation);
             if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                 rc.buildRobot(RobotType.LANDSCAPER, optDir);
                 landscaperCount++;
             }
         }
-        if (landscaperCount < 7 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+200) {
-            Direction optDir = rc.getLocation().directionTo(HQLocation);
-            if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                rc.buildRobot(RobotType.LANDSCAPER, optDir);
-                landscaperCount++;
-            }
-        }
+        // spawn the teraforming landscapers
         if (landscaperCount < 12 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300) {
             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
             for (int i = 0; i < 8; i++) {

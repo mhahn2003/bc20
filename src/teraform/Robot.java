@@ -75,8 +75,8 @@ public class Robot {
     static boolean isAttackerBuilder = false;
     // is the turtle around HQ done
     static boolean isTurtle = false;
-    // should we turtle immediately
-    static boolean hardTurtle = false;
+    // have drones spawned yet
+    static boolean areDrones = false;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
@@ -202,7 +202,7 @@ public class Robot {
             buildLoc[i] = buildLoc[i].rotate(rotateState);
             MapLocation loc = buildLoc[i].addWith(HQLocation);
             if (rc.canSenseLocation(loc)) {
-                if (Math.abs(rc.senseElevation(loc) - spawnHeight) < 6 && !rc.senseFlooding(loc) && rc.senseElevation(loc) > 1) {
+                if (Math.abs(rc.senseElevation(loc) - spawnHeight) < 6 && !rc.senseFlooding(loc)) {
                     boolean flood = false;
                     if (rc.senseElevation(loc) < 4) {
                         MapLocation hole = loc.add(HQLocation.directionTo(loc));
@@ -215,41 +215,8 @@ public class Robot {
                 }
             }
         }
-        MapLocation softTurtle = null;
-        for (Vector v : possibleBuilds) {
-            if (v.equals(new Vector(2, 2))) {
-                if (HQLocation.x < rc.getMapWidth() - 9 && HQLocation.y < rc.getMapHeight() - 9) {
-                    softTurtle = v.addWith(HQLocation);
-                    break;
-                }
-            } else if (v.equals(new Vector(2, -2))) {
-                if (HQLocation.x < rc.getMapWidth() - 9 && HQLocation.y >= 9) {
-                    softTurtle = v.addWith(HQLocation);
-                    break;
-                }
-            } else if (v.equals(new Vector(-2, 2))) {
-                if (HQLocation.x >= 9 && HQLocation.y < rc.getMapHeight() - 9) {
-                    softTurtle = v.addWith(HQLocation);
-                    break;
-                }
-            } else {
-                if (HQLocation.x >= 9 && HQLocation.y >= 9) {
-                    softTurtle = v.addWith(HQLocation);
-                    break;
-                }
-            }
-        }
-        if (softTurtle != null) {
-            System.out.println("softTurtle is currently: " + softTurtle.toString());
-        }
-        if (softTurtle == null) {
-            // TODO: what do we do if possibleBuilds is empty??
-            hardTurtle = true;
-            dirCenter = HQLocation.directionTo(possibleBuilds.get(0).addWith(HQLocation));
-        } else {
-            hardTurtle = false;
-            dirCenter = HQLocation.directionTo(softTurtle);
-        }
+        // TODO: what do we do if possibleBuilds is empty??
+        dirCenter = HQLocation.directionTo(possibleBuilds.get(0).addWith(HQLocation));
         System.out.println("dirCenter is now: " + dirCenter.toString());
         if (dirCenter == Direction.EAST || dirCenter == Direction.NORTHEAST || dirCenter == Direction.NORTH) {
             rotateState = 0;
@@ -259,26 +226,6 @@ public class Robot {
             rotateState = 1;
         } else {
             rotateState = 3;
-        }
-        // finally check if there's a ton of water / elevation <= 1 near HQ
-        int maxV = 6;
-        int lowElevation = 0;
-        for (int i = -maxV; i <= maxV; i++) {
-            for (int j = -maxV; j <= maxV; j++) {
-                MapLocation loc = new MapLocation(i, j);
-                if (rc.canSenseLocation(loc)) {
-                    if (rc.senseElevation(loc) < 2) lowElevation++;
-                    if (rc.senseElevation(loc) < 4) lowElevation++;
-                }
-            }
-        }
-//        System.out.println("lowElevation is: " + lowElevation);
-        if (lowElevation > 25) hardTurtle = true;
-        if (hardTurtle) {
-            // broadcast hard turtle
-            // also broadcast rotation
-//            System.out.println("Sent hard turtle!");
-            infoQ.add(getMessage(Cast.InformationCategory.HARD_TURTLE, HQLocation));
         }
 //        System.out.println("Sent rotation state of: " + rotateState);
         infoQ.add(getMessage(Cast.InformationCategory.ROTATION, new MapLocation(0, rotateState)));

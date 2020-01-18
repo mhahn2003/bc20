@@ -53,10 +53,10 @@ public class Cast {
         HOLE,
         // TURTLE DONE
         TURTLE,
-        // HARD TURTLE
-        HARD_TURTLE,
         // ROTATION
         ROTATION,
+        // FIRST DRONE SPAWN
+        DRONE_SPAWN,
         // enemy?
         OTHER
     }
@@ -108,10 +108,10 @@ public class Cast {
             case TURTLE:
                 message += 15;
                 break;
-            case HARD_TURTLE:
+            case ROTATION:
                 message += 16;
                 break;
-            case ROTATION:
+            case DRONE_SPAWN:
                 message += 17;
                 break;
             default:
@@ -158,8 +158,8 @@ public class Cast {
             case 13: return InformationCategory.FACTORY;
             case 14: return InformationCategory.HOLE;
             case 15: return InformationCategory.TURTLE;
-            case 16: return InformationCategory.HARD_TURTLE;
-            case 17: return InformationCategory.ROTATION;
+            case 16: return InformationCategory.ROTATION;
+            case 17: return InformationCategory.DRONE_SPAWN;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -409,14 +409,12 @@ public class Cast {
                             case TURTLE:
                                 isTurtle = true;
                                 break;
-                            case HARD_TURTLE:
-                                System.out.println("Receieved hard turtle!");
-                                hardTurtle = true;
-                                break;
                             case ROTATION:
                                 rotateState = loc.y;
                                 System.out.println("Recieved rotate state of: " + rotateState);
                                 break;
+                            case DRONE_SPAWN:
+                                areDrones = true;
                         }
                     }
                 }

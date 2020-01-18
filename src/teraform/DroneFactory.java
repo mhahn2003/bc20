@@ -2,6 +2,7 @@ package teraform;
 
 import battlecode.common.*;
 
+import static teraform.Cast.getMessage;
 import static teraform.Cast.infoQ;
 import static teraform.Util.*;
 
@@ -15,11 +16,15 @@ public class DroneFactory extends Building {
         System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
         Direction optDir = Direction.NORTHEAST;
-        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 250) {
+        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 400){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
+                    if (droneCount == 1) {
+                        infoQ.add(getMessage(Cast.InformationCategory.DRONE_SPAWN, HQLocation));
+                        areDrones = true;
+                    }
                     break;
                 } else {
                     optDir = optDir.rotateLeft();
