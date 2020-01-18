@@ -77,6 +77,7 @@ Our current strategy is to:
 11. Build net guns next to refineries?
 20. Sometimes drones aren't dropping units off? I think it's because it keeps trying to drop in Direction.CENTER
 23. When refinery is destroyed removed from refineryLoc
+24. Make miners remove HQLoc from nearest refinery after outerlayer is built
 26. If a building that we want to bury is in a hole, then we should dig center location
 28. Remove soupLoc from empty adjacent positions because miners are trying to get to the holes the landscapers dig
 29. Miners timing out

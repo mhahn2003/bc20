@@ -610,6 +610,7 @@ public strictfp class RobotPlayer {
 //            return;
 //        }
         System.out.println("My state is: " + turtle.getLandscaperState());
+        turtle.buildBaseWall(rc);
         if (turtle.getLandscaperState() == 0) {
             // TODO: maybe we can make a ENEMY_BUILDING category and have them attack in the future
             boolean enemyLandscaper = false;

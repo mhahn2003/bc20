@@ -46,13 +46,6 @@ public class HQ extends Shooter {
         boolean isVaporator = false;
         int netGunCount = 0;
         for (RobotInfo r : robots) {
-            if (r.getTeam() != rc.getTeam() && r.getType() == RobotType.DELIVERY_DRONE) {
-                System.out.println("Shot a drone at " + r.getLocation());
-                if (rc.canShootUnit(r.getID())) {
-                    rc.shootUnit(r.getID());
-                    break;
-                }
-            }
             if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
                 isVaporator = true;
             }
