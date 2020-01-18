@@ -3,7 +3,7 @@ package bot01;
 import battlecode.common.*;
 
 import java.util.ArrayList;
-
+import java.math.*;
 import static bot01.RobotPlayer.directions;
 
 public class Turtle {
@@ -107,6 +107,45 @@ public class Turtle {
             return r != null && r.getType() == RobotType.LANDSCAPER && r.getTeam() == rc.getTeam();
         }
         return false;
+    }
+
+    void buildBaseWall(RobotController rc) throws GameActionException {
+        Vector vec = new Vector(2, 2);
+        if(rc.getLocation().isAdjacentTo(vec.rotate(rotateState).addWith(HQLocation))){return;};
+        ArrayList<MapLocation> outWalls= new ArrayList<MapLocation>(); 
+        for (Vector loc:outerLoc){
+            outWalls.add(loc.addWith(HQLocation));
+        }
+        vec =new Vector(3,3);
+        outWalls.add(vec.addWith(HQLocation));
+        vec =new Vector(3,-3);
+        outWalls.add(vec.addWith(HQLocation));
+        vec =new Vector(-3,3);
+        outWalls.add(vec.addWith(HQLocation));
+        vec =new Vector(-3,-3);
+        outWalls.add(vec.addWith(HQLocation));
+
+        for (MapLocation wall:outWalls){
+            System.out.println("check with "+ wall.toString()+rc.getLocation().toString());
+            System.out.println("adjacent: "+ wall.isAdjacentTo(rc.getLocation()));
+            if (wall.isAdjacentTo(rc.getLocation())){
+                System.out.println("elevation: "+ rc.senseElevation(wall));
+            }
+            if( wall.isAdjacentTo(rc.getLocation()) && rc.senseElevation(wall)< Math.min(rc.senseElevation(rc.getLocation())+3,6) ){
+                System.out.println("wall at "+ wall.toString() + " is near");
+                if(rc.getDirtCarrying()==0){
+                    for(Direction dir: directions){
+                        System.out.println("dig from "+dir.toString());
+                        if ( ! outWalls.contains(rc.getLocation().add(dir)) && rc.canDigDirt(dir)){
+                            rc.digDirt(dir);
+                        }
+                    }
+                }else{                    
+                    System.out.println("build new base fort at "+wall.toString());
+                    rc.depositDirt(rc.getLocation().directionTo(wall));
+                }
+            }
+        }
     }
 
     // try to build the outer layer, even is when we should try to build evenly
