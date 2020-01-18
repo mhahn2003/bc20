@@ -202,7 +202,7 @@ public class Robot {
             buildLoc[i] = buildLoc[i].rotate(rotateState);
             MapLocation loc = buildLoc[i].addWith(HQLocation);
             if (rc.canSenseLocation(loc)) {
-                if (Math.abs(rc.senseElevation(loc) - spawnHeight) < 6 && !rc.senseFlooding(loc) && rc.senseElevation(loc) > 1) {
+                if (Math.abs(rc.senseElevation(loc) - spawnHeight) < 7 && !rc.senseFlooding(loc) && rc.senseElevation(loc) > 0) {
                     boolean flood = false;
                     if (rc.senseElevation(loc) < 4) {
                         MapLocation hole = loc.add(HQLocation.directionTo(loc));
@@ -265,14 +265,14 @@ public class Robot {
         int lowElevation = 0;
         for (int i = -maxV; i <= maxV; i++) {
             for (int j = -maxV; j <= maxV; j++) {
-                MapLocation loc = new MapLocation(i, j);
+                MapLocation loc = new Vector(i, j).addWith(HQLocation);
                 if (rc.canSenseLocation(loc)) {
                     if (rc.senseElevation(loc) < 2) lowElevation++;
                     if (rc.senseElevation(loc) < 4) lowElevation++;
                 }
             }
         }
-//        System.out.println("lowElevation is: " + lowElevation);
+        System.out.println("lowElevation is: " + lowElevation);
         if (lowElevation > 25) hardTurtle = true;
         if (hardTurtle) {
             // broadcast hard turtle

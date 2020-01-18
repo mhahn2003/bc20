@@ -76,12 +76,11 @@ Our current strategy is to:
 4. Install net guns near miners to protect them
 11. Build net guns next to refineries?
 20. Sometimes drones aren't dropping units off? I think it's because it keeps trying to drop in Direction.CENTER
-21. Optimize miner code
-22. Program miners so they never come into HQ after outer layer is built
 23. When refinery is destroyed removed from refineryLoc
-24. Make miners remove HQLoc from nearest refinery after outerlayer is built
-25. Check all 4 directions on where the design school can be placed
-26. Check if there's any height 1- nearby hq, if so, just 3x3 turtle immediately
+26. If a building that we want to bury is in a hole, then we should dig center location
+28. Remove soupLoc from empty adjacent positions because miners are trying to get to the holes the landscapers dig
+29. Miners timing out
+30. teraform is broken on these maps: Soup, InADitch, IsThisProcedural
 21. disruptWithCow strat: make a 3x5 box right next to HQ, and place cows in it. Should look something like this:
 LNL
 LC

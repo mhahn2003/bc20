@@ -222,14 +222,14 @@ public class Nav {
         // if under drone attack don't call for help
         if (droneThreat(rc, rc.getLocation())) return false;
         if (travelDist < 20) {
-            if (rc.getRoundNum()-travelRound-15 > travelDist*5 && rc.getRoundNum() >= 100 && turnCount > 25) {
+            if (rc.getRoundNum()-travelRound-15 > travelDist*5 && rc.getRoundNum() >= 250 && turnCount > 25) {
                 helpReq = rc.getLocation();
                 System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
         }
         else {
-            if (rc.getRoundNum()-travelRound - 10 > travelDist && rc.getRoundNum() >= 100 && turnCount > 25) {
+            if (rc.getRoundNum()-travelRound - 10 > travelDist && rc.getRoundNum() >= 250 && turnCount > 25) {
                 helpReq = rc.getLocation();
                 System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;

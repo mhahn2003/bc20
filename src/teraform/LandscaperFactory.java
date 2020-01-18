@@ -30,7 +30,7 @@ public class LandscaperFactory extends Building {
                 landscaperCount++;
             }
         }
-        if (landscaperCount < 7 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+200) {
+        if (landscaperCount < 8 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+200) {
             Direction optDir = rc.getLocation().directionTo(HQLocation);
             if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                 rc.buildRobot(RobotType.LANDSCAPER, optDir);
