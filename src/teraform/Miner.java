@@ -1,6 +1,8 @@
 package teraform;
 import battlecode.common.*;
 
+import java.util.Map;
+
 import static teraform.Cast.infoQ;
 import static teraform.Util.directions;
 import static teraform.Util.refineryDist;
@@ -198,10 +200,12 @@ public class Miner extends Unit {
                         }
                         else {
                             System.out.println("I'm going to soup");
+                            System.out.println("Soup is at: " + soupLoc.toString());
                             nav.bugNav(rc, soupLoc);
                         }
                     }
                 } else {
+                    // check if getting close to flooded
                     // scout for soup
                     nav.searchEnemyHQ(rc);
                 }
@@ -221,21 +225,13 @@ public class Miner extends Unit {
     // but if within vision range, just normally find the closest soup
     static void findSoup() throws GameActionException {
         // try to find soup very close
-        MapLocation robotLoc = rc.getLocation();
-        int maxV = 5;
-        for (int x = -maxV; x <= maxV; x++) {
-            for (int y = -maxV; y <= maxV; y++) {
-                MapLocation check = robotLoc.translate(x, y);
-                if (rc.canSenseLocation(check)) {
-                    if (rc.senseSoup(check) > 0) {
-                        // find the closest maxmimal soup deposit
-                        int checkDist = check.distanceSquaredTo(rc.getLocation());
-                        if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
-                                || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
-                            soupLoc = check;
-                    }
-                }
-            }
+        System.out.println("Before calling I have: " + Clock.getBytecodesLeft());
+        MapLocation[] soups = rc.senseNearbySoup();
+        for (MapLocation check: soups) {
+            int checkDist = check.distanceSquaredTo(rc.getLocation());
+            if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
+                    || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
+                soupLoc = check;
         }
         if (soupLoc != null) return;
         // if not, try to find closest soup according to stored soupLocation
@@ -249,5 +245,6 @@ public class Miner extends Unit {
                 soupLoc = soup;
             }
         }
+        System.out.println("After calling I have: " + Clock.getBytecodesLeft());
     }
 }

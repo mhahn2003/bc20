@@ -108,7 +108,6 @@ public class Robot {
             closestEnemyUnit=null;
             cast.getInfo(rc.getRoundNum()-1);
             cast.collectInfo();
-            System.out.println("My threats are: " + nav.getThreats().toString());
         }
     }
 
@@ -158,9 +157,9 @@ public class Robot {
                 }
             } else {
                 if (rc.canSenseLocation(factoryLocation)) {
-                    System.out.println("direction to factory: " + rc.getLocation().directionTo(factoryLocation).toString());
-                    System.out.println("rotated direction: " + rotateDir(Direction.NORTHEAST));
-                    System.out.println("rotateState: " + rotateState);
+//                    System.out.println("direction to factory: " + rc.getLocation().directionTo(factoryLocation).toString());
+//                    System.out.println("rotated direction: " + rotateDir(Direction.NORTHEAST));
+//                    System.out.println("rotateState: " + rotateState);
                     if (rc.getLocation().directionTo(factoryLocation).equals(rotateDir(Direction.NORTHEAST))) {
                         System.out.println("My mode is 2!");
                         teraformMode = 2;
@@ -273,15 +272,15 @@ public class Robot {
                 }
             }
         }
-        System.out.println("lowElevation is: " + lowElevation);
+//        System.out.println("lowElevation is: " + lowElevation);
         if (lowElevation > 25) hardTurtle = true;
         if (hardTurtle) {
             // broadcast hard turtle
             // also broadcast rotation
-            System.out.println("Sent hard turtle!");
+//            System.out.println("Sent hard turtle!");
             infoQ.add(getMessage(Cast.InformationCategory.HARD_TURTLE, HQLocation));
         }
-        System.out.println("Sent rotation state of: " + rotateState);
+//        System.out.println("Sent rotation state of: " + rotateState);
         infoQ.add(getMessage(Cast.InformationCategory.ROTATION, new MapLocation(0, rotateState)));
     }
 

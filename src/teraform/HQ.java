@@ -16,6 +16,7 @@ public class HQ extends Shooter {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         // if HQ is surrounded by complete turtle then send turtle signal
+        boolean oneSpace = false;
         if (!isTurtle) {
             int landscapers = 0;
             int space = 0;
@@ -33,6 +34,7 @@ public class HQ extends Shooter {
                 // broadcast turtle
                 infoQ.add(getMessage(Cast.InformationCategory.TURTLE, HQLocation));
             }
+            if (landscapers == space-1) oneSpace = true;
         }
 
         // find drones and shoot them
@@ -75,7 +77,7 @@ public class HQ extends Shooter {
         // maximum of 10 miners at 250th round
         // TODO: spawn appropriate number of miners according to length of soupLoc
         Direction optDir = Direction.NORTH;
-        if (!isTurtle && minerCount < Math.min(3+rc.getRoundNum()/100, 7) && (minerCount < 3 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
+        if (!oneSpace && !isTurtle && minerCount < Math.min(3+rc.getRoundNum()/100, 7) && (minerCount < 3 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
