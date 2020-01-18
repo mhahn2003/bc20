@@ -50,4 +50,12 @@ public class Util {
     static int builderReturn = 60;
     // when to explode drone
     static int explodeThresh = 10;
+
+    public int floodRound(int level) {
+        if (level == 1) return 230;
+        if (level == 2) return 420;
+        if (level == 3) return 620;
+        if (level == 4) return 880;
+        return 0;
+    }
 }

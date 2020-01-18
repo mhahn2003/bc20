@@ -200,6 +200,7 @@ public class Miner extends Unit {
                         }
                         else {
                             System.out.println("I'm going to soup");
+                            System.out.println("Soup is at: " + soupLoc.toString());
                             nav.bugNav(rc, soupLoc);
                         }
                     }
