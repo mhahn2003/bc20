@@ -1,8 +1,7 @@
 package teraform;
 import battlecode.common.*;
 
-import java.util.Map;
-
+import static teraform.Cast.getMessage;
 import static teraform.Cast.infoQ;
 import static teraform.Util.directions;
 import static teraform.Util.refineryDist;
@@ -39,13 +38,34 @@ public class Miner extends Unit {
                 }
             }
             // TODO: if buildings are destroyed then rebuild
+            // build refinery
+            if (refineryLocation.isEmpty() && isBuilder) {
+                if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
+                    for (Direction dir: directions) {
+                        MapLocation loc = rc.getLocation().add(dir);
+                        if (loc.distanceSquaredTo(HQLocation) > 20) {
+                            if (rc.canBuildRobot(RobotType.REFINERY, dir)) {
+                                MapLocation placeLoc = rc.getLocation().add(dir);
+                                if (placeLoc.x % 3 == HQLocation.x % 3 && placeLoc.y % 3 == HQLocation.y % 3) continue;
+                                rc.buildRobot(RobotType.REFINERY, dir);
+                                infoQ.add(getMessage(Cast.InformationCategory.NEW_REFINERY, placeLoc));
+                                refineryLocation.add(placeLoc);
+                                break;
+                            }
+                        }
+                    }
+                    if (factoryLocation != null) nav.bugNav(rc, factoryLocation);
+                }
+            }
             // build drone factory
             if (droneFactoryLocation == null && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) == 10) {
+                        if (loc.distanceSquaredTo(HQLocation) > 20) {
                             if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
+                                MapLocation placeLoc = rc.getLocation().add(dir);
+                                if (placeLoc.x % 3 == HQLocation.x % 3 && placeLoc.y % 3 == HQLocation.y % 3) continue;
                                 rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
                                 droneFactoryLocation = rc.getLocation().add(dir);
                                 break;
