@@ -25,7 +25,7 @@ public class LandscaperFactory extends Building {
             }
         }
         // spawning the other 3 to complete the turtle as soon as we have enough money
-        if (landscaperCount < 8 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
+        if (landscaperCount < 8 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+75) {
             Direction optDir = rc.getLocation().directionTo(HQLocation);
             if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                 rc.buildRobot(RobotType.LANDSCAPER, optDir);

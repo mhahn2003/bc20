@@ -181,26 +181,6 @@ public class Landscaper extends Unit {
         return Math.min(12, (int) (Math.floor(Math.sqrt(distFromFactory)/1.3)) + factoryHeight)+waterHeight;
     }
 
-    public Direction fillTo(Direction dig) throws GameActionException {
-        for (Direction dir: directions) {
-            if (dig.equals(dir)) continue;
-            MapLocation fill = rc.getLocation().add(dir);
-            boolean bad = false;
-            for (int i = 0; i < untouchSize; i++) {
-                if (fill.equals(untouchableLoc[i])) {
-                    bad = true;
-                    break;
-                }
-            }
-            if (bad) continue;
-            RobotInfo rob = rc.senseRobotAtLocation(fill);
-            if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)
-                    && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) return dir;
-        }
-        // if can't find anything
-        return null;
-    }
-
     public void checkFillAndDig(Direction dig) throws GameActionException {
         for (Direction dir: directions) {
             if (dig.equals(dir)) continue;
@@ -229,24 +209,6 @@ public class Landscaper extends Unit {
         }
     }
 
-    public Direction digTo(Direction dig) throws GameActionException {
-        for (Direction dir: directions) {
-            if (dig.equals(dir)) continue;
-            MapLocation fill = rc.getLocation().add(dir);
-            boolean bad = false;
-            for (int i = 0; i < untouchSize; i++) {
-                if (fill.equals(untouchableLoc[i])) {
-                    bad = true;
-                    break;
-                }
-            }
-            if (bad) continue;
-            RobotInfo rob = rc.senseRobotAtLocation(fill);
-            if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) return dir;
-        }
-        // if can't find anything
-        return null;
-    }
     // scans teraformLoc and checks
     public MapLocation closestHole() throws GameActionException {
         if (teraformLoc[0] == null) return null;

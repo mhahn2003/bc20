@@ -23,11 +23,11 @@ public class Robot {
 
 
     // navigation object
-    static Nav nav;
+    static Nav nav = null;
     // communication object
-    static Cast cast;
+    static Cast cast = null;
     // turtle object
-    static Turtle turtle;
+    static Turtle turtle = null;
     // blueprint object (only the first miner will have this)
     static Blueprint blueprint;
 
@@ -117,8 +117,13 @@ public class Robot {
             cast.collectInfo();
             findHoleSize();
         } else {
-            cast.getAllInfo();
+            int round = 1;
+            while (HQLocation == null) {
+                cast.getInfo(round);
+                round++;
+            }
             nav = new Nav();
+            cast.getAllInfo();
         }
         if (rc.getType() == RobotType.HQ) findRotate();
         exploreLoc();

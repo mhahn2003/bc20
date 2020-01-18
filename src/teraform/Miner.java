@@ -39,11 +39,16 @@ public class Miner extends Unit {
             }
             // TODO: if buildings are destroyed then rebuild
             // build refinery
+            if (refineryLocation.isEmpty()) {
+                System.out.println("refinery loc is empty!");
+            } else {
+                System.out.println("refinery loc is: " + refineryLocation.toString());
+            }
             if (refineryLocation.isEmpty() && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) > 20) {
+                        if (loc.distanceSquaredTo(HQLocation) > 16) {
                             if (rc.canBuildRobot(RobotType.REFINERY, dir)) {
                                 MapLocation placeLoc = rc.getLocation().add(dir);
                                 if (placeLoc.x % 3 == HQLocation.x % 3 && placeLoc.y % 3 == HQLocation.y % 3) continue;
@@ -59,7 +64,7 @@ public class Miner extends Unit {
             }
             // build drone factory
             if (droneFactoryLocation == null && isBuilder) {
-                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
+                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+60) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
                         if (loc.distanceSquaredTo(HQLocation) > 20) {

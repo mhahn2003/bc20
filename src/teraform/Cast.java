@@ -317,6 +317,7 @@ public class Cast {
                                 HQLocation = loc;
                                 break;
                             case ENEMY_HQ:
+                                if (nav == null) System.out.println("nav is null!!!!!!!!!!!!!");
                                 enemyHQLocation = loc;
                                 if (!nav.isThreat(loc)) nav.addThreat(loc);
                                 break;
@@ -445,7 +446,7 @@ public class Cast {
                 System.out.println("threats are: " + nav.getThreats().toString());
             }
             // why is this an else if?
-            else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY || r.getType() == RobotType.HQ) && r.getTeam() == rc.getTeam()) {
+            else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY) && r.getTeam() == rc.getTeam()) {
                 rloc = r.getLocation();
                 // check for matching
                 for (MapLocation refineryLoca : refineryLocation) {
