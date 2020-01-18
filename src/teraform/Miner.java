@@ -225,6 +225,7 @@ public class Miner extends Unit {
     // but if within vision range, just normally find the closest soup
     static void findSoup() throws GameActionException {
         // try to find soup very close
+        System.out.println("Before calling I have: " + Clock.getBytecodesLeft());
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
             int checkDist = check.distanceSquaredTo(rc.getLocation());
@@ -244,5 +245,6 @@ public class Miner extends Unit {
                 soupLoc = soup;
             }
         }
+        System.out.println("After calling I have: " + Clock.getBytecodesLeft());
     }
 }

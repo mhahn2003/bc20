@@ -519,7 +519,7 @@ public class Cast {
                 }
             }
             for (MapLocation soup : soupLocation) {
-                if (rc.getLocation().equals(soup)) {
+                if (rc.getLocation().isAdjacentTo(soup)) {
                     // check if robot is on the soup location and there is no soup around him
                     // if there isn't any soup around it then remove
                     // TODO: reimplement with the new documentation

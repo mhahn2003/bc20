@@ -261,6 +261,9 @@ public class Landscaper extends Unit {
     public boolean canMove(Direction dir) throws GameActionException {
         Direction hole = holeTo();
         MapLocation loc = rc.getLocation().add(dir);
+        for (int i = 0; i < untouchSize; i++) {
+            if (untouchableLoc[i].equals(loc)) return false;
+        }
         return !hole.equals(dir) && rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc);
     }
 
