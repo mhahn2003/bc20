@@ -73,6 +73,8 @@ public class Robot {
     static boolean isAttackerBuilder = false;
     // is the turtle around HQ done
     static boolean isTurtle = false;
+    // should we turtle immediately
+    static boolean hardTurtle = false;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
@@ -169,6 +171,18 @@ public class Robot {
         // find rotation of map
         MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction dirCenter = HQLocation.directionTo(center);
+        Vector[] buildLoc = new Vector[]{new Vector(-2, 2), new Vector(2, 2), new Vector(2, -2), new Vector(-2, -2)};
+        ArrayList<Vector> possibleBuilds = new ArrayList<>();
+        int spawnHeight = rc.senseElevation(HQLocation);
+        for (Vector v: buildLoc) {
+            MapLocation loc = v.addWith(HQLocation);
+            if (rc.canSenseLocation(loc)) {
+                if (Math.abs(rc.senseElevation(loc)-spawnHeight) < 3 && !rc.senseFlooding(loc) && rc.senseElevation(loc) > 0) {
+                    possibleBuilds.add(v);
+                }
+            }
+        }
+        // TODO: finish implementing
         if (dirCenter == Direction.EAST || dirCenter == Direction.NORTHEAST || dirCenter == Direction.NORTH) {
             rotateState = 0;
         }
@@ -185,6 +199,7 @@ public class Robot {
             rotateState += 2;
             rotateState %= 2;
         }
+        // TODO: fix this function
     }
 
 
