@@ -64,5 +64,25 @@ public class LandscaperFactory extends Building {
                 landscaperCount++;
             }
         }
+        if (landscaperCount < 25 && rc.getTeamSoup() >= 900) {
+            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+            for (int i = 0; i < 3; i++) {
+                MapLocation loc = rc.getLocation().add(optDir);
+                if (loc.x % 3 == HQLocation.x % 3 && loc.y % 3 == HQLocation.y % 3) {
+                    optDir = optDir.rotateRight();
+                    continue;
+                }
+                if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
+                    optDir = optDir.rotateRight();
+                    continue;
+                }
+                if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                    rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                    landscaperCount++;
+                    break;
+                }
+                optDir = optDir.rotateRight();
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ public class Drone extends Unit {
         super.takeTurn();
         System.out.println("My wander value is " + nav.getWander());
         System.out.println("My stuck value is " + nav.getStuck());
+        System.out.println("My threats are: " + nav.getThreats().toString());
         // check if it needs to explode
         if (nav.getStuck() >= explodeThresh) {
             explode = true;
@@ -125,6 +126,7 @@ public class Drone extends Unit {
             // if not helping and no one to help
             switch(phase) {
                 case NON_ATTACKING:
+                    System.out.println("Threats are: " + nav.getThreats().toString());
                     // find opponent units and pick up
                     if (!rc.isCurrentlyHoldingUnit()) {
                         System.out.println("I'm not holding any units!");
@@ -248,7 +250,6 @@ public class Drone extends Unit {
                         nav.bugNav(rc, HQLocation);
                     }
                     // with in the area, move to closest possible position around enemy hq
-                    // TODO: this ignores potential net guns around HQ
                     MapLocation minDistancedSafe = rc.getLocation();
                     int min_dist = enemyHQLocation.distanceSquaredTo(minDistancedSafe);
                     MapLocation nextPrepareLocation;

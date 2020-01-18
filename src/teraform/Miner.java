@@ -36,6 +36,7 @@ public class Miner extends Unit {
                     nav.bugNav(rc, LFLoc);
                 }
             }
+            // TODO: if buildings are destroyed then rebuild
             // build drone factory
             if (droneFactoryLocation == null && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {

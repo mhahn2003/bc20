@@ -14,7 +14,7 @@ public class Nav {
     private boolean isBugging;
     private int closestDist;
     private MapLocation currentDest;
-    private ArrayList<MapLocation> threats = new ArrayList<>();
+    private ArrayList<MapLocation> threats;
     private MapLocation lastLoc;
     private MapLocation lastLastLoc;
     private int travelDist;
@@ -34,10 +34,14 @@ public class Nav {
         wander = 0;
         helpReq = null;
         stuck = 0;
+        threats = new ArrayList<>();
     }
 
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
+        if (rc.getType() == RobotType.DELIVERY_DRONE) {
+            System.out.println("My threats are: " + threats.toString());
+        }
         if (rc.getLocation().equals(dest)) {
             System.out.println("Location is equal");
             wander++;
@@ -209,6 +213,8 @@ public class Nav {
     public boolean isThreat(MapLocation loc) {
         return threats.contains(loc);
     }
+
+    public ArrayList<MapLocation> getThreats() { return threats; }
 
     public boolean needHelp(RobotController rc, int turnCount, MapLocation loc) {
         if (!loc.equals(currentDest)) return false;

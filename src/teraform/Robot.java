@@ -23,7 +23,7 @@ public class Robot {
 
 
     // navigation object
-    static Nav nav = new Nav();
+    static Nav nav;
     // communication object
     static Cast cast;
     // turtle object
@@ -108,11 +108,13 @@ public class Robot {
             closestEnemyUnit=null;
             cast.getInfo(rc.getRoundNum()-1);
             cast.collectInfo();
+            System.out.println("My threats are: " + nav.getThreats().toString());
         }
     }
 
     // when a unit is first created it calls this function
     public void initialize() throws GameActionException {
+        nav = new Nav();
         if (rc.getType() == RobotType.HQ) {
             cast.collectInfo();
             findHoleSize();

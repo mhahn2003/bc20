@@ -442,8 +442,9 @@ public class Cast {
                 enemyHQLocation = r.getLocation();
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
-                if (rc.getType() == RobotType.DELIVERY_DRONE)
-                    if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
+                System.out.println("Found enemy HQ!!!");
+                if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
+                System.out.println("threats are: " + nav.getThreats().toString());
             }
             // why is this an else if?
             else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY || r.getType() == RobotType.HQ) && r.getTeam() == rc.getTeam()) {
