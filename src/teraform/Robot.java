@@ -113,12 +113,12 @@ public class Robot {
 
     // when a unit is first created it calls this function
     public void initialize() throws GameActionException {
-        nav = new Nav();
         if (rc.getType() == RobotType.HQ) {
             cast.collectInfo();
             findHoleSize();
         } else {
             cast.getAllInfo();
+            nav = new Nav();
         }
         if (rc.getType() == RobotType.HQ) findRotate();
         exploreLoc();
@@ -149,7 +149,6 @@ public class Robot {
                             if (dir.equals(rotateDir(Direction.NORTHEAST))) {
                                 System.out.println("My mode is 2!");
                                 teraformMode = 2;
-                                turtle = new Turtle(rc, HQLocation, rotateState);
                             }
                             break;
                         }
@@ -163,7 +162,6 @@ public class Robot {
                     if (rc.getLocation().directionTo(factoryLocation).equals(rotateDir(Direction.NORTHEAST))) {
                         System.out.println("My mode is 2!");
                         teraformMode = 2;
-                        turtle = new Turtle(rc, HQLocation, rotateState);
                     }
                     factoryHeight = rc.senseElevation(factoryLocation);
                 }
@@ -181,24 +179,21 @@ public class Robot {
             rotateState = 0;
         }
         else if (dirCenter == Direction.WEST || dirCenter == Direction.SOUTHWEST || dirCenter == Direction.SOUTH) {
-            rotateState = 2;
+            rotateState = 4;
         }
         else if (dirCenter == Direction.SOUTHEAST) {
-            rotateState = 1;
+            rotateState = 2;
         }
         else {
-            rotateState = 3;
-        }
-        if (HQLocation.x >= 9 && HQLocation.x <= rc.getMapWidth()-10 && HQLocation.y >= 9 && HQLocation.y <= rc.getMapHeight()-10) {
-            rotateState += 2;
-            rotateState %= 2;
+            rotateState = 6;
         }
         System.out.println("Initial rotateState was: " + rotateState);
-        Vector[] buildLoc = new Vector[]{new Vector(-2, -2), new Vector(2, -2), new Vector(-2, 2), new Vector(2, 2)};
-        ArrayList<Vector> possibleBuilds = new ArrayList<>();
+        Vector[] buildLoc = new Vector[]{new Vector(-2, -2), new Vector(-2, 0), new Vector(0, -2), new Vector(2, -2), new Vector(-2, 2), new Vector(0, 2), new Vector(2, 0), new Vector(2, 2)};
         int spawnHeight = rc.senseElevation(HQLocation);
+        Vector possibleSpawn = null;
+        int currentHeight = -1;
         // check for buildable locations and rotate to that direction
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 8; i++) {
             buildLoc[i] = buildLoc[i].rotate(rotateState);
             MapLocation loc = buildLoc[i].addWith(HQLocation);
             if (rc.canSenseLocation(loc)) {
@@ -210,24 +205,52 @@ public class Robot {
                             if (rc.senseFlooding(hole)) flood = true;
                         }
                     }
-                    if (!flood) possibleBuilds.add(buildLoc[i]);
+
+                    MapLocation buildSpot = loc.add(loc.directionTo(HQLocation));
+                    boolean canBuild = Math.abs(rc.senseElevation(buildSpot)-rc.senseElevation(loc)) <= 3;
+                    // prioritize the highest location
+                    if (!flood && canBuild) {
+                        if (possibleSpawn == null || rc.senseElevation(loc) > currentHeight) {
+                            currentHeight = rc.senseElevation(loc);
+                            possibleSpawn = buildLoc[i];
+                        }
+                    }
                     System.out.println("I added: " + buildLoc[i].getX() + ", " + buildLoc[i].getY());
                 }
             }
         }
-        // TODO: what do we do if possibleBuilds is empty??
-        dirCenter = HQLocation.directionTo(possibleBuilds.get(0).addWith(HQLocation));
-        System.out.println("dirCenter is now: " + dirCenter.toString());
-        if (dirCenter == Direction.EAST || dirCenter == Direction.NORTHEAST || dirCenter == Direction.NORTH) {
-            rotateState = 0;
-        } else if (dirCenter == Direction.WEST || dirCenter == Direction.SOUTHWEST || dirCenter == Direction.SOUTH) {
-            rotateState = 2;
-        } else if (dirCenter == Direction.SOUTHEAST) {
-            rotateState = 1;
-        } else {
-            rotateState = 3;
+        // TODO: what do we do if possibleSpawn is null??
+        if (possibleSpawn != null) {
+            dirCenter = HQLocation.directionTo(possibleSpawn.addWith(HQLocation));
+            System.out.println("dirCenter is now: " + dirCenter.toString());
+            switch (dirCenter) {
+                case NORTHEAST:
+                    rotateState = 0;
+                    break;
+                case EAST:
+                    rotateState = 1;
+                    break;
+                case SOUTHEAST:
+                    rotateState = 2;
+                    break;
+                case SOUTH:
+                    rotateState = 3;
+                    break;
+                case SOUTHWEST:
+                    rotateState = 4;
+                    break;
+                case WEST:
+                    rotateState = 5;
+                    break;
+                case NORTHWEST:
+                    rotateState = 6;
+                    break;
+                case NORTH:
+                    rotateState = 7;
+                    break;
+            }
         }
-//        System.out.println("Sent rotation state of: " + rotateState);
+        System.out.println("Sent rotation state of: " + rotateState);
         infoQ.add(getMessage(Cast.InformationCategory.ROTATION, new MapLocation(0, rotateState)));
     }
 

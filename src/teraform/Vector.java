@@ -8,10 +8,12 @@ import static teraform.Util.directions;
 public class Vector {
     private int x;
     private int y;
+    private int magnitude;
 
     public Vector(int x, int y) {
         this.x = x;
         this.y = y;
+        this.magnitude = Math.max(Math.abs(x), Math.abs(y));
     }
 
     public int getX() {
@@ -36,9 +38,18 @@ public class Vector {
 
     public Vector rotate(int rotateState) {
         if (rotateState == 0) return new Vector(this.x, this.y);
-        else if (rotateState == 1) return new Vector(this.y, -this.x);
-        else if (rotateState == 2) return new Vector(-this.x, -this.y);
-        else return new Vector(-this.y, this.x);
+        else if (rotateState == 2) return new Vector(this.y, -this.x);
+        else if (rotateState == 4) return new Vector(-this.x, -this.y);
+        else if (rotateState == 6) return new Vector(-this.y, this.x);
+        else {
+            x /= magnitude;
+            y /= magnitude;
+            Direction d = getDir();
+            for (int i = 0; i < rotateState; i++) {
+                d = d.rotateRight();
+            }
+            return new Vector(magnitude*d.dx, magnitude*d.dy);
+        }
     }
 
     public static Vector getVec(Direction dir) {

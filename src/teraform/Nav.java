@@ -22,6 +22,8 @@ public class Nav {
     private int wander;
     private int stuck;
     private MapLocation helpReq;
+    private Vector[] untouchable;
+    private MapLocation[] untouchableLoc;
 
     public Nav() {
         isBugging = false;
@@ -35,6 +37,12 @@ public class Nav {
         helpReq = null;
         stuck = 0;
         threats = new ArrayList<>();
+        untouchable = new Vector[]{new Vector(0, 2), new Vector(0, -2), new Vector(2, 0), new Vector(-2, 0), new Vector(1, 1)};
+        untouchableLoc = new MapLocation[5];
+        for (int i = 0; i < 5; i++) {
+            if (i == 4) untouchable[i] = untouchable[i].rotate(rotateState);
+            untouchableLoc[i] = untouchable[i].addWith(HQLocation);
+        }
     }
 
     // use bug navigation algorithm to navigate to destination
@@ -155,6 +163,11 @@ public class Nav {
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
         if (!free && (moveTo.equals(lastLoc) || moveTo.equals(lastLastLoc))) return false;
+        if (!free) {
+            for (MapLocation loc: untouchableLoc) {
+                if (moveTo.equals(loc)) return false;
+            }
+        }
         // run away from enemy drones
         if (droneThreat(rc, moveTo)) return false;
         return true;
@@ -229,7 +242,7 @@ public class Nav {
             }
         }
         else {
-            if (rc.getRoundNum()-travelRound - 10 > travelDist && areDrones && turnCount > 25) {
+            if (rc.getRoundNum()-travelRound - 10 > travelDist*7/4 && areDrones && turnCount > 25) {
                 helpReq = rc.getLocation();
                 System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;

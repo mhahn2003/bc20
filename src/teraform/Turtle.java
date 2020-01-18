@@ -778,11 +778,23 @@ public class Turtle {
 
     // get the digging position
     public Direction getDig() {
-        // TODO: implement this
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
             for (MapLocation digLoc: digLocation) {
-                if (dig.equals(digLoc)) return dir;
+                if (dig.equals(digLoc)) {
+                    if (rc.canDigDirt(dir)) return dir;
+                }
+            }
+        }
+        for (Direction dir: directions) {
+            MapLocation dig = rc.getLocation().add(dir);
+            for (MapLocation digLoc: digLocation) {
+                if (dig.equals(digLoc)) {
+                    Direction left = dir.rotateLeft();
+                    Direction right = dir.rotateRight();
+                    if (rc.canDigDirt(left)) return left;
+                    if (rc.canDigDirt(right)) return right;
+                }
             }
         }
         // shouldn't reach here

@@ -29,7 +29,7 @@ public class Landscaper extends Unit {
         untouchable = new Vector[]{new Vector(1, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-1, 0), new Vector(-1, 1), new Vector(0, 1), new Vector(1, 1), new Vector(0, 2), new Vector (2, 0), new Vector(0, -2), new Vector(-2, 0)};
         untouchableLoc = new MapLocation[untouchSize];
         for (int i = 0; i < untouchSize; i++) {
-            untouchableLoc[i] = untouchable[i].rotate(rotateState).addWith(HQLocation);
+            untouchableLoc[i] = untouchable[i].addWith(HQLocation);
         }
     }
 
@@ -123,7 +123,35 @@ public class Landscaper extends Unit {
             }
         }
         if (teraformMode == 2) {
+            // dig hq if you can
             if (rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
+            // if spawn location has bad height then dig it
+            MapLocation spawn = HQLocation.add(rotateDir(Direction.NORTHEAST));
+            if (rc.getLocation().isAdjacentTo(spawn)) {
+                if (rc.canSenseLocation(spawn) && Math.abs(rc.senseElevation(spawn) - factoryHeight) > 3) {
+                    RobotInfo rob = rc.senseRobotAtLocation(spawn);
+                    if (rob == null) {
+                        if (rc.senseElevation(spawn) > factoryHeight) {
+                            // if the spawn location is higher
+                            if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                                Direction dig = rc.getLocation().directionTo(spawn);
+                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                            } else {
+                                if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+                            }
+                        } else {
+                            // if the spawn location is lower
+                            if (rc.getDirtCarrying() == 0) {
+                                Direction dig = turtle.getDig();
+                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                            } else {
+                                Direction fill = rc.getLocation().directionTo(spawn);
+                                if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
+                            }
+                        }
+                    }
+                }
+            }
             // build the turtle
             turtle.buildFort(rc);
         }

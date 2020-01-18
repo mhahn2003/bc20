@@ -52,6 +52,7 @@ public class Miner extends Unit {
                             }
                         }
                     }
+                    if (factoryLocation != null) nav.bugNav(rc, factoryLocation);
                 }
             }
 
