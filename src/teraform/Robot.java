@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static teraform.Cast.getMessage;
+import static teraform.Cast.infoQ;
 import static teraform.Util.directions;
 
 public class Robot {
@@ -117,7 +119,7 @@ public class Robot {
         } else {
             cast.getAllInfo();
         }
-        findRotate();
+        if (rc.getType() == RobotType.HQ) findRotate();
         exploreLoc();
 
         if (rc.getType() == RobotType.MINER) {
@@ -154,6 +156,9 @@ public class Robot {
                 }
             } else {
                 if (rc.canSenseLocation(factoryLocation)) {
+                    System.out.println("direction to factory: " + rc.getLocation().directionTo(factoryLocation).toString());
+                    System.out.println("rotated direction: " + rotateDir(Direction.NORTHEAST));
+                    System.out.println("rotateState: " + rotateState);
                     if (rc.getLocation().directionTo(factoryLocation).equals(rotateDir(Direction.NORTHEAST))) {
                         System.out.println("My mode is 2!");
                         teraformMode = 2;
@@ -171,18 +176,6 @@ public class Robot {
         // find rotation of map
         MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction dirCenter = HQLocation.directionTo(center);
-        Vector[] buildLoc = new Vector[]{new Vector(-2, 2), new Vector(2, 2), new Vector(2, -2), new Vector(-2, -2)};
-        ArrayList<Vector> possibleBuilds = new ArrayList<>();
-        int spawnHeight = rc.senseElevation(HQLocation);
-        for (Vector v: buildLoc) {
-            MapLocation loc = v.addWith(HQLocation);
-            if (rc.canSenseLocation(loc)) {
-                if (Math.abs(rc.senseElevation(loc)-spawnHeight) < 3 && !rc.senseFlooding(loc) && rc.senseElevation(loc) > 0) {
-                    possibleBuilds.add(v);
-                }
-            }
-        }
-        // TODO: finish implementing
         if (dirCenter == Direction.EAST || dirCenter == Direction.NORTHEAST || dirCenter == Direction.NORTH) {
             rotateState = 0;
         }
@@ -199,7 +192,95 @@ public class Robot {
             rotateState += 2;
             rotateState %= 2;
         }
-        // TODO: fix this function
+        System.out.println("Initial rotateState was: " + rotateState);
+        Vector[] buildLoc = new Vector[]{new Vector(-2, -2), new Vector(2, -2), new Vector(-2, 2), new Vector(2, 2)};
+        ArrayList<Vector> possibleBuilds = new ArrayList<>();
+        int spawnHeight = rc.senseElevation(HQLocation);
+        // check for buildable locations and rotate to that direction
+        for (int i = 0; i < 4; i++) {
+            buildLoc[i] = buildLoc[i].rotate(rotateState);
+            MapLocation loc = buildLoc[i].addWith(HQLocation);
+            if (rc.canSenseLocation(loc)) {
+                if (Math.abs(rc.senseElevation(loc) - spawnHeight) < 6 && !rc.senseFlooding(loc) && rc.senseElevation(loc) > 1) {
+                    boolean flood = false;
+                    if (rc.senseElevation(loc) < 4) {
+                        MapLocation hole = loc.add(HQLocation.directionTo(loc));
+                        if (rc.canSenseLocation(hole)) {
+                            if (rc.senseFlooding(hole)) flood = true;
+                        }
+                    }
+                    if (!flood) possibleBuilds.add(buildLoc[i]);
+                    System.out.println("I added: " + buildLoc[i].getX() + ", " + buildLoc[i].getY());
+                }
+            }
+        }
+        MapLocation softTurtle = null;
+        for (Vector v : possibleBuilds) {
+            if (v.equals(new Vector(2, 2))) {
+                if (HQLocation.x < rc.getMapWidth() - 9 && HQLocation.y < rc.getMapHeight() - 9) {
+                    softTurtle = v.addWith(HQLocation);
+                    break;
+                }
+            } else if (v.equals(new Vector(2, -2))) {
+                if (HQLocation.x < rc.getMapWidth() - 9 && HQLocation.y >= 9) {
+                    softTurtle = v.addWith(HQLocation);
+                    break;
+                }
+            } else if (v.equals(new Vector(-2, 2))) {
+                if (HQLocation.x >= 9 && HQLocation.y < rc.getMapHeight() - 9) {
+                    softTurtle = v.addWith(HQLocation);
+                    break;
+                }
+            } else {
+                if (HQLocation.x >= 9 && HQLocation.y >= 9) {
+                    softTurtle = v.addWith(HQLocation);
+                    break;
+                }
+            }
+        }
+        if (softTurtle != null) {
+            System.out.println("softTurtle is currently: " + softTurtle.toString());
+        }
+        if (softTurtle == null) {
+            // TODO: what do we do if possibleBuilds is empty??
+            hardTurtle = true;
+            dirCenter = HQLocation.directionTo(possibleBuilds.get(0).addWith(HQLocation));
+        } else {
+            hardTurtle = false;
+            dirCenter = HQLocation.directionTo(softTurtle);
+        }
+        System.out.println("dirCenter is now: " + dirCenter.toString());
+        if (dirCenter == Direction.EAST || dirCenter == Direction.NORTHEAST || dirCenter == Direction.NORTH) {
+            rotateState = 0;
+        } else if (dirCenter == Direction.WEST || dirCenter == Direction.SOUTHWEST || dirCenter == Direction.SOUTH) {
+            rotateState = 2;
+        } else if (dirCenter == Direction.SOUTHEAST) {
+            rotateState = 1;
+        } else {
+            rotateState = 3;
+        }
+        // finally check if there's a ton of water / elevation <= 1 near HQ
+        int maxV = 6;
+        int lowElevation = 0;
+        for (int i = -maxV; i <= maxV; i++) {
+            for (int j = -maxV; j <= maxV; j++) {
+                MapLocation loc = new MapLocation(i, j);
+                if (rc.canSenseLocation(loc)) {
+                    if (rc.senseElevation(loc) < 2) lowElevation++;
+                    if (rc.senseElevation(loc) < 4) lowElevation++;
+                }
+            }
+        }
+        System.out.println("lowElevation is: " + lowElevation);
+        if (lowElevation > 25) hardTurtle = true;
+        if (hardTurtle) {
+            // broadcast hard turtle
+            // also broadcast rotation
+            System.out.println("Sent hard turtle!");
+            infoQ.add(getMessage(Cast.InformationCategory.HARD_TURTLE, HQLocation));
+        }
+        System.out.println("Sent rotation state of: " + rotateState);
+        infoQ.add(getMessage(Cast.InformationCategory.ROTATION, new MapLocation(0, rotateState)));
     }
 
 

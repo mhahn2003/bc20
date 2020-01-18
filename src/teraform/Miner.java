@@ -21,7 +21,7 @@ public class Miner extends Unit {
         if (helpMode == 0) {
             // build landscaper factory
             MapLocation LFLoc = new Vector(2, 2).rotate(rotateState).addWith(HQLocation);
-            if (factoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) <= 18 && isBuilder) {
+            if (factoryLocation == null && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
@@ -37,7 +37,7 @@ public class Miner extends Unit {
                 }
             }
             // build drone factory
-            if (droneFactoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) < 18 && isBuilder) {
+            if (droneFactoryLocation == null && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
@@ -153,23 +153,38 @@ public class Miner extends Unit {
                     else nav.bugNav(rc, closestRefineryLocation);
                 }
             } else {
+                System.out.println("I'm looking for soup");
                 // try to mine soup in all directions because miner finding soup can be slightly buggy
                 boolean canMine = false;
-                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                MapLocation op = rc.getLocation().add(rc.getLocation().directionTo(HQLocation).opposite());
                 if (rc.canMineSoup(Direction.CENTER)) {
-                    rc.mineSoup(Direction.CENTER);
+                    System.out.println("I can mine " + Direction.CENTER.toString());
+                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
+                        System.out.println("I'm bugnaving!");
+                        nav.bugNav(rc, op);
+                    } else {
+                        rc.mineSoup(Direction.CENTER);
+                    }
                     canMine = true;
                 }
                 for (Direction d: directions) {
                     if (rc.canMineSoup(d)) {
-                        rc.mineSoup(d);
+                        if (rc.getLocation().isAdjacentTo(HQLocation)) {
+                            System.out.println("I'm bugnaving!");
+                            nav.bugNav(rc, op);
+                        } else {
+                            System.out.println("I can mine " + d.toString());
+                            rc.mineSoup(d);
+                        }
                         canMine = true;
                         break;
                     }
                 }
                 if (soupLoc != null) {
+
 //                    System.out.println("Soup is at: " + soupLoc.toString());
                     if (canMine) {
+                        System.out.println("I mined soup!");
                         // pollution might make miner skip this even though it's right next to soup
                         nav.navReset(rc, rc.getLocation());
                     }
@@ -180,7 +195,10 @@ public class Miner extends Unit {
                             System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                             infoQ.add(Cast.getMessage(rc.getLocation(), soupLoc));
                         }
-                        else nav.bugNav(rc, soupLoc);
+                        else {
+                            System.out.println("I'm going to soup");
+                            nav.bugNav(rc, soupLoc);
+                        }
                     }
                 } else {
                     // scout for soup

@@ -16,7 +16,7 @@ public class Cast {
     static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 15;
+    private static int numCase = 17;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -51,8 +51,12 @@ public class Cast {
         TERAFORM,
         // TERAFORM DONE
         HOLE,
-        // TURTLE DONe
+        // TURTLE DONE
         TURTLE,
+        // HARD TURTLE
+        HARD_TURTLE,
+        // ROTATION
+        ROTATION,
         // enemy?
         OTHER
     }
@@ -104,8 +108,14 @@ public class Cast {
             case TURTLE:
                 message += 15;
                 break;
-            default:
+            case HARD_TURTLE:
                 message += 16;
+                break;
+            case ROTATION:
+                message += 17;
+                break;
+            default:
+                message += 18;
                 break;
         }
         message=addCoord(message, coord);
@@ -148,6 +158,8 @@ public class Cast {
             case 13: return InformationCategory.FACTORY;
             case 14: return InformationCategory.HOLE;
             case 15: return InformationCategory.TURTLE;
+            case 16: return InformationCategory.HARD_TURTLE;
+            case 17: return InformationCategory.ROTATION;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -396,6 +408,14 @@ public class Cast {
                                 break;
                             case TURTLE:
                                 isTurtle = true;
+                                break;
+                            case HARD_TURTLE:
+                                System.out.println("Receieved hard turtle!");
+                                hardTurtle = true;
+                                break;
+                            case ROTATION:
+                                rotateState = loc.y;
+                                System.out.println("Recieved rotate state of: " + rotateState);
                                 break;
                         }
                     }

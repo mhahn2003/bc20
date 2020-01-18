@@ -185,16 +185,18 @@ public class Landscaper extends Unit {
                 }
             }
             if (bad) continue;
-            RobotInfo rob = rc.senseRobotAtLocation(fill);
-            if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)
-                    && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) {
-                this.fill = dir;
-                return;
-            }
-            if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40)
-                    || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) {
-                this.digLoc = dir;
-                return;
+            if (rc.canSenseLocation(fill)) {
+                RobotInfo rob = rc.senseRobotAtLocation(fill);
+                if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)
+                        && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) {
+                    this.fill = dir;
+                    return;
+                }
+                if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40)
+                        || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) {
+                    this.digLoc = dir;
+                    return;
+                }
             }
         }
     }

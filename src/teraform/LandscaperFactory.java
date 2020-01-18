@@ -16,16 +16,28 @@ public class LandscaperFactory extends Building {
             factoryLocation = rc.getLocation();
             infoQ.add(Cast.getMessage(Cast.InformationCategory.FACTORY, factoryLocation));
         }
-        if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+200) {
+        if (hardTurtle && landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+150) {
             Direction optDir = rc.getLocation().directionTo(HQLocation);
             if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                System.out.println("First condition!");
+                rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                landscaperCount++;
+            }
+        }
+        if (hardTurtle && landscaperCount < 8 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost) {
+            Direction optDir = rc.getLocation().directionTo(HQLocation);
+            if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                landscaperCount++;
+            }
+        }
+        if (landscaperCount < 7 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+200) {
+            Direction optDir = rc.getLocation().directionTo(HQLocation);
+            if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                 rc.buildRobot(RobotType.LANDSCAPER, optDir);
                 landscaperCount++;
             }
         }
         if (landscaperCount < 12 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300) {
-            System.out.println("I'm in the second condition");
             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
@@ -39,7 +51,6 @@ public class LandscaperFactory extends Building {
                 }
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);
-                    System.out.println("Second condition!");
                     landscaperCount++;
                     break;
                 }
@@ -49,7 +60,6 @@ public class LandscaperFactory extends Building {
         if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+300) {
             Direction optDir = rc.getLocation().directionTo(HQLocation);
             if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                System.out.println("Third condition!");
                 rc.buildRobot(RobotType.LANDSCAPER, optDir);
                 landscaperCount++;
             }

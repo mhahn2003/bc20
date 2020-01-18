@@ -82,7 +82,7 @@ public class HQ extends Shooter {
         // maximum of 10 miners at 250th round
         // TODO: spawn appropriate number of miners according to length of soupLoc
         Direction optDir = Direction.NORTH;
-        if (!isTurtle && minerCount < Math.min(3+rc.getRoundNum()/50, 10) && (minerCount < 3 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
+        if (!isTurtle && minerCount < Math.min(3+rc.getRoundNum()/100, 7) && (minerCount < 3 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
