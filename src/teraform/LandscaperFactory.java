@@ -16,30 +16,42 @@ public class LandscaperFactory extends Building {
             factoryLocation = rc.getLocation();
             infoQ.add(Cast.getMessage(Cast.InformationCategory.FACTORY, factoryLocation));
         }
-        if (landscaperCount < 4 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+200) {
+        if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+200) {
+            Direction optDir = rc.getLocation().directionTo(HQLocation);
+            if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                System.out.println("First condition!");
+                rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                landscaperCount++;
+            }
+        }
+        if (landscaperCount < 12 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300) {
+            System.out.println("I'm in the second condition");
             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
-                if (loc.x % 3 == HQLocation.x % 3 && loc.y % 3 == HQLocation.y % 3) continue;
+                if (loc.x % 3 == HQLocation.x % 3 && loc.y % 3 == HQLocation.y % 3) {
+                    optDir = optDir.rotateRight();
+                    continue;
+                }
+                if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
+                    optDir = optDir.rotateRight();
+                    continue;
+                }
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                    System.out.println("Second condition!");
                     landscaperCount++;
                     break;
                 }
                 optDir = optDir.rotateRight();
             }
         }
-        if (landscaperCount < 30 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300) {
-            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
-            for (int i = 0; i < 8; i++) {
-                MapLocation loc = rc.getLocation().add(optDir);
-                if (loc.x % 3 == HQLocation.x % 3 && loc.y % 3 == HQLocation.y % 3) continue;
-                if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                    rc.buildRobot(RobotType.LANDSCAPER, optDir);
-                    landscaperCount++;
-                    break;
-                }
-                optDir = optDir.rotateRight();
+        if (rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+300) {
+            Direction optDir = rc.getLocation().directionTo(HQLocation);
+            if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                System.out.println("Third condition!");
+                rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                landscaperCount++;
             }
         }
     }

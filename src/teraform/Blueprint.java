@@ -21,11 +21,7 @@ public class Blueprint {
         LFLoc = new Vector(1, 2).rotate(rotateState).addWith(HQLocation);
         buildComplete = new Boolean[10];
         for (int i = 0; i < 10; i++) buildComplete[i] = false;
-        if (isShifted) {
-            minerTrail = new Vector[]{new Vector(0, 0), new Vector(0, -1), new Vector(-1, 0), new Vector(0, 1), new Vector(1, 0)};
-        } else {
-            minerTrail = new Vector[]{new Vector(-1, -1), new Vector(0, -1), new Vector(-1, 0), new Vector(0, 1), new Vector(1, 0)};
-        }
+        minerTrail = new Vector[]{new Vector(-1, -1), new Vector(0, -1), new Vector(-1, 0), new Vector(0, 1), new Vector(1, 0)};
         for (int i = 0; i < minerTrail.length; i++) {
             minerTrail[i] = minerTrail[i].rotate(rotateState);
         }

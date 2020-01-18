@@ -20,11 +20,12 @@ public class Miner extends Unit {
         }
         if (helpMode == 0) {
             // build landscaper factory
-            if (factoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) < 18 && isBuilder) {
+            MapLocation LFLoc = new Vector(2, 2).rotate(rotateState).addWith(HQLocation);
+            if (factoryLocation == null && rc.getLocation().distanceSquaredTo(HQLocation) <= 18 && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) == 10) {
+                        if (loc.equals(LFLoc)) {
                             if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
                                 rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
                                 factoryLocation = rc.getLocation().add(dir);
@@ -32,6 +33,7 @@ public class Miner extends Unit {
                             }
                         }
                     }
+                    nav.bugNav(rc, LFLoc);
                 }
             }
             // build drone factory
@@ -60,14 +62,41 @@ public class Miner extends Unit {
                 // if the robot is full or has stuff and no more soup nearby, move back to HQ
                 //            System.out.println("before going home i have " + Clock.getBytecodesLeft());
                 // default hq
-                // TODO: remove hqlocation as a possible refinery if outer layer is complete
                 // TODO: remove refinery location if enemy destroys or is flooded
-                closestRefineryLocation = HQLocation;
+                if (isTurtle) {
+                    if (refineryLocation.isEmpty()) {
+                        // build a refinery
+                        Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                        for (int i = 0; i < 8; i++) {
+                            MapLocation robotLoc = rc.getLocation();
+                            MapLocation placeLoc = robotLoc.add(optDir);
+                            if (placeLoc.x % 3 == HQLocation.x && placeLoc.y % 3 == HQLocation.y) {
+                                optDir = optDir.rotateRight();
+                                continue;
+                            }
+                            if (rc.canBuildRobot(RobotType.REFINERY, optDir)) {
+                                //                            System.out.println("can build refinery");
+                                rc.buildRobot(RobotType.REFINERY, optDir);
+                                //                            System.out.println("built refinery");
+                                refineryLocation.add(placeLoc);
+                                break;
+                            } else {
+                                optDir = optDir.rotateRight();
+                            }
+                        }
+                    }
+                    if (refineryLocation.isEmpty()) {
+                        // if it's still empty, try to move back to HQ?
+                        nav.bugNav(rc, HQLocation);
+                        return;
+                    }
+                    closestRefineryLocation = refineryLocation.get(0);
+                } else closestRefineryLocation = HQLocation;
                 // check select a point as reference(might be edge case?)
                 MapLocation referencePoint = soupLoc;
                 if (referencePoint != null) {
                     //                System.out.println("reference to " + reference_point.toString());
-                    int minRefineryDist = referencePoint.distanceSquaredTo(HQLocation);
+                    int minRefineryDist = referencePoint.distanceSquaredTo(closestRefineryLocation);
 
                     //                System.out.println("before find min d i have" + Clock.getBytecodesLeft());
                     // check through refinery(redundancy here)
@@ -89,12 +118,17 @@ public class Miner extends Unit {
                         //                    System.out.println("attempt build refinery");
                         Direction optDir = rc.getLocation().directionTo(referencePoint);
                         for (int i = 0; i < 8; i++) {
+                            MapLocation robotLoc = rc.getLocation();
+                            MapLocation placeLoc = robotLoc.add(optDir);
+                            if (placeLoc.x % 3 == HQLocation.x && placeLoc.y % 3 == HQLocation.y) {
+                                optDir = optDir.rotateRight();
+                                continue;
+                            }
                             if (rc.canBuildRobot(RobotType.REFINERY, optDir)) {
                                 //                            System.out.println("can build refinery");
                                 rc.buildRobot(RobotType.REFINERY, optDir);
                                 //                            System.out.println("built refinery");
-                                MapLocation robotLoc = rc.getLocation();
-                                refineryLocation.add(robotLoc.add(optDir));
+                                refineryLocation.add(placeLoc);
                                 closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
                                 break;
                             } else {
@@ -114,7 +148,7 @@ public class Miner extends Unit {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                         helpMode = 1;
                         System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        infoQ.add(bot01.Cast.getMessage(rc.getLocation(), closestRefineryLocation));
+                        infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
                     }
                     else nav.bugNav(rc, closestRefineryLocation);
                 }
@@ -123,21 +157,10 @@ public class Miner extends Unit {
                 boolean canMine = false;
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 if (rc.canMineSoup(Direction.CENTER)) {
-                    // don't suffocate HQ (infinity map)
-                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
-                        if (rc.canMove(optDir)) {
-                            rc.move(optDir);
-                        }
-                    }
                     rc.mineSoup(Direction.CENTER);
                     canMine = true;
                 }
                 for (Direction d: directions) {
-                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
-                        if (rc.canMove(optDir)) {
-                            rc.move(optDir);
-                        }
-                    }
                     if (rc.canMineSoup(d)) {
                         rc.mineSoup(d);
                         canMine = true;

@@ -35,7 +35,7 @@ public class Vector {
     }
 
     public Vector rotate(int rotateState) {
-        if (rotateState == 0) return this;
+        if (rotateState == 0) return new Vector(this.x, this.y);
         else if (rotateState == 1) return new Vector(this.y, -this.x);
         else if (rotateState == 2) return new Vector(-this.x, -this.y);
         else return new Vector(-this.y, this.x);

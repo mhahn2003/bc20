@@ -14,7 +14,7 @@ public class Nav {
     private boolean isBugging;
     private int closestDist;
     private MapLocation currentDest;
-    private ArrayList<MapLocation> threats= new ArrayList<>();
+    private ArrayList<MapLocation> threats = new ArrayList<>();
     private MapLocation lastLoc;
     private MapLocation lastLastLoc;
     private int travelDist;
