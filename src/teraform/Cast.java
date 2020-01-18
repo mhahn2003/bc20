@@ -467,7 +467,6 @@ public class Cast {
             }
         }
         if (!(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
-            System.out.println("Getting soup!");
             boolean doAdd;
             soupLoc = null;
             for (int x = -maxV; x <= maxV; x += 2) {

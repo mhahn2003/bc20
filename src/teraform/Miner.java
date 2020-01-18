@@ -186,7 +186,7 @@ public class Miner extends Unit {
                 }
                 if (soupLoc != null) {
 
-//                    System.out.println("Soup is at: " + soupLoc.toString());
+                    System.out.println("Soup is at: " + soupLoc.toString());
                     if (canMine) {
                         System.out.println("I mined soup!");
                         // pollution might make miner skip this even though it's right next to soup
@@ -206,6 +206,7 @@ public class Miner extends Unit {
                         }
                     }
                 } else {
+                    System.out.println("Going to enemyHQ!");
                     // check if getting close to flooded
                     // scout for soup
                     nav.searchEnemyHQ(rc);
