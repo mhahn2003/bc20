@@ -17,9 +17,16 @@ public class HQ extends Shooter {
         super.takeTurn();
         // if HQ is surrounded by complete turtle then send turtle signal
         boolean oneSpace = false;
+        int space;
+        if ((HQLocation.x == 0 || HQLocation.x == rc.getMapWidth()-1) && (HQLocation.y == 0 || HQLocation.y == rc.getMapHeight()-1)) space = 3;
+        else if ((HQLocation.x == 0 || HQLocation.x == rc.getMapWidth()-1) && (HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2)) space = 4;
+        else if ((HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2) && (HQLocation.y == 0 || HQLocation.y == rc.getMapHeight()-1)) space = 4;
+        else if ((HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2) && (HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2)) space = 5;
+        else if (HQLocation.x == 0 || HQLocation.x == rc.getMapWidth()-1 || HQLocation.y == 0 || HQLocation.y == rc.getMapHeight()-1) space = 5;
+        else if (HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2 || HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2) space = 7;
+        else space = 8;
         if (!isTurtle) {
             int landscapers = 0;
-            int space = 0;
             for (Direction dir : directions) {
                 MapLocation loc = rc.getLocation().add(dir);
                 if (rc.canSenseLocation(loc)) {
