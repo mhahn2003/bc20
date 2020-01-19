@@ -84,7 +84,7 @@ public class Landscaper extends Unit {
                                 sendHole(closeHole);
                                 MapLocation hole = closestHole();
                                 System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
-                                if (rc.getID() % 3 != 0) {
+                                if (rc.getID() % 2 != 0) {
                                     if (hole != null) {
                                         System.out.println("closest hole is: " + hole);
                                         moveTo(hole);
@@ -158,11 +158,11 @@ public class Landscaper extends Unit {
     }
 
     public Direction holeTo() {
-        int modX = HQLocation.x % 3;
-        int modY = HQLocation.y % 3;
+        int modX = HQLocation.x % 2;
+        int modY = HQLocation.y % 2;
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
-            if (dig.x % 3 == modX && dig.y % 3 == modY) {
+            if (dig.x % 2 == modX && dig.y % 2 == modY) {
                 return dir;
             }
         }
@@ -183,7 +183,7 @@ public class Landscaper extends Unit {
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
         for (Direction dir: directions) {
-            if (dig.equals(dir)) continue;
+            if (dig.equals(dir) || dig.equals(dir.opposite()) && ! rc.senseFlooding(rc.getLocation().add(dir))  ) continue;
             MapLocation fill = rc.getLocation().add(dir);
             boolean bad = false;
             for (int i = 0; i < untouchSize; i++) {
@@ -252,7 +252,7 @@ public class Landscaper extends Unit {
         Direction hole = holeTo();
         MapLocation loc = rc.getLocation().add(dir);
         for (int i = 0; i < untouchSize; i++) {
-            if (untouchableLoc[i].equals(loc)) return false;
+            if (untouchableLoc[i].equals(loc)|| loc.x%2 == HQLocation.x%2 && loc.y%2 == HQLocation.y%2) return false;
         }
         return !hole.equals(dir) && rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc);
     }

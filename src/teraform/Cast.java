@@ -139,7 +139,7 @@ public class Cast {
     }
 
     private static int addCoord(Hole h1, Hole h2, Hole h3) {
-        return -250000*h1.getValue()-500*h2.getValue()-h3.getValue();
+        return -1048576*h1.getValue()-1024*h2.getValue()-h3.getValue();
     }
 
     public static InformationCategory getCat(int message){
@@ -181,17 +181,17 @@ public class Cast {
 
     public static MapLocation getH1(int message) {
         int mFlip = -message;
-        return new Hole((mFlip - mFlip % 250000)/250000).getMapLoc();
+        return new Hole((mFlip - mFlip % 1048576)/1048576).getMapLoc();
     }
 
     public static MapLocation getH2(int message) {
         int mFlip = -message;
-        return new Hole((mFlip % 250000 - mFlip % 500)/500).getMapLoc();
+        return new Hole((mFlip % 1048576 - mFlip % 1024)/1024).getMapLoc();
     }
 
     public static MapLocation getH3(int message) {
         int mFlip = -message;
-        return new Hole((mFlip % 500)).getMapLoc();
+        return new Hole((mFlip % 1024)).getMapLoc();
     }
 
 

@@ -15,21 +15,21 @@ public class Hole {
     public Hole(int x, int y) {
         this.x = x;
         this.y = y;
-        value = 22*x+y;
-        dx = HQLocation.x % 3;
-        dy = HQLocation.y % 3;
+        value = 32*x+y;
+        dx = HQLocation.x % 2;
+        dy = HQLocation.y % 2;
     }
 
     public Hole(int value) {
         this.value = value;
-        y = value % 22;
-        x = (value-(value % 22))/22;
-        dx = HQLocation.x % 3;
-        dy = HQLocation.y % 3;
+        y = value % 32;
+        x = (value-(value % 32))/32;
+        dx = HQLocation.x % 2;
+        dy = HQLocation.y % 2;
     }
 
     public MapLocation getMapLoc() {
-        return new MapLocation(dx+x*3, dy+y*3);
+        return new MapLocation(dx+x*2, dy+y*2);
     }
 
     public int getValue() { return value; }
@@ -39,9 +39,9 @@ public class Hole {
     public int getY() { return y; }
 
     public static Hole getHole(MapLocation loc) {
-        dx = HQLocation.x % 3;
-        dy = HQLocation.y % 3;
-        return new Hole((loc.x-dx)/3, (loc.y-dy)/3);
+        dx = HQLocation.x % 2;
+        dy = HQLocation.y % 2;
+        return new Hole((loc.x-dx)/2, (loc.y-dy)/2);
     }
 }
 
