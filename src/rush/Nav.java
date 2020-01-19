@@ -48,10 +48,10 @@ public class Nav {
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
         if (rc.getType() == RobotType.DELIVERY_DRONE) {
-            System.out.println("My threats are: " + threats.toString());
+//            System.out.println("My threats are: " + threats.toString());
         }
         if (rc.getLocation().equals(dest)) {
-            System.out.println("Location is equal");
+//            System.out.println("Location is equal");
             wander++;
             return;
         }

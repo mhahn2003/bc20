@@ -16,7 +16,7 @@ public class Cast {
     public static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 17;
+    private static int numCase = 18;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -57,6 +57,8 @@ public class Cast {
         ROTATION,
         // FIRST DRONE SPAWN
         DRONE_SPAWN,
+        // RUSHING
+        RUSH,
         // enemy?
         OTHER
     }
@@ -114,8 +116,11 @@ public class Cast {
             case DRONE_SPAWN:
                 message += 17;
                 break;
-            default:
+            case RUSH:
                 message += 18;
+                break;
+            default:
+                message += 19;
                 break;
         }
         message=addCoord(message, coord);
@@ -160,6 +165,7 @@ public class Cast {
             case 15: return InformationCategory.TURTLE;
             case 16: return InformationCategory.ROTATION;
             case 17: return InformationCategory.DRONE_SPAWN;
+            case 18: return InformationCategory.RUSH;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -416,6 +422,11 @@ public class Cast {
                                 break;
                             case DRONE_SPAWN:
                                 areDrones = true;
+                                break;
+                            case RUSH:
+                                if (rushHappening) rushHappening = false;
+                                else rushHappening = true;
+                                break;
                         }
                     }
                 }
@@ -467,7 +478,7 @@ public class Cast {
                 }
             }
         }
-        if (!(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
+        if (!isAttacker && !(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
             boolean doAdd;
             soupLoc = null;
             for (int x = -maxV; x <= maxV; x += 2) {

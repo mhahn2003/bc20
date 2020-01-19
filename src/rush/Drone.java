@@ -5,6 +5,7 @@ import battlecode.common.*;
 import java.util.ArrayList;
 
 import static rush.Util.*;
+import static rush.Util.directions;
 
 public class Drone extends Unit {
 
@@ -220,15 +221,14 @@ public class Drone extends Unit {
                             MapLocation water = findWater();
                             MapLocation robotLoc = rc.getLocation();
                             if (water != null) {
-                                if (water.isAdjacentTo(robotLoc)) {
-                                    System.out.println("Dropping off unit!");
-                                    // drop off unit
-                                    Direction dropDir = robotLoc.directionTo(water);
-                                    if (rc.canDropUnit(dropDir)) rc.dropUnit(dropDir);
-                                } else {
-                                    System.out.println("Navigating to water at " + water.toString());
-                                    nav.bugNav(rc, water);
+                                for (Direction dir: directions) {
+                                    MapLocation loc = rc.getLocation().add(dir);
+                                    if (rc.canSenseLocation(loc) && rc.senseFlooding(loc)) {
+                                        if (rc.canDropUnit(dir)) rc.dropUnit(dir);
+                                    }
                                 }
+                                // if no water
+                                if (rc.isReady()) nav.bugNav(rc, water);
                             } else {
                                 // explore
                                 if (exploreTo == null || suspectsVisited.get(exploreTo)) {

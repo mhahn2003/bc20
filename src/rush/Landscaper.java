@@ -16,11 +16,17 @@ public class Landscaper extends Unit {
     private Direction fill;
     private Direction digLoc;
 
+    // rushing stuff
+    private ArrayList<MapLocation> emptySpots;
+    Direction LFdir = null;
+    Direction DFdir = null;
+    Direction HQdir = null;
+
 
     public Landscaper(RobotController r) throws GameActionException {
         super(r);
         visitedHole = new ArrayList<>();
-
+        emptySpots = new ArrayList<>();
     }
 
     public void initialize() throws GameActionException {
@@ -35,6 +41,7 @@ public class Landscaper extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         if (teraformMode == 0) {
+            // teraform mode
             System.out.println("Initially I have: " + Clock.getBytecodesLeft());
             if (teraformLoc[0] == null) {
                 System.out.println("My teraformLoc is: null");
@@ -120,8 +127,108 @@ public class Landscaper extends Unit {
                     moveTo(enemyHQLocationSuspect);
                 }
             }
+        } else if (teraformMode == 1) {
+            // rush mode
+            // prioritize: getting to empty spot -> digging other landscaper factory out -> digging hq out -> digging other buildings out -> digging walls out
+            RobotInfo[] robots = rc.senseNearbyRobots(2, rc.getTeam().opponent());
+            HQdir = null;
+            LFdir = null;
+            DFdir = null;
+            getDirections(robots);
+            if (rc.getLocation().isAdjacentTo(enemyHQLocation)) {
+                if (LFdir != null) {
+                    if (rc.getDirtCarrying() > 0) {
+                        if (rc.canDepositDirt(LFdir)) rc.depositDirt(LFdir);
+                    } else {
+                        Direction optDir = HQdir.opposite();
+                        for (int i = 0; i < 8; i++) {
+                            if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
+                                optDir = optDir.rotateLeft();
+                                continue;
+                            }
+                            if (rc.canDigDirt(optDir)) {
+                                rc.digDirt(optDir);
+                                break;
+                            } else optDir = optDir.rotateLeft();
+                        }
+                    }
+                }
+                else if (HQdir != null) {
+                    if (rc.getDirtCarrying() > 0) {
+                        if (rc.canDepositDirt(HQdir)) rc.depositDirt(HQdir);
+                    } else {
+                        Direction optDir = HQdir.opposite();
+                        for (int i = 0; i < 8; i++) {
+                            if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
+                                optDir = optDir.rotateLeft();
+                                continue;
+                            }
+                            if (rc.canDigDirt(optDir)) {
+                                rc.digDirt(optDir);
+                                break;
+                            } else optDir = optDir.rotateLeft();
+                        }
+                    }
+                }
+            } else {
+                // try to get to an empty spot
+                getEmpty();
+                if (emptySpots.isEmpty()) {
+                    // try to dig down buildings if you can
+                    if (LFdir != null) {
+                        if (rc.getDirtCarrying() > 0) {
+                            if (rc.canDepositDirt(LFdir)) rc.depositDirt(LFdir);
+                        } else {
+                            Direction optDir = LFdir.opposite();
+                            for (int i = 0; i < 8; i++) {
+                                if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
+                                    optDir = optDir.rotateLeft();
+                                    continue;
+                                }
+                                if (rc.canDigDirt(optDir)) {
+                                    rc.digDirt(optDir);
+                                    break;
+                                } else optDir = optDir.rotateLeft();
+                            }
+                        }
+                    }
+                    else if (DFdir != null) {
+                        if (rc.getDirtCarrying() > 0) {
+                            if (rc.canDepositDirt(DFdir)) rc.depositDirt(DFdir);
+                        } else {
+                            Direction optDir = DFdir.opposite();
+                            for (int i = 0; i < 8; i++) {
+                                if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
+                                    optDir = optDir.rotateLeft();
+                                    continue;
+                                }
+                                if (rc.canDigDirt(optDir)) {
+                                    rc.digDirt(optDir);
+                                    break;
+                                } else optDir = optDir.rotateLeft();
+                            }
+                        }
+                    } else {
+                        // dig down walls i guess
+                        // TODO: implement this part
+                    }
+                } else {
+                    MapLocation goTo = null;
+                    int dist = 0;
+                    for (MapLocation loc: emptySpots) {
+                        int tempD = rc.getLocation().distanceSquaredTo(loc);
+                        if (goTo == null || tempD < dist) {
+                            goTo = loc;
+                            dist = tempD;
+                        }
+                    }
+                    System.out.println("Going to: " + goTo.toString());
+                    nav.bugNav(rc, goTo);
+                }
+            }
         }
-        if (teraformMode == 2) {
+        else if (teraformMode == 2) {
+            // turtle mode
             // dig hq if you can
             if (rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
             // if spawn location has bad height then dig it
@@ -311,5 +418,38 @@ public class Landscaper extends Unit {
             visitedHole.remove(0);
         }
         visitedHole.add(loc);
+    }
+
+
+
+    public void getEmpty() throws GameActionException {
+        // assuming enemyHQLocation is not null
+        emptySpots = new ArrayList<>();
+        for (Direction dir: directions) {
+            MapLocation loc = enemyHQLocation.add(dir);
+            if (isEmpty(loc)) emptySpots.add(loc);
+        }
+    }
+
+    public boolean isEmpty(MapLocation loc) throws GameActionException {
+        if (rc.canSenseLocation(loc)) {
+            RobotInfo rob = rc.senseRobotAtLocation(loc);
+            return rob == null && Math.abs(rc.senseElevation(loc)-rc.senseElevation(enemyHQLocation)) <= 3;
+        }
+        return false;
+    }
+
+    public void getDirections(RobotInfo[] robots) {
+        for (RobotInfo r: robots) {
+            if (r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
+                HQdir = rc.getLocation().directionTo(r.getLocation());
+            }
+            if (r.getType() == RobotType.DESIGN_SCHOOL && r.getTeam() != rc.getTeam()) {
+                LFdir = rc.getLocation().directionTo(r.getLocation());
+            }
+            if (r.getType() == RobotType.FULFILLMENT_CENTER && r.getTeam() != rc.getTeam()) {
+                DFdir = rc.getLocation().directionTo(r.getLocation());
+            }
+        }
     }
 }

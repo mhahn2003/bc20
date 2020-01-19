@@ -27,9 +27,10 @@ public class Robot {
     static Cast cast = null;
     // turtle object
     static Turtle turtle = null;
-    // blueprint object (only the first miner will have this)
+    // blueprint object (only the second miner will have this)
     static Blueprint blueprint;
-
+    // rush object (only the first miner will have this)
+    static Rush rush;
     // hole array
     static boolean[][] holeLocation;
 
@@ -60,8 +61,8 @@ public class Robot {
     // for landscapers:    0: building teraform   1: building 5x5 turtle
     static int teraformMode = 0;
 
-    static boolean isBuilder;
-    static boolean isAttacker;
+    static boolean isBuilder = false;
+    static boolean isAttacker = false;
 
     // booleans
     // is drone holding a cow
@@ -76,6 +77,10 @@ public class Robot {
     static boolean isTurtle = false;
     // have drones spawned yet
     static boolean areDrones = false;
+    // are we rushing right now
+    static boolean rushHappening = true;
+    // rush cost
+    static int rushCost = 250;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
@@ -100,6 +105,8 @@ public class Robot {
     }
 
     public void takeTurn() throws GameActionException {
+        if (rushHappening) rushCost = 250;
+        else rushCost = 0;
         turnCount += 1;
         if (turnCount == 1) {
             initialize();
@@ -121,20 +128,27 @@ public class Robot {
                 cast.getInfo(round);
                 round++;
             }
-            nav = new Nav();
-            cast.getAllInfo();
         }
+        nav = new Nav();
+        cast.getAllInfo();
         if (rc.getType() == RobotType.HQ) findRotate();
         exploreLoc();
 
         if (rc.getType() == RobotType.MINER) {
             if (rc.getRoundNum() == 2) {
+                isAttacker = true;
+                rush = new Rush();
+            }
+            if (rc.getRoundNum() == 3) {
                 isBuilder = true;
             }
-            if (rc.getRoundNum() == 3) isAttacker = true;
             return;
         }
         if (rc.getType() == RobotType.LANDSCAPER) {
+            if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < 18) {
+                teraformMode = 1;
+                return;
+            }
             turtle = new Turtle(rc, HQLocation, rotateState);
             System.out.println("Initialized teraform!");
             teraformLoc[0] = null;
