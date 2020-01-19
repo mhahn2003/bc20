@@ -3,8 +3,6 @@ import battlecode.common.*;
 
 public class Unit extends Robot {
 
-    MapLocation hqLoc;
-
     public Unit(RobotController r) {
         super(r);
     }

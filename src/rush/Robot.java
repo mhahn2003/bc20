@@ -27,8 +27,6 @@ public class Robot {
     static Cast cast = null;
     // turtle object
     static Turtle turtle = null;
-    // blueprint object (only the second miner will have this)
-    static Blueprint blueprint;
     // rush object (only the first miner will have this)
     static Rush rush;
     // hole array
