@@ -1,11 +1,11 @@
-package teraform;
+package rngform;
 
 import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static teraform.Robot.*;
-import static teraform.Util.*;
+import static rngform.Robot.*;
+import static rngform.Util.*;
 
 // Navigation class
 public class Cast {
@@ -23,6 +23,8 @@ public class Cast {
     public enum InformationCategory {
         // request help from drone
         HELP,
+        // make wall based on two coordinates
+        WALL_SPAWN,
         // new refinery
         NEW_REFINERY,
         // information not there anymore
@@ -47,14 +49,6 @@ public class Cast {
         DEFENSE,
         // FACTORY LOC
         FACTORY,
-        // TERAFORM
-        TERAFORM,
-        // TERAFORM DONE
-        HOLE,
-        // TURTLE DONE
-        TURTLE,
-        // ROTATION
-        ROTATION,
         // FIRST DRONE SPAWN
         DRONE_SPAWN,
         // enemy?
@@ -102,20 +96,11 @@ public class Cast {
             case FACTORY:
                 message += 13;
                 break;
-            case HOLE:
+            case DRONE_SPAWN:
                 message += 14;
                 break;
-            case TURTLE:
-                message += 15;
-                break;
-            case ROTATION:
-                message += 16;
-                break;
-            case DRONE_SPAWN:
-                message += 17;
-                break;
             default:
-                message += 18;
+                message += 15;
                 break;
         }
         message=addCoord(message, coord);
@@ -126,20 +111,12 @@ public class Cast {
         return addCoord(c1, c2);
     }
 
-    public static int getMessage(Hole h1, Hole h2, Hole h3) {
-        return addCoord(h1, h2, h3);
-    }
-
     private static int addCoord(int message, MapLocation coord) {
         return message*10000 + coord.x*100 + coord.y;
     }
 
     private static int addCoord(MapLocation c1, MapLocation c2) {
         return 100000000 + c1.x*1000000 + c1.y*10000 + c2.x*100 + c2.y;
-    }
-
-    private static int addCoord(Hole h1, Hole h2, Hole h3) {
-        return -1048576*h1.getValue()-1024*h2.getValue()-h3.getValue();
     }
 
     public static InformationCategory getCat(int message){
@@ -156,13 +133,10 @@ public class Cast {
             case 11: return InformationCategory.SURRENDER;
             case 12: return InformationCategory.DEFENSE;
             case 13: return InformationCategory.FACTORY;
-            case 14: return InformationCategory.HOLE;
-            case 15: return InformationCategory.TURTLE;
-            case 16: return InformationCategory.ROTATION;
-            case 17: return InformationCategory.DRONE_SPAWN;
+            case 14: return InformationCategory.DRONE_SPAWN;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
-                if (message < 0) return InformationCategory.TERAFORM;
+                if (message/100000000 == 2) return InformationCategory.WALL_SPAWN;
                 return InformationCategory.OTHER;
         }
     }
@@ -179,33 +153,13 @@ public class Cast {
         return new MapLocation((message%10000-message%100)/100, message%100);
     }
 
-    public static MapLocation getH1(int message) {
-        int mFlip = -message;
-        return new Hole((mFlip - mFlip % 1048576)/1048576).getMapLoc();
-    }
-
-    public static MapLocation getH2(int message) {
-        int mFlip = -message;
-        return new Hole((mFlip % 1048576 - mFlip % 1024)/1024).getMapLoc();
-    }
-
-    public static MapLocation getH3(int message) {
-        int mFlip = -message;
-        return new Hole((mFlip % 1024)).getMapLoc();
-    }
 
 
     // check if it's our blockChain
     public static boolean isValid(int message, RobotController rc) throws GameActionException {
         InformationCategory info = getCat(message);
-        if (info != InformationCategory.HELP && info != InformationCategory.TERAFORM) return (message < 10000*(numCase+1) && onMap(getCoord(message), rc));
+        if (info != InformationCategory.HELP) return (message < 10000*(numCase+1) && onMap(getCoord(message), rc));
         else if (info == InformationCategory.HELP) return (onMap(getC1(message), rc) && onMap(getC2(message), rc));
-        else if (info == InformationCategory.TERAFORM) {
-//            System.out.println("H1 is: " + getH1(message).toString());
-//            System.out.println("H2 is: " + getH2(message).toString());
-//            System.out.println("H3 is: " + getH3(message).toString());
-            return rc.onTheMap(getH1(message)) && rc.onTheMap(getH2(message)) && rc.onTheMap(getH3(message));
-        }
         else {
             return false;
         }
@@ -390,30 +344,6 @@ public class Cast {
                             case FACTORY:
                                 factoryLocation = loc;
                                 break;
-                            case TERAFORM:
-                                if (rc.getType() != RobotType.LANDSCAPER) break;
-                                System.out.println("I got teraform!");
-                                MapLocation h1 = Cast.getH1(message);
-                                MapLocation h2 = Cast.getH2(message);
-                                MapLocation h3 = Cast.getH3(message);
-
-                                teraformLoc[0] = h1;
-                                teraformLoc[1] = h2;
-                                teraformLoc[2] = h3;
-                                break;
-                            case HOLE:
-                                if (rc.getType() != RobotType.HQ) break;
-                                Hole h = Hole.getHole(loc);
-                                System.out.println("I got hole location: " + h.getX() + " " + h.getY());
-                                holeLocation[h.getX()][h.getY()] = true;
-                                break;
-                            case TURTLE:
-                                isTurtle = true;
-                                break;
-                            case ROTATION:
-                                rotateState = loc.y;
-                                System.out.println("Recieved rotate state of: " + rotateState);
-                                break;
                             case DRONE_SPAWN:
                                 areDrones = true;
                         }
@@ -560,7 +490,6 @@ public class Cast {
 
     // send information collected to the blockchain
     public void sendInfo() throws GameActionException {
-        if (rc.getType() == RobotType.HQ) exploreHole();
         if (!infoQ.isEmpty())  {
             int blockSize = Math.min(6, infoQ.size());
             int[] info = new int[blockSize+1];
@@ -633,62 +562,4 @@ public class Cast {
         }
     }
 
-    // HQ will find explorable hole locations
-    public void exploreHole() {
-        // on the first return don't call this
-        if (rc.getRoundNum() == 1) return;
-        Hole h1 = null;
-        Hole h2 = null;
-        Hole h3 = null;
-        int d1 = 1000000;
-        int d2 = 1000000;
-        int d3 = 1000000;
-        int HQHx = HQLocation.x/3;
-        int HQHy = HQLocation.y/3;
-//        System.out.println("HQHx: " + HQHx);
-//        System.out.println("HQHy: " + HQHy);
-        int maxV = 4;
-//        System.out.println("sizeX: " + sizeX);
-//        System.out.println("sizeY: " + sizeY);
-//        System.out.println("Start x at: " + Math.max(0, HQHx-maxV));
-//        System.out.println("End x at: " + Math.min(HQHx+maxV, sizeX-1));
-//        System.out.println("Start y at: " + Math.max(0, HQHy-maxV));
-//        System.out.println("End y at: " + Math.min(HQHy+maxV, sizeY-1));
-        for (int i = Math.max(0, HQHx-maxV); i <= Math.min(HQHx+maxV, sizeX-1); i++) {
-            for (int j = Math.max(0, HQHy-maxV); j <= Math.min(HQHy+maxV, sizeY-1); j++) {
-                if (i == HQHx && j == HQHy) continue;
-//                System.out.println("iterating i: " + i + " j: " + j);
-                if (!holeLocation[i][j]) {
-                    int dist = Math.max(d1, Math.max(d2, d3));
-                    Hole temp = new Hole(i, j);
-//                    System.out.println("calculated temp");
-                    int tempD = HQLocation.distanceSquaredTo(temp.getMapLoc());
-                    if (tempD < dist) {
-//                        System.out.println("Case happened");
-                        if (dist == d1) {
-                            d1 = tempD;
-                            h1 = temp;
-//                            System.out.println("I updated!");
-                        }
-                        else if (dist == d2) {
-                            d2 = tempD;
-                            h2 = temp;
-                        }
-                        else {
-                            d3 = tempD;
-                            h3 = temp;
-                        }
-                    }
-                }
-            }
-        }
-//        System.out.println("Sending hole locations");
-//        System.out.println("h1 is: " + h1.getMapLoc().toString());
-//        System.out.println("h2 is: " + h2.getMapLoc().toString());
-//        System.out.println("h3 is: " + h3.getMapLoc().toString());
-        if (h3 != null) {
-            System.out.println("Adding holes");
-            infoQ.add(getMessage(h1, h2, h3));
-        }
-    }
 }
