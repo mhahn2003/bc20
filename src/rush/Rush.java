@@ -182,7 +182,7 @@ public class Rush {
             }
             System.out.println("Going to pos: " + goTo);
             // go to pos
-            bugNavOpt(goTo);
+            bugNav(goTo);
         }
     }
 
@@ -254,7 +254,7 @@ public class Rush {
         }
     }
 
-//    // optimized bugnav
+    // optimized bugnav
     public void bugNavOpt(MapLocation dest) throws GameActionException {
         System.out.println("I'm at: " + rc.getLocation().toString());
         if (currentDest == null || !dest.isAdjacentTo(currentDest)) {

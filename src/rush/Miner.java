@@ -56,11 +56,6 @@ public class Miner extends Unit {
             }
             // TODO: if buildings are destroyed then rebuild
             // build refinery
-            if (refineryLocation.isEmpty()) {
-                System.out.println("refinery loc is empty!");
-            } else {
-                System.out.println("refinery loc is: " + refineryLocation.toString());
-            }
             if (refineryLocation.isEmpty() && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.REFINERY.cost+rushCost) {
                     for (Direction dir: directions) {

@@ -48,7 +48,7 @@ public class DroneFactory extends Building {
         }
 
         // spam drones
-        if (rc.getTeamSoup() >= 1000) {
+        if (rc.getTeamSoup() >= 500) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);

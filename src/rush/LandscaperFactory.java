@@ -20,10 +20,8 @@ public class LandscaperFactory extends Building {
 
             // get count of how many landscapers and net guns we already have
             boolean netGunPlaced = false;
-            int landscapers = 0;
             RobotInfo[] robots = rc.senseNearbyRobots();
             for (RobotInfo r: robots) {
-                if (r.getType() == RobotType.LANDSCAPER && r.getTeam() == rc.getTeam()) landscapers++;
                 if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) netGunPlaced = true;
             }
             Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
@@ -31,17 +29,25 @@ public class LandscaperFactory extends Building {
             Direction right = optDir.rotateRight();
             Direction leftLeft = left.rotateLeft();
             Direction rightRight = right.rotateRight();
-            if (netGunPlaced) {
+            Direction leftLeftLeft = leftLeft.rotateLeft();
+            Direction rightRightRight = rightRight.rotateRight();
+            if (netGunPlaced && landscaperCount < 5) {
+                tryPlace(optDir);
                 tryPlace(left);
                 tryPlace(right);
                 tryPlace(leftLeft);
                 tryPlace(rightRight);
+                tryPlace(leftLeftLeft);
+                tryPlace(rightRightRight);
             }
-            else if (landscapers < 2 || !flyingDetected) {
+            else if (landscaperCount < 4 && !flyingDetected) {
+                tryPlace(optDir);
                 tryPlace(left);
                 tryPlace(right);
                 tryPlace(leftLeft);
                 tryPlace(rightRight);
+                tryPlace(leftLeftLeft);
+                tryPlace(rightRightRight);
             }
 
         } else {
@@ -66,7 +72,7 @@ public class LandscaperFactory extends Building {
                 }
             }
             // spawn the teraforming landscapers
-            if (landscaperCount < 12 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300) {
+            if (landscaperCount < 12 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300 + rushCost) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 for (int i = 0; i < 8; i++) {
                     MapLocation loc = rc.getLocation().add(optDir);
@@ -117,7 +123,10 @@ public class LandscaperFactory extends Building {
     }
 
     public void tryPlace(Direction dir) throws GameActionException {
-        if (rc.canBuildRobot(RobotType.LANDSCAPER, dir)) rc.buildRobot(RobotType.LANDSCAPER, dir);
+        if (rc.canBuildRobot(RobotType.LANDSCAPER, dir)) {
+            rc.buildRobot(RobotType.LANDSCAPER, dir);
+            landscaperCount++;
+        }
     }
 
     private void checkFlying() {

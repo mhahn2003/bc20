@@ -81,7 +81,5 @@ Our current strategy is to:
 29. Miners timing out
 30. teraform is broken on these maps: GSF, IsThisProcedural
 31. Miners doing weird thing with refineries? On Soup map and SoupOnTheSide
-32. Look forward a bit more with rush miner (maybe 2/3 steps)
 33. Install unkillable net gun if you can
-34. Do other stuff if everything is blocked
-35. Work on rush defense
+35. Work on rush defense (especially landscapers to stall out until drones can pick landscapers up)

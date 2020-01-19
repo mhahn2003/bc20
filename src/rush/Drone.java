@@ -134,8 +134,6 @@ public class Drone extends Unit {
                         // find opponent units
                         RobotInfo pickup = null;
                         for (RobotInfo r : rc.senseNearbyRobots()) {
-                            // check if it's inside the barrier somehow
-                            if (rc.getRoundNum() >= 450 && r.getLocation().distanceSquaredTo(HQLocation) < 8) continue;
                             if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
                                 if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
                                     if (r.getType() == RobotType.COW) {

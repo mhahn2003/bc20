@@ -3,9 +3,8 @@ package rush;
 import battlecode.common.*;
 
 import java.util.ArrayList;
-import java.util.Map;
 
-import static rush.Cast.*;
+import static rush.Cast.infoQ;
 import static rush.Util.directions;
 
 public class Landscaper extends Unit {
@@ -22,6 +21,7 @@ public class Landscaper extends Unit {
     Direction LFdir = null;
     Direction DFdir = null;
     Direction HQdir = null;
+    Direction RFdir = null;
 
 
     public Landscaper(RobotController r) throws GameActionException {
@@ -135,7 +135,9 @@ public class Landscaper extends Unit {
             HQdir = null;
             LFdir = null;
             DFdir = null;
+            RFdir = null;
             getDirections(robots);
+            if (RFdir != null) System.out.println("Rfdir is: " + RFdir.toString());
             Direction digTo = getAttackDig();
             if (rc.getLocation().isAdjacentTo(enemyHQLocation)) {
                 if (LFdir != null) {
@@ -170,64 +172,118 @@ public class Landscaper extends Unit {
                         } else {
                             if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
                         }
-                    } else {
-                        // check if there's any miners surrounding HQ, go to them, and wait
-                        // if there is none, then just dig down the walls
-                        MapLocation minerSpot = null;
-                        int curDist = 0;
-                        for (Direction dir: directions) {
-                            MapLocation loc = enemyHQLocation.add(dir);
-                            if (rc.canSenseLocation(loc)) {
-                                RobotInfo r = rc.senseRobotAtLocation(loc);
-                                if (r != null && r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam()) {
-                                    // go and try to steal that miners spot!
-                                    int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
-                                    if (minerSpot == null || tempDist < curDist) {
-                                        minerSpot = r.getLocation();
-                                        curDist = tempDist;
-                                    }
+                    }
+                    else if (RFdir != null) {
+                        if (rc.getDirtCarrying() > 0) {
+                            if (rc.canDepositDirt(RFdir)) {
+                                System.out.println("I'm depositing towards: " + RFdir.toString());
+                                rc.depositDirt(RFdir);
+                            }
+                        } else {
+                            if (rc.canDigDirt(digTo)) {
+                                System.out.println("I'm digging towards: " + digTo.toString());
+                                rc.digDirt(digTo);
+                            }
+                        }
+                    }
+                    else {
+                        // first check if there's any design school / fullfillment center
+                        // if there is, navigate to those
+                        MapLocation landscaperSpot = null;
+                        MapLocation droneSpot = null;
+                        MapLocation refinerySpot = null;
+                        int landDist = 0;
+                        int flyDist = 0;
+                        int soupDist = 0;
+                        RobotInfo[] fullRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                        for (RobotInfo r: fullRobots) {
+                            if (r.getType() == RobotType.DESIGN_SCHOOL) {
+                                int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
+                                if (landscaperSpot == null || tempDist < landDist) {
+                                    landscaperSpot = r.getLocation();
+                                    landDist = tempDist;
+                                }
+                            }
+                            if (r.getType() == RobotType.FULFILLMENT_CENTER) {
+                                int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
+                                if (droneSpot == null || tempDist < flyDist) {
+                                    droneSpot = r.getLocation();
+                                    flyDist = tempDist;
+                                }
+                            }
+                            if (r.getType() == RobotType.REFINERY) {
+                                int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
+                                if (refinerySpot == null || tempDist < soupDist) {
+                                    refinerySpot = r.getLocation();
+                                    soupDist = tempDist;
                                 }
                             }
                         }
-                        if (minerSpot != null) {
-                            // if adjacent to it, just wait there
-                            if (!rc.getLocation().isAdjacentTo(minerSpot)) {
-                                // if not, move there
-                                nav.bugNav(rc, minerSpot);
-                            }
+                        if (landscaperSpot != null) {
+                            // go to landscaper
+                            nav.bugNav(rc, landscaperSpot);
                         } else {
-                            // if there's no miner spot (probably all landscapers) just try to find other buildings and tear them down
-                            MapLocation landscaperSpot = null;
-                            MapLocation droneSpot = null;
-                            int landDist = 0;
-                            int flyDist = 0;
-                            RobotInfo[] fullRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-                            for (RobotInfo r: fullRobots) {
-                                if (r.getType() == RobotType.DESIGN_SCHOOL) {
-                                    int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
-                                    if (landscaperSpot == null || tempDist < landDist) {
-                                        landscaperSpot = r.getLocation();
-                                        landDist = tempDist;
-                                    }
-                                }
-                                if (r.getType() == RobotType.FULFILLMENT_CENTER) {
-                                    int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
-                                    if (droneSpot == null || tempDist < flyDist) {
-                                        droneSpot = r.getLocation();
-                                        flyDist = tempDist;
-                                    }
-                                }
-                            }
-                            if (landscaperSpot != null) {
-                                // go to landscaper
-                                nav.bugNav(rc, landscaperSpot);
+                            // go to drone center
+                            if (droneSpot != null) {
+                                nav.bugNav(rc, droneSpot);
                             } else {
-                                // go to drone center
-                                if (droneSpot != null) {
-                                    nav.bugNav(rc, droneSpot);
+                                if (refinerySpot != null) {
+                                    nav.bugNav(rc, refinerySpot);
                                 } else {
-                                    // if nothing's there? Just go to enemy hq i guess
-                                    nav.bugNav(rc, enemyHQLocation);
+                                    // if nothing's there? dig miners out
+                                    // check if there's any miners surrounding HQ, go to them, and wait
+                                    // if there is none, then just dig down the walls
+                                    MapLocation minerSpot = null;
+                                    int curDist = 0;
+                                    for (Direction dir : directions) {
+                                        MapLocation loc = enemyHQLocation.add(dir);
+                                        if (rc.canSenseLocation(loc)) {
+                                            RobotInfo r = rc.senseRobotAtLocation(loc);
+                                            if (r != null && r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam()) {
+                                                // go and try to steal that miners spot!
+                                                // check elevation since you'll be digging his spot
+                                                if (rc.canSenseLocation(enemyHQLocation)) {
+                                                    if (Math.abs(rc.senseElevation(enemyHQLocation) - rc.senseElevation(r.getLocation())) > 3) continue;
+                                                }
+                                                int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
+                                                if (minerSpot == null || tempDist < curDist) {
+                                                    minerSpot = r.getLocation();
+                                                    curDist = tempDist;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (minerSpot != null) {
+                                        // if adjacent to it, just wait there
+                                        if (!rc.getLocation().isAdjacentTo(minerSpot)) {
+                                            // if not, move there
+                                            nav.bugNav(rc, minerSpot);
+                                        } else {
+                                            // if you're next to miner, dig him down / fill him up
+                                            Direction minerDir = rc.getLocation().directionTo(minerSpot);
+                                            if (rc.senseElevation(enemyHQLocation) > rc.senseElevation(minerSpot)) {
+                                                // if lower, dig it
+                                                if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                                                    if (rc.canDigDirt(minerDir)) rc.digDirt(minerDir);
+                                                } else {
+                                                    Direction optDir = rc.getLocation().directionTo(enemyHQLocation).opposite();
+                                                    if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                                                }
+                                            } else {
+                                                // if higher, fill it
+                                                if (rc.getDirtCarrying() == 0) {
+                                                    if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
+                                                } else {
+                                                    if (rc.canDepositDirt(minerDir)) rc.depositDirt(minerDir);
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        // if there's no miner spots? (probably all landscapers)
+                                        // we should try to dig them down, but for now we'll just navigate to enemy HQ
+                                        // TODO: fix this
+                                        nav.bugNav(rc, enemyHQLocation);
+                                    }
                                 }
                             }
                         }
@@ -246,11 +302,37 @@ public class Landscaper extends Unit {
                     nav.bugNav(rc, goTo);
                 }
             }
+            // if after everything they're stuck, try to dig themselves out
+            if (rc.isReady()) {
+                if (!checkMove()) {
+                    Direction high = highest();
+                    if (rc.getDirtCarrying() == 0) {
+                        if (rc.canDigDirt(high)) rc.digDirt(high);
+                    } else {
+                        if (high.equals(Direction.CENTER)) {
+                            // place it somewhere random
+                            Direction optDir = rc.getLocation().directionTo(enemyHQLocation).opposite();
+                            if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
+                        } else {
+                            // place it on you
+                            if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+                        }
+                    }
+                }
+            }
         }
         else if (teraformMode == 2) {
             // turtle mode
             // dig hq if you can
             if (rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
+            // dig other locations if you can
+            RobotInfo[] buildings = rc.senseNearbyRobots(2, rc.getTeam());
+            for (RobotInfo r: buildings) {
+                if (r.getType().isBuilding()) {
+                    Direction digDir = rc.getLocation().directionTo(r.getLocation());
+                    if (rc.canDigDirt(digDir)) rc.digDirt(digDir);
+                }
+            }
             // if spawn location has bad height then dig it
             MapLocation spawn = HQLocation.add(rotateDir(Direction.NORTHEAST));
             if (rc.getLocation().isAdjacentTo(spawn)) {
@@ -470,6 +552,9 @@ public class Landscaper extends Unit {
             if (r.getType() == RobotType.FULFILLMENT_CENTER && r.getTeam() != rc.getTeam()) {
                 DFdir = rc.getLocation().directionTo(r.getLocation());
             }
+            if (r.getType() == RobotType.REFINERY && r.getTeam() != rc.getTeam()) {
+                RFdir = rc.getLocation().directionTo(r.getLocation());
+            }
         }
     }
 
@@ -492,9 +577,34 @@ public class Landscaper extends Unit {
         for (RobotInfo r: ourRobots) {
             if (r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam()) {
                 digDir = rc.getLocation().directionTo(r.getLocation());
-                if (rc.canDigDirt(digDir)) return digDir;
+                if (rc.canDigDirt(digDir)) {
+                    // check elevation difference
+                    if (Math.abs(rc.senseElevation(enemyHQLocation)-rc.senseElevation(r.getLocation())) < 3) return digDir;
+                }
             }
         }
         return Direction.CENTER;
+    }
+
+    public boolean checkMove() throws GameActionException {
+        for (Direction dir: directions) {
+            if (rc.canSenseLocation(rc.getLocation().add(dir)) && rc.canMove(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) return true;
+        }
+        return false;
+    }
+
+    public Direction highest() throws GameActionException {
+        Direction elevate = Direction.CENTER;
+        int high = rc.senseElevation(rc.getLocation());
+        for (Direction dir: directions) {
+            MapLocation loc = rc.getLocation().add(dir);
+            if (rc.canSenseLocation(loc)) {
+                if (rc.senseElevation(loc) > high) {
+                    elevate = dir;
+                    high = rc.senseElevation(loc);
+                }
+            }
+        }
+        return elevate;
     }
 }
