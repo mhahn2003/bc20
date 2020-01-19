@@ -579,7 +579,7 @@ public class Landscaper extends Unit {
                 digDir = rc.getLocation().directionTo(r.getLocation());
                 if (rc.canDigDirt(digDir)) {
                     // check elevation difference
-                    if (Math.abs(rc.senseElevation(enemyHQLocation)-rc.senseElevation(r.getLocation())) < 3) return digDir;
+                    if (Math.abs(rc.senseElevation(enemyHQLocation)-rc.senseElevation(r.getLocation())) < 4) return digDir;
                 }
             }
         }

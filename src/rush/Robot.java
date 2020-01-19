@@ -128,9 +128,9 @@ public class Robot {
                 cast.getInfo(round);
                 round++;
             }
+            nav = new Nav();
+            cast.getAllInfo();
         }
-        nav = new Nav();
-        cast.getAllInfo();
         if (rc.getType() == RobotType.HQ) {
             findRotate();
             cast.sendInfo();
@@ -140,7 +140,6 @@ public class Robot {
         if (rc.getType() == RobotType.MINER) {
             if (rc.getRoundNum() == 2) {
                 isAttacker = true;
-                rush = new Rush();
             }
             if (rc.getRoundNum() == 3) {
                 isBuilder = true;

@@ -15,16 +15,16 @@ public class Miner extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         if (isAttacker) {
-            if (rc.getRoundNum() > 250 && !rush.engaged() && rush.getRush()) {
+            if (rc.getRoundNum() > 250 && !Rush.engaged() && Rush.getRush()) {
                 rushHappening = false;
-                rush.turnOff();
+                Rush.turnOff();
                 infoQ.add(getMessage(InformationCategory.RUSH, HQLocation));
                 // call off the rush
             }
             System.out.println("I'm a rusher!");
-            if (rush.getRush()) {
+            if (Rush.getRush()) {
                 System.out.println("Rushing enemy!");
-                rush.killEnemy();
+                Rush.killEnemy();
                 return;
             }
             else if (rc.getLocation().distanceSquaredTo(HQLocation) > 100) nav.bugNav(rc, HQLocation);
