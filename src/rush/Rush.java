@@ -109,9 +109,9 @@ public class Rush {
                         System.out.println("Already there!");
                         // don't move
                     } else {
-                        // only move if it's adjacent
+                        // only move if it's adjacent or there's a lot of empty spots
                         System.out.println("Going to my location!");
-                        if (goTo.isAdjacentTo(rc.getLocation())) bugNav(goTo);
+                        if (goTo.isAdjacentTo(rc.getLocation()) || emptySpots.size() > 2) bugNav(goTo);
                     }
                     // build net gun if we need to and can
                     if (!netGunPlaced && flyingDetected) {
@@ -141,7 +141,8 @@ public class Rush {
                 getEmpty();
                 if (emptySpots.isEmpty()) {
                     System.out.println("No empty spots");
-                    bugNav(enemyHQLocation);
+                    // bug nav if not close
+                    if (rc.getLocation().distanceSquaredTo(enemyHQLocation) > 5) bugNav(enemyHQLocation);
                 } else {
                     MapLocation goTo = null;
                     int dist = 0;
@@ -253,9 +254,8 @@ public class Rush {
         }
     }
 
-    // optimized bugnav
+//    // optimized bugnav
     public void bugNavOpt(MapLocation dest) throws GameActionException {
-        System.out.println("Calling bugNavOpt");
         System.out.println("I'm at: " + rc.getLocation().toString());
         if (currentDest == null || !dest.isAdjacentTo(currentDest)) {
             System.out.println("Resetting");
@@ -264,19 +264,26 @@ public class Rush {
             isBugging = false;
             closestDist = rc.getLocation().distanceSquaredTo(dest);
         }
-        Direction optDir = rc.getLocation().directionTo(dest);
+        Direction optDir = null;
+        int closestD = 0;
+        for (Direction dir: directions) {
+            int tempD = dest.distanceSquaredTo(rc.getLocation().add(dir));
+            if (optDir == null || tempD < closestD) {
+                optDir = dir;
+                closestD = tempD;
+            }
+        }
         System.out.println("optimal direction is: " + optDir.toString());
         if (!isBugging) {
             System.out.println("Not bugging right now");
-            Direction optimized = getOptimalDirection(dest);
-            System.out.println("optimized direction is: " + optimized.toString());
-            if (optimized.equals(Direction.CENTER)) isBugging = true;
+            if (canGo(optDir)) {
+                System.out.println("I moved!");
+                lastLoc = rc.getLocation();
+                rc.move(optDir);
+            }
             else {
-                if (rc.canMove(optimized)) {
-                    System.out.println("I moved!");
-                    lastLoc = rc.getLocation();
-                    rc.move(optimized);
-                }
+                System.out.println("Couldn't move, switching to bugging");
+                isBugging = true;
             }
         }
         if (isBugging) {
@@ -317,76 +324,86 @@ public class Rush {
         }
     }
 
-    private Direction getOptimalDirection(MapLocation dest) throws GameActionException {
-        firstMove = new boolean[3][3];
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) firstMove[i][j] = false;
-        }
-        secondMove = new Direction[5][5];
-        heights = new int[5][5];
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                secondMove[i][j] = Direction.CENTER;
-                MapLocation loc = rc.getLocation().translate(i-2, j-2);
-                if (rc.canSenseLocation(loc)) {
-                    RobotInfo r = rc.senseRobotAtLocation(loc);
-                    if (r != null) heights[i][j] = 5000;
-                    else if (rc.senseFlooding(loc)) heights[i][j] = -10000;
-                    else heights[i][j] = rc.senseElevation(loc);
-                } else heights[i][j] = 10000;
-                if (i == 2 && j == 2) heights[i][j] = rc.senseElevation(rc.getLocation());
-                System.out.println("Height at i: " + i + " j: " + j + " is at: " + heights[i][j]);
-            }
-        }
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (i == 1 && j == 1) continue;
-                firstMove[i][j] = canMove(2, 2, i+1, j+1);
-                if (firstMove[i][j]) {
-                    System.out.println("First move for i: " + i + ", j: " + j);
-                    for (int x = -1; x <= 1; x++) {
-                        for (int y = -1; y <= 1; y++) {
-                            // check the second iteration
-                            if (x == 0 && y == 0) continue;
-                            if (canMove(i+1, j+1, i+1+x, j+1+y)) {
-                                System.out.println("Can move to x: " + x + ", y: " + y);
-                                secondMove[i+1+x][j+1+y] = new Vector(x, y).getDir();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        Direction optDir = Direction.CENTER;
-        // first check if we can just get there with only one move
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (firstMove[i][j]) {
-                    MapLocation loc = rc.getLocation().translate(i-1, j-1);
-                    int tempD = loc.distanceSquaredTo(dest);
-                    if (tempD < closestDist) {
-                        closestDist = tempD;
-                        optDir = new Vector(i-1, j-1).getDir();
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                if (!secondMove[i][j].equals(Direction.CENTER)) {
-                    MapLocation loc = rc.getLocation().translate(i-2, j-2);
-                    int tempD = loc.distanceSquaredTo(dest);
-                    if (tempD < closestDist) {
-                        closestDist = tempD;
-                        optDir = rc.getLocation().directionTo(loc.add(secondMove[i][j].opposite()));
-                    }
-                }
-            }
-        }
-        return optDir;
-    }
-
-    private boolean canMove(int fi, int fj, int si, int sj) {
-        return Math.abs(heights[fi][fj]-heights[si][sj]) <= 3;
-    }
+//    private Direction getOptimalDirection(MapLocation dest) throws GameActionException {
+//        System.out.println("Initially I have: " + Clock.getBytecodesLeft());
+//        firstMove = new boolean[3][3];
+//        secondMove = new Direction[5][5];
+//        heights = new int[5][5];
+//        for (int i = 0; i < 5; i++) {
+//            for (int j = 0; j < 5; j++) {
+//                secondMove[i][j] = Direction.CENTER;
+//                MapLocation loc = rc.getLocation().translate(i-2, j-2);
+//                if (rc.canSenseLocation(loc)) {
+//                    if (rc.isLocationOccupied(loc)) heights[i][j] = 5000;
+//                    else if (rc.senseFlooding(loc)) heights[i][j] = -10000;
+//                    else heights[i][j] = rc.senseElevation(loc);
+//                } else heights[i][j] = 10000;
+//                if (i == 2 && j == 2) heights[i][j] = rc.senseElevation(rc.getLocation());
+//                System.out.println("Height at i: " + i + " j: " + j + " is at: " + heights[i][j]);
+//                System.out.println("One itereation takes: " + Clock.getBytecodesLeft());
+//            }
+//        }
+//        System.out.println("After initializing arrays, I have: " + Clock.getBytecodesLeft());
+//        for (int i = 0; i < 3; i++) {
+//            for (int j = 0; j < 3; j++) {
+//                if (i == 1 && j == 1) continue;
+//                firstMove[i][j] = canMove(2, 2, i + 1, j + 1);
+////            }
+////        }
+////        for (int i = 0; i < 5; i++) {
+////            for (int j = 0; j < 5; j++) {
+////
+////            }
+////        }
+//                if (firstMove[i][j]) {
+//                    System.out.println("First move for i: " + i + ", j: " + j);
+//                    for (int x = -1; x <= 1; x++) {
+//                        for (int y = -1; y <= 1; y++) {
+//                            // check the second iteration
+//                            if (x == 0 && y == 0) continue;
+//                            if (canMove(i+1, j+1, i+1+x, j+1+y)) {
+//                                System.out.println("Can move to x: " + x + ", y: " + y);
+//                                secondMove[i+1+x][j+1+y] = new Vector(x, y).getDir();
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        System.out.println("After doing 2 steps, I have: " + Clock.getBytecodesLeft());
+//        Direction optDir = Direction.CENTER;
+//        // first check if we can just get there with only one move
+//        for (int i = 0; i < 3; i++) {
+//            for (int j = 0; j < 3; j++) {
+//                if (firstMove[i][j]) {
+//                    MapLocation loc = rc.getLocation().translate(i-1, j-1);
+//                    int tempD = loc.distanceSquaredTo(dest);
+//                    if (tempD < closestDist) {
+//                        closestDist = tempD;
+//                        optDir = new Vector(i-1, j-1).getDir();
+//                    }
+//                }
+//            }
+//        }
+//        System.out.println("After checking 1 step, I have: " + Clock.getBytecodesLeft());
+//        for (int i = 0; i < 5; i++) {
+//            for (int j = 0; j < 5; j++) {
+//                System.out.println("For i: " + i + ", j: " + j + ", we have secondMove: " + secondMove[i][j].toString());
+//                if (!secondMove[i][j].equals(Direction.CENTER)) {
+//                    MapLocation loc = rc.getLocation().translate(i-2, j-2);
+//                    int tempD = loc.distanceSquaredTo(dest);
+//                    if (tempD < closestDist) {
+//                        closestDist = tempD;
+//                        optDir = rc.getLocation().directionTo(loc.add(secondMove[i][j].opposite()));
+//                    }
+//                }
+//            }
+//        }
+//        System.out.println("After checking 2 steps, I have: " + Clock.getBytecodesLeft());
+//        return optDir;
+//    }
+//
+//    private boolean canMove(int fi, int fj, int si, int sj) {
+//        return Math.abs(heights[fi][fj]-heights[si][sj]) <= 3;
+//    }
 }
