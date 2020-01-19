@@ -51,7 +51,7 @@ public class Landscaper extends Unit {
             if (rc.getLocation().distanceSquaredTo(HQLocation) > 2 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
                 System.out.println("Case 1");
                 Direction dig = holeTo();
-                System.out.println("After checking hole locations, I have: " + Clock.getBytecodesLeft());
+                System.out.println("before checking hole locations, I have: " + Clock.getBytecodesLeft());
                 fill = null;
                 digLoc = null;
                 checkFillAndDig(dig);
@@ -157,17 +157,32 @@ public class Landscaper extends Unit {
         }
     }
 
-    public Direction holeTo() {
+    public Direction holeTo() throws GameActionException {
         int modX = HQLocation.x % 2;
         int modY = HQLocation.y % 2;
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
-            if (dig.x % 2 == modX && dig.y % 2 == modY) {
+            if (dig.x % 2 == modX && dig.y % 2 == modY && ! rc.senseFlooding(dig) && surroundedLand(dig)) {
                 return dir;
             }
         }
         // this shouldn't happen
         return Direction.CENTER;
+    }
+
+    public boolean surroundedLand(MapLocation pos) throws GameActionException {
+        // return true if surrounded by land
+        for (int i = 0 ; i<8 ; i++){
+            if ( rc.canSenseLocation(pos.add(directions[i])) && rc.senseFlooding(pos.add(directions[i])) ){
+                return false;
+            }
+        }
+        return true;
+    } 
+
+    public boolean isHole(Direction dir){
+        MapLocation pos =rc.getLocation().add(dir);
+        return pos.x%2 == HQLocation.x % 2 && pos.y%2 == HQLocation.y % 2;
     }
 
     // returns the optimal height of a location. Adds 2 to the height if near water.
@@ -178,12 +193,12 @@ public class Landscaper extends Unit {
             MapLocation posWater = loc.add(dir);
             if (rc.canSenseLocation(posWater) && rc.senseFlooding(posWater)) waterHeight = 2;
         }
-        return Math.min(12, (int) (Math.floor(Math.sqrt(distFromFactory)/1.3)) + factoryHeight)+waterHeight;
+        return Math.min(20, (int) (Math.floor(Math.sqrt(distFromFactory)*2)) + factoryHeight)+waterHeight;
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
         for (Direction dir: directions) {
-            if (dig.equals(dir) || dig.equals(dir.opposite()) && ! rc.senseFlooding(rc.getLocation().add(dir))  ) continue;
+            if (dig.equals(dir) || isHole(dir) && ! rc.senseFlooding(rc.getLocation().add(dir))) continue;
             MapLocation fill = rc.getLocation().add(dir);
             boolean bad = false;
             for (int i = 0; i < untouchSize; i++) {
