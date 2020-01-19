@@ -3,6 +3,7 @@ package rush;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static rush.Cast.*;
 import static rush.Util.directions;
@@ -135,39 +136,20 @@ public class Landscaper extends Unit {
             LFdir = null;
             DFdir = null;
             getDirections(robots);
+            Direction digTo = getAttackDig();
             if (rc.getLocation().isAdjacentTo(enemyHQLocation)) {
                 if (LFdir != null) {
                     if (rc.getDirtCarrying() > 0) {
                         if (rc.canDepositDirt(LFdir)) rc.depositDirt(LFdir);
                     } else {
-                        Direction optDir = HQdir.opposite();
-                        for (int i = 0; i < 8; i++) {
-                            if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
-                                optDir = optDir.rotateLeft();
-                                continue;
-                            }
-                            if (rc.canDigDirt(optDir)) {
-                                rc.digDirt(optDir);
-                                break;
-                            } else optDir = optDir.rotateLeft();
-                        }
+                        if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
                     }
                 }
                 else if (HQdir != null) {
                     if (rc.getDirtCarrying() > 0) {
                         if (rc.canDepositDirt(HQdir)) rc.depositDirt(HQdir);
                     } else {
-                        Direction optDir = HQdir.opposite();
-                        for (int i = 0; i < 8; i++) {
-                            if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
-                                optDir = optDir.rotateLeft();
-                                continue;
-                            }
-                            if (rc.canDigDirt(optDir)) {
-                                rc.digDirt(optDir);
-                                break;
-                            } else optDir = optDir.rotateLeft();
-                        }
+                        if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
                     }
                 }
             } else {
@@ -179,38 +161,76 @@ public class Landscaper extends Unit {
                         if (rc.getDirtCarrying() > 0) {
                             if (rc.canDepositDirt(LFdir)) rc.depositDirt(LFdir);
                         } else {
-                            Direction optDir = LFdir.opposite();
-                            for (int i = 0; i < 8; i++) {
-                                if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
-                                    optDir = optDir.rotateLeft();
-                                    continue;
-                                }
-                                if (rc.canDigDirt(optDir)) {
-                                    rc.digDirt(optDir);
-                                    break;
-                                } else optDir = optDir.rotateLeft();
-                            }
+                            if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
                         }
                     }
                     else if (DFdir != null) {
                         if (rc.getDirtCarrying() > 0) {
                             if (rc.canDepositDirt(DFdir)) rc.depositDirt(DFdir);
                         } else {
-                            Direction optDir = DFdir.opposite();
-                            for (int i = 0; i < 8; i++) {
-                                if (optDir.equals(LFdir) || optDir.equals(DFdir) || optDir.equals(HQdir)) {
-                                    optDir = optDir.rotateLeft();
-                                    continue;
-                                }
-                                if (rc.canDigDirt(optDir)) {
-                                    rc.digDirt(optDir);
-                                    break;
-                                } else optDir = optDir.rotateLeft();
-                            }
+                            if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
                         }
                     } else {
-                        // dig down walls i guess
-                        // TODO: implement this part
+                        // check if there's any miners surrounding HQ, go to them, and wait
+                        // if there is none, then just dig down the walls
+                        MapLocation minerSpot = null;
+                        int curDist = 0;
+                        for (Direction dir: directions) {
+                            MapLocation loc = enemyHQLocation.add(dir);
+                            if (rc.canSenseLocation(loc)) {
+                                RobotInfo r = rc.senseRobotAtLocation(loc);
+                                if (r != null && r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam()) {
+                                    // go and try to steal that miners spot!
+                                    int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
+                                    if (minerSpot == null || tempDist < curDist) {
+                                        minerSpot = r.getLocation();
+                                        curDist = tempDist;
+                                    }
+                                }
+                            }
+                        }
+                        if (minerSpot != null) {
+                            // if adjacent to it, just wait there
+                            if (!rc.getLocation().isAdjacentTo(minerSpot)) {
+                                // if not, move there
+                                nav.bugNav(rc, minerSpot);
+                            }
+                        } else {
+                            // if there's no miner spot (probably all landscapers) just try to find other buildings and tear them down
+                            MapLocation landscaperSpot = null;
+                            MapLocation droneSpot = null;
+                            int landDist = 0;
+                            int flyDist = 0;
+                            RobotInfo[] fullRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                            for (RobotInfo r: fullRobots) {
+                                if (r.getType() == RobotType.DESIGN_SCHOOL) {
+                                    int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
+                                    if (landscaperSpot == null || tempDist < landDist) {
+                                        landscaperSpot = r.getLocation();
+                                        landDist = tempDist;
+                                    }
+                                }
+                                if (r.getType() == RobotType.FULFILLMENT_CENTER) {
+                                    int tempDist = rc.getLocation().distanceSquaredTo(r.getLocation());
+                                    if (droneSpot == null || tempDist < flyDist) {
+                                        droneSpot = r.getLocation();
+                                        flyDist = tempDist;
+                                    }
+                                }
+                            }
+                            if (landscaperSpot != null) {
+                                // go to landscaper
+                                nav.bugNav(rc, landscaperSpot);
+                            } else {
+                                // go to drone center
+                                if (droneSpot != null) {
+                                    nav.bugNav(rc, droneSpot);
+                                } else {
+                                    // if nothing's there? Just go to enemy hq i guess
+                                    nav.bugNav(rc, enemyHQLocation);
+                                }
+                            }
+                        }
                     }
                 } else {
                     MapLocation goTo = null;
@@ -451,5 +471,30 @@ public class Landscaper extends Unit {
                 DFdir = rc.getLocation().directionTo(r.getLocation());
             }
         }
+    }
+
+    public Direction getAttackDig() throws GameActionException {
+        // priorities: our design school, our net guns, and opponent miners
+        Direction digDir;
+        RobotInfo[] ourRobots = rc.senseNearbyRobots(2);
+        for (RobotInfo r: ourRobots) {
+            if (r.getType() == RobotType.DESIGN_SCHOOL && r.getTeam() == rc.getTeam()) {
+                digDir = rc.getLocation().directionTo(r.getLocation());
+                if (rc.canDigDirt(digDir)) return digDir;
+            }
+        }
+        for (RobotInfo r: ourRobots) {
+            if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) {
+                digDir = rc.getLocation().directionTo(r.getLocation());
+                if (rc.canDigDirt(digDir)) return digDir;
+            }
+        }
+        for (RobotInfo r: ourRobots) {
+            if (r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam()) {
+                digDir = rc.getLocation().directionTo(r.getLocation());
+                if (rc.canDigDirt(digDir)) return digDir;
+            }
+        }
+        return Direction.CENTER;
     }
 }

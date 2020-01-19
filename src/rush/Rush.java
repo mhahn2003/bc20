@@ -14,6 +14,7 @@ public class Rush {
     private boolean isRush = true;
     private boolean landscaperPlaced = false;
     private boolean netGunPlaced = false;
+    private boolean flyingDetected = false;
     private MapLocation landscaperFactory = null;
     private MapLocation[] suspects;
     private MapLocation currentDest;
@@ -23,6 +24,9 @@ public class Rush {
     private boolean[] visited;
     private ArrayList<MapLocation> emptySpots;
     private int enemyHQHeight;
+    private boolean[][] firstMove;
+    private Direction[][] secondMove;
+    private int[][] heights;
 
     public Rush() {
         isRush = true;
@@ -36,6 +40,9 @@ public class Rush {
 
     public void killEnemy() throws GameActionException {
         if (enemyHQLocation != null) {
+            if (!flyingDetected) {
+                checkFlying();
+            }
             if (rc.canSenseLocation(enemyHQLocation)) enemyHQHeight = rc.senseElevation(enemyHQLocation);
             System.out.println("I see enemy hq!");
             // if enemy HQ location is seen
@@ -101,31 +108,32 @@ public class Rush {
                     if (rc.getLocation().equals(goTo)) {
                         System.out.println("Already there!");
                         // don't move
-                        // build net gun
-                        if (!netGunPlaced) {
-                            System.out.println("I don't have a net gun yet!");
-                            // check if there are any landscapers first before spawning
-                            boolean isLandscaper = false;
-                            RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
-                            for (RobotInfo r: robots) {
-                                if (r.getType() == RobotType.LANDSCAPER) {
-                                    isLandscaper = true;
-                                    break;
-                                }
-                            }
-                            if (isLandscaper && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
-                                Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
-                                for (int i = 0; i < 8; i++) {
-                                    if (rc.canBuildRobot(RobotType.NET_GUN, optDir)) {
-                                        rc.buildRobot(RobotType.NET_GUN, optDir);
-                                        netGunPlaced = true;
-                                    } else optDir = optDir.rotateRight();
-                                }
+                    } else {
+                        // only move if it's adjacent
+                        System.out.println("Going to my location!");
+                        if (goTo.isAdjacentTo(rc.getLocation())) bugNav(goTo);
+                    }
+                    // build net gun if we need to and can
+                    if (!netGunPlaced && flyingDetected) {
+                        System.out.println("I don't have a net gun yet!");
+                        // check if there are any landscapers first before spawning
+                        boolean isLandscaper = false;
+                        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
+                        for (RobotInfo r: robots) {
+                            if (r.getType() == RobotType.LANDSCAPER) {
+                                isLandscaper = true;
+                                break;
                             }
                         }
-                    } else {
-                        System.out.println("Going to my location!");
-                        bugNav(goTo);
+                        if (isLandscaper && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
+                            Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
+                            for (int i = 0; i < 8; i++) {
+                                if (rc.canBuildRobot(RobotType.NET_GUN, optDir)) {
+                                    rc.buildRobot(RobotType.NET_GUN, optDir);
+                                    netGunPlaced = true;
+                                } else optDir = optDir.rotateRight();
+                            }
+                        }
                     }
                 }
             } else {
@@ -173,7 +181,7 @@ public class Rush {
             }
             System.out.println("Going to pos: " + goTo);
             // go to pos
-            bugNav(goTo);
+            bugNavOpt(goTo);
         }
     }
 
@@ -245,11 +253,140 @@ public class Rush {
         }
     }
 
+    // optimized bugnav
+    public void bugNavOpt(MapLocation dest) throws GameActionException {
+        System.out.println("Calling bugNavOpt");
+        System.out.println("I'm at: " + rc.getLocation().toString());
+        if (currentDest == null || !dest.isAdjacentTo(currentDest)) {
+            System.out.println("Resetting");
+            currentDest = dest;
+            lastLoc = null;
+            isBugging = false;
+            closestDist = rc.getLocation().distanceSquaredTo(dest);
+        }
+        Direction optDir = rc.getLocation().directionTo(dest);
+        System.out.println("optimal direction is: " + optDir.toString());
+        if (!isBugging) {
+            System.out.println("Not bugging right now");
+            Direction optimized = getOptimalDirection(dest);
+            System.out.println("optimized direction is: " + optimized.toString());
+            if (optimized.equals(Direction.CENTER)) isBugging = true;
+            else {
+                if (rc.canMove(optimized)) {
+                    System.out.println("I moved!");
+                    lastLoc = rc.getLocation();
+                    rc.move(optimized);
+                }
+            }
+        }
+        if (isBugging) {
+            System.out.println("Bugging right now");
+            for (int i = 0; i < 8; i++) {
+                if (canGo(optDir)) {
+                    System.out.println("I can move to: " + optDir.toString());
+                    lastLoc = rc.getLocation();
+                    rc.move(optDir);
+                    break;
+                } else {
+                    optDir = optDir.rotateRight();
+                }
+            }
+        }
+        if (rc.getLocation().distanceSquaredTo(dest) < closestDist) {
+            System.out.println("I'm closer now, so going back to bugging");
+            closestDist = rc.getLocation().distanceSquaredTo(dest);
+            isBugging = false;
+        }
+    }
+
     private boolean canGo(Direction dir) throws GameActionException {
         MapLocation moveTo = rc.getLocation().add(dir);
         if (!rc.canMove(dir)) return false;
         if (moveTo.equals(lastLoc)) return false;
         if (rc.canSenseLocation(moveTo) && rc.senseFlooding(moveTo)) return false;
         return true;
+    }
+
+    private void checkFlying() {
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        for (RobotInfo r: robots) {
+            if (r.getType() == RobotType.DELIVERY_DRONE || r.getType() == RobotType.FULFILLMENT_CENTER) {
+                flyingDetected = true;
+                break;
+            }
+        }
+    }
+
+    private Direction getOptimalDirection(MapLocation dest) throws GameActionException {
+        firstMove = new boolean[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) firstMove[i][j] = false;
+        }
+        secondMove = new Direction[5][5];
+        heights = new int[5][5];
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                secondMove[i][j] = Direction.CENTER;
+                MapLocation loc = rc.getLocation().translate(i-2, j-2);
+                if (rc.canSenseLocation(loc)) {
+                    RobotInfo r = rc.senseRobotAtLocation(loc);
+                    if (r != null) heights[i][j] = 5000;
+                    else if (rc.senseFlooding(loc)) heights[i][j] = -10000;
+                    else heights[i][j] = rc.senseElevation(loc);
+                } else heights[i][j] = 10000;
+                if (i == 2 && j == 2) heights[i][j] = rc.senseElevation(rc.getLocation());
+                System.out.println("Height at i: " + i + " j: " + j + " is at: " + heights[i][j]);
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (i == 1 && j == 1) continue;
+                firstMove[i][j] = canMove(2, 2, i+1, j+1);
+                if (firstMove[i][j]) {
+                    System.out.println("First move for i: " + i + ", j: " + j);
+                    for (int x = -1; x <= 1; x++) {
+                        for (int y = -1; y <= 1; y++) {
+                            // check the second iteration
+                            if (x == 0 && y == 0) continue;
+                            if (canMove(i+1, j+1, i+1+x, j+1+y)) {
+                                System.out.println("Can move to x: " + x + ", y: " + y);
+                                secondMove[i+1+x][j+1+y] = new Vector(x, y).getDir();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Direction optDir = Direction.CENTER;
+        // first check if we can just get there with only one move
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (firstMove[i][j]) {
+                    MapLocation loc = rc.getLocation().translate(i-1, j-1);
+                    int tempD = loc.distanceSquaredTo(dest);
+                    if (tempD < closestDist) {
+                        closestDist = tempD;
+                        optDir = new Vector(i-1, j-1).getDir();
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < 5; i++) {
+            for (int j = 0; j < 5; j++) {
+                if (!secondMove[i][j].equals(Direction.CENTER)) {
+                    MapLocation loc = rc.getLocation().translate(i-2, j-2);
+                    int tempD = loc.distanceSquaredTo(dest);
+                    if (tempD < closestDist) {
+                        closestDist = tempD;
+                        optDir = rc.getLocation().directionTo(loc.add(secondMove[i][j].opposite()));
+                    }
+                }
+            }
+        }
+        return optDir;
+    }
+
+    private boolean canMove(int fi, int fj, int si, int sj) {
+        return Math.abs(heights[fi][fj]-heights[si][sj]) <= 3;
     }
 }

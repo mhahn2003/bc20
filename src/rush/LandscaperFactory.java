@@ -5,6 +5,9 @@ import battlecode.common.*;
 import static rush.Cast.*;
 
 public class LandscaperFactory extends Building {
+
+    private boolean flyingDetected = false;
+
     public LandscaperFactory(RobotController r) {
         super(r);
 
@@ -29,14 +32,12 @@ public class LandscaperFactory extends Building {
             Direction leftLeft = left.rotateLeft();
             Direction rightRight = right.rotateRight();
             if (netGunPlaced) {
-                tryPlace(optDir);
                 tryPlace(left);
                 tryPlace(right);
                 tryPlace(leftLeft);
                 tryPlace(rightRight);
             }
-            else if (landscapers < 2) {
-                tryPlace(optDir);
+            else if (landscapers < 2 || !flyingDetected) {
                 tryPlace(left);
                 tryPlace(right);
                 tryPlace(leftLeft);
@@ -57,7 +58,7 @@ public class LandscaperFactory extends Building {
                 }
             }
             // spawning the other 3 to complete the turtle as soon as we have enough money
-            if (landscaperCount < 8 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 75) {
+            if (landscaperCount < 10 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 75) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation);
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);
@@ -117,5 +118,15 @@ public class LandscaperFactory extends Building {
 
     public void tryPlace(Direction dir) throws GameActionException {
         if (rc.canBuildRobot(RobotType.LANDSCAPER, dir)) rc.buildRobot(RobotType.LANDSCAPER, dir);
+    }
+
+    private void checkFlying() {
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        for (RobotInfo r: robots) {
+            if (r.getType() == RobotType.DELIVERY_DRONE || r.getType() == RobotType.FULFILLMENT_CENTER) {
+                flyingDetected = true;
+                break;
+            }
+        }
     }
 }
