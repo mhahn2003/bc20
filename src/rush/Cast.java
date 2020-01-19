@@ -439,7 +439,7 @@ public class Cast {
         MapLocation robotLoc = rc.getLocation();
         if (HQLocation == null && rc.getType() == RobotType.HQ) {
             HQLocation = rc.getLocation();
-            infoQ.add(Cast.getMessage(Cast.InformationCategory.HQ, HQLocation));
+            infoQ.add(0, Cast.getMessage(Cast.InformationCategory.HQ, HQLocation));
         }
         RobotInfo[] robots = rc.senseNearbyRobots();
         // location of the bot
@@ -450,7 +450,7 @@ public class Cast {
             saved = false;
             if (enemyHQLocation == null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
                 enemyHQLocation = r.getLocation();
-                infoQ.add(Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
+                infoQ.add(0, Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
                 System.out.println("Found enemy HQ!!!");
                 if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
@@ -531,7 +531,6 @@ public class Cast {
                 if (rc.getLocation().isAdjacentTo(soup)) {
                     // check if robot is on the soup location and there is no soup around him
                     // if there isn't any soup around it then remove
-                    // TODO: reimplement with the new documentation
                     findSoup();
                     if (rc.senseSoup(soup) == 0 && (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc))) {
                         System.out.println("There's no soup!");
@@ -566,6 +565,8 @@ public class Cast {
         } else {
             // TODO: send information that landscapers will send
         }
+        // don't send yet if it's hq
+        if (rc.getRoundNum() == 1 && rc.getType() == RobotType.HQ) return;
         if (rc.getRoundNum() % waitBlock == 1) sendInfo();
     }
 

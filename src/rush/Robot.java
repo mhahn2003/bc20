@@ -131,7 +131,10 @@ public class Robot {
         }
         nav = new Nav();
         cast.getAllInfo();
-        if (rc.getType() == RobotType.HQ) findRotate();
+        if (rc.getType() == RobotType.HQ) {
+            findRotate();
+            cast.sendInfo();
+        }
         exploreLoc();
 
         if (rc.getType() == RobotType.MINER) {
@@ -273,7 +276,7 @@ public class Robot {
             }
         }
         System.out.println("Sent rotation state of: " + rotateState);
-        infoQ.add(getMessage(Cast.InformationCategory.ROTATION, new MapLocation(0, rotateState)));
+        infoQ.add(1, getMessage(Cast.InformationCategory.ROTATION, new MapLocation(0, rotateState)));
     }
 
 
