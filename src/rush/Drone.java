@@ -1,10 +1,11 @@
-package teraform;
+package rush;
 
 import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static teraform.Util.*;
+import static rush.Util.*;
+import static rush.Util.directions;
 
 public class Drone extends Unit {
 
@@ -180,6 +181,8 @@ public class Drone extends Unit {
                             }
                         }
                     } else {
+                        System.out.println("I am adjacent to my self is " + rc.getLocation().isAdjacentTo(rc.getLocation()));
+                        System.out.println("I'm here and distance is: " + rc.getLocation().distanceSquaredTo(HQLocation));
                         // if within distance 13 of HQ first things first move away
                         if (rc.getLocation().distanceSquaredTo(HQLocation) <= 13) {
                             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
