@@ -27,8 +27,10 @@ public class Util {
     // how far can water be away from each other
     static int waterClusterDist = 120;
     // patrol radius
-    static int patrolRadiusMin = 34;
-    static int patrolRadiusMax = 50;
+    static int friendlyPatrolRadiusMin = 13;
+    static int friendlyPatrolRadiusMax = 25;
+    static int enemyPatrolRadiusMin = 34;
+    static int enemyPatrolRadiusMax = 50;
     // help radius (super large for now because helping miners is pretty important)
     static int helpRadius = 800;
     // refinery radius

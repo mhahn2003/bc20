@@ -78,7 +78,7 @@ public class Drone extends Unit {
             }
             if (helpIndex != -1) {
                 // only help people if you don't know enemy hq location or you're not bugging around enemyHQ
-                if (enemyHQLocation == null || rc.getLocation().distanceSquaredTo(enemyHQLocation) > patrolRadiusMax) helpMode = 1;
+                if (enemyHQLocation == null || rc.getLocation().distanceSquaredTo(enemyHQLocation) > enemyPatrolRadiusMax) helpMode = 1;
             }
         }
         // if helping
@@ -237,11 +237,11 @@ public class Drone extends Unit {
                     }
                     break;
                 case PREPARE:
-                    if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= patrolRadiusMax) {
+                    if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= enemyPatrolRadiusMax) {
                         // if too far, move in
                         nav.bugNav(rc, enemyHQLocation);
                         break;
-                    } else if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) < patrolRadiusMin) {
+                    } else if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) < enemyPatrolRadiusMin) {
                         // if too close, move out
                         nav.bugNav(rc, HQLocation);
                     }
@@ -390,7 +390,7 @@ public class Drone extends Unit {
                     }
                     break;
                 case SURRENDER:
-                    if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < patrolRadiusMin) {
+                    if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < enemyPatrolRadiusMin) {
                         // if close, move away
                         nav.bugNav(rc, HQLocation);
                     } else {
@@ -480,9 +480,9 @@ public class Drone extends Unit {
     public void patrolHQ() throws GameActionException {
         Direction rotateDir = rc.getLocation().directionTo(HQLocation);
         int distHQ = rc.getLocation().distanceSquaredTo(HQLocation);
-        if (distHQ < patrolRadiusMin) {
+        if (distHQ < friendlyPatrolRadiusMin) {
             rotateDir = rotateDir.opposite();
-        } else if (distHQ <= patrolRadiusMax) {
+        } else if (distHQ <= friendlyPatrolRadiusMax) {
             rotateDir = rotateDir.rotateLeft();
             rotateDir = rotateDir.rotateLeft();
         }

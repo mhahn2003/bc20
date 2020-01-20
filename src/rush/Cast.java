@@ -626,6 +626,7 @@ public class Cast {
         // try to find soup very close
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
+            if (rc.senseFlooding(check)) continue;
             int checkDist = check.distanceSquaredTo(rc.getLocation());
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))

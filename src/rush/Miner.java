@@ -289,6 +289,7 @@ public class Miner extends Unit {
         System.out.println("Before calling I have: " + Clock.getBytecodesLeft());
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
+            if (rc.senseFlooding(check)) continue;
             int checkDist = check.distanceSquaredTo(rc.getLocation());
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
