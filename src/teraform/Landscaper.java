@@ -112,6 +112,7 @@ public class Landscaper extends Unit {
                     }
                 }
             } else {
+                teraformMode=2;
                 MapLocation hole = closestHole();
                 System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
                 if (hole != null) {
