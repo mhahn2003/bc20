@@ -75,13 +75,15 @@ Our current strategy is to:
 3. Create path objects each with an id(for future modification, need to be set unique in some way), so if nothing happend, just render the path
 4. Install net guns near miners to protect them
 11. Build net guns next to refineries?
-20. Sometimes drones aren't dropping units off? I think it's because it keeps trying to drop in Direction.CENTER
 23. When refinery is destroyed removed from refineryLoc
 26. If a building that we want to bury is in a hole, then we should dig center location
 29. Miners timing out
 30. teraform is broken on these maps: GSF, IsThisProcedural
 31. Miners doing weird thing with refineries? On Soup map and SoupOnTheSide
-32. Look forward a bit more with rush miner (maybe 2/3 steps)
 33. Install unkillable net gun if you can
-34. Do other stuff if everything is blocked
-35. Work on rush defense
+35. Work on rush defense (especially landscapers to stall out until drones can pick landscapers up)
+36. Miners need to try and explore more soup without drone help
+37. Miners having trouble pathing InADitch
+38. Drones in attack mode keep moving into HQ and drop them
+39. If there are more than 3 landscapers, prioritize hq over design school
+40. Rush miner rotates differently based on hq positioning

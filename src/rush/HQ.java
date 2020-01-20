@@ -95,5 +95,12 @@ public class HQ extends Shooter {
                 } else optDir = optDir.rotateLeft();
             }
         }
+        // attack
+        if (rc.getRoundNum() == 1000) {
+            infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, HQLocation));
+        }
+        if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 1100) {
+            infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, HQLocation));
+        }
     }
 }

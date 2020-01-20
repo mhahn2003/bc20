@@ -1,13 +1,10 @@
-package rush;
+package rngform;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
-import static rush.Cast.*;
-import static rush.Util.attackLandscaperCount;
-import static rush.Util.maxDroneCount;
+import static rngform.Cast.getMessage;
+import static rngform.Cast.infoQ;
+import static rngform.Util.*;
 
 public class DroneFactory extends Building {
     public DroneFactory(RobotController r) {
@@ -19,7 +16,7 @@ public class DroneFactory extends Building {
         System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
         Direction optDir = Direction.NORTHEAST;
-        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150+rushCost/2) {
+        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 400){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
@@ -35,7 +32,7 @@ public class DroneFactory extends Building {
             }
         }
         optDir = Direction.NORTHEAST;
-        if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost+rushCost/2 && helpLoc.size() >= 5) {
+        if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost && helpLoc.size() >= 5) {
             for (int i = 0; i < 2; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 350){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
@@ -48,7 +45,7 @@ public class DroneFactory extends Building {
         }
 
         // spam drones
-        if (rc.getTeamSoup() >= 500) {
+        if (rc.getTeamSoup() >= 1000) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
