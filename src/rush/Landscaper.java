@@ -371,7 +371,7 @@ public class Landscaper extends Unit {
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
             if (dig.x % 2 == modX && dig.y % 2 == modY && ! rc.senseFlooding(dig) && surroundedLand(dig)) {
-                return dir;
+                if (rc.canDigDirt(dir)) return dir;
             }
         }
         // this shouldn't happen
