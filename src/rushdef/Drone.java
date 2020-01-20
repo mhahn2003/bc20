@@ -126,6 +126,63 @@ public class Drone extends Unit {
             // if not helping and no one to help
             switch(phase) {
                 case NON_ATTACKING:
+                    if (!isTurtle) {
+                        // check if there are any landscapers nearby that are not in turtle position
+                        if (!rc.isCurrentlyHoldingUnit()) {
+                            RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
+                            RobotInfo landscaper = null;
+                            for (RobotInfo rob : robots) {
+                                if (rob.getType() == RobotType.LANDSCAPER && !rob.getLocation().isAdjacentTo(HQLocation) && (enemyHQLocation == null || rob.getLocation().distanceSquaredTo(enemyHQLocation) <= 18)) {
+                                    landscaper = rob;
+                                    break;
+                                }
+                            }
+                            if (landscaper != null) {
+                                // then go pick it up
+                                if (landscaper.getLocation().isAdjacentTo(rc.getLocation())) {
+                                    if (rc.canPickUpUnit(landscaper.getID())) {
+                                        rc.pickUpUnit(landscaper.getID());
+                                        isLandscaper = true;
+                                    }
+                                } else {
+                                    // navigate to that landscaper
+                                    nav.bugNav(rc, landscaper.getLocation());
+                                }
+                            }
+                            // if there is none then just do normal stuff
+                        } else {
+                            // if it is holding a unit, check if it's a friendly landscaper
+                            if (isLandscaper) {
+                                // if it is, then navigate to HQ and try to find closest empty spot
+                                MapLocation emptySpot = null;
+                                int dist = 100000;
+                                for (Direction dir: directions) {
+                                    MapLocation loc = HQLocation.add(dir);
+                                    if (rc.canSenseLocation(loc)) {
+                                        RobotInfo r = rc.senseRobotAtLocation(loc);
+                                        if (r == null) {
+                                            if (emptySpot == null || rc.getLocation().distanceSquaredTo(loc) < dist)
+                                            emptySpot = loc;
+                                            dist = rc.getLocation().distanceSquaredTo(loc);
+                                        }
+                                    }
+                                }
+                                if (emptySpot != null) {
+                                    // check if adjacent and drop off
+                                    if (rc.getLocation().isAdjacentTo(emptySpot)) {
+                                        Direction drop = rc.getLocation().directionTo(emptySpot);
+                                        if (rc.canDropUnit(drop)) {
+                                            isLandscaper = false;
+                                            rc.dropUnit(drop);
+                                        }
+                                    } else {
+                                        // navigate to there
+                                        nav.bugNav(rc, emptySpot);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     System.out.println("Threats are: " + nav.getThreats().toString());
                     // find opponent units and pick up
                     if (!rc.isCurrentlyHoldingUnit()) {
@@ -199,7 +256,22 @@ public class Drone extends Unit {
                                 nav.bugNav(rc, enemyHQLocation);
                             }
                             nav.searchEnemyHQ(rc);
-                        } else {
+                        }
+                        else if (isLandscaper) {
+                            // if it's a friendly landscaper and the turtle is closed, just drop it off anywhere nonwater
+                            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                            for (int i = 0; i < 8; i++) {
+                                if (rc.canDropUnit(optDir) && !rc.senseFlooding(rc.getLocation().add(optDir))) {
+                                    rc.dropUnit(optDir);
+                                    isLandscaper = false;
+                                    break;
+                                } else {
+                                    optDir = optDir.rotateRight();
+                                }
+                            }
+                        }
+                        else {
+                            // enemy unit
                             MapLocation water = findWater();
                             MapLocation robotLoc = rc.getLocation();
                             if (water != null) {

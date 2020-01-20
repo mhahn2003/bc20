@@ -65,6 +65,8 @@ public class Robot {
     // booleans
     // is drone holding a cow
     static boolean isCow = false;
+    // is drone holding friendly landscaper
+    static boolean isLandscaper = false;
     // explode the unit
     static boolean explode = false;
     // is HQ under attack
