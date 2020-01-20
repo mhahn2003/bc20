@@ -1,12 +1,12 @@
-package rush;
+package nonrush;
 
 import battlecode.common.*;
 
 import java.util.ArrayList;
 
 import static java.lang.Math.min;
-import static rush.Robot.*;
-import static rush.Util.wanderLimit;
+import static nonrush.Robot.*;
+import static nonrush.Util.wanderLimit;
 
 // Navigation class
 public class Nav {

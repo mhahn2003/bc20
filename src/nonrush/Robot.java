@@ -1,4 +1,4 @@
-package rush;
+package nonrush;
 
 import battlecode.common.*;
 
@@ -7,8 +7,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static rush.Cast.*;
-import static rush.Util.directions;
+import static nonrush.Cast.*;
+import static nonrush.Util.directions;
 
 public class Robot {
     static RobotController rc;
@@ -27,8 +27,6 @@ public class Robot {
     static Cast cast = null;
     // turtle object
     static Turtle turtle = null;
-    // rush object (only the first miner will have this)
-    static Rush rush;
     // hole array
     static boolean[][] holeLocation;
 
@@ -75,12 +73,8 @@ public class Robot {
     static boolean isTurtle = false;
     // have drones spawned yet
     static boolean areDrones = false;
-    // are we rushing right now
-    static boolean rushHappening = true;
     // can we build vaporators now
     static boolean isVaporator = false;
-    // rush cost
-    static int rushCost = 250;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
@@ -105,8 +99,6 @@ public class Robot {
     }
 
     public void takeTurn() throws GameActionException {
-        if (rushHappening && rc.getRoundNum() < 250) rushCost = 250;
-        else rushCost = 0;
         turnCount += 1;
         if (turnCount == 1) {
             initialize();
@@ -275,7 +267,7 @@ public class Robot {
             }
         }
         System.out.println("Sent rotation state of: " + rotateState);
-        infoQ.add(1, getMessage(Cast.InformationCategory.ROTATION, new MapLocation(0, rotateState)));
+        infoQ.add(1, getMessage(InformationCategory.ROTATION, new MapLocation(0, rotateState)));
     }
 
 

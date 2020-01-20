@@ -1,9 +1,9 @@
-package rush;
+package nonrush;
 
 import battlecode.common.*;
 
-import static rush.Cast.*;
-import static rush.Util.directions;
+import static nonrush.Cast.*;
+import static nonrush.Util.directions;
 
 public class HQ extends Shooter {
     static int numMiners = 0;
@@ -41,7 +41,7 @@ public class HQ extends Shooter {
             if (landscapers == space) {
                 // broadcast turtle
                 System.out.println("turtle!!!!!!!!!!");
-                infoQ.add(getMessage(Cast.InformationCategory.TURTLE, HQLocation));
+                infoQ.add(getMessage(InformationCategory.TURTLE, HQLocation));
                 isTurtle = true;
             }
             if (landscapers == space-1) oneSpace = true;
@@ -66,7 +66,7 @@ public class HQ extends Shooter {
         if (!isUnderAttack) {
             for (RobotInfo r : robots) {
                 if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER) && r.getTeam() != rc.getTeam()) {
-                    infoQ.add(Cast.getMessage(Cast.InformationCategory.DEFENSE, HQLocation));
+                    infoQ.add(Cast.getMessage(InformationCategory.DEFENSE, HQLocation));
                     isUnderAttack = true;
                     break;
                 }
@@ -80,7 +80,7 @@ public class HQ extends Shooter {
                 }
             }
             if (!isUnderAttack) {
-                infoQ.add(Cast.getMessage(Cast.InformationCategory.SURRENDER, HQLocation));
+                infoQ.add(Cast.getMessage(InformationCategory.SURRENDER, HQLocation));
             }
         }
         // build all the miners we can get in the first few turns
@@ -105,10 +105,10 @@ public class HQ extends Shooter {
         }
         // attack
         if (rc.getRoundNum() == 1000) {
-            infoQ.add(getMessage(Cast.InformationCategory.PREPARE, HQLocation));
+            infoQ.add(getMessage(InformationCategory.PREPARE, HQLocation));
         }
         if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 1100) {
-            infoQ.add(getMessage(Cast.InformationCategory.ATTACK, HQLocation));
+            infoQ.add(getMessage(InformationCategory.ATTACK, HQLocation));
         }
         if (rc.getRoundNum() == 1150) {
             infoQ.add(getMessage(InformationCategory.SURRENDER, HQLocation));

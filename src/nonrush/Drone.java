@@ -1,11 +1,10 @@
-package rush;
+package nonrush;
 
 import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static rush.Util.*;
-import static rush.Util.directions;
+import static nonrush.Util.*;
 
 public class Drone extends Unit {
 
