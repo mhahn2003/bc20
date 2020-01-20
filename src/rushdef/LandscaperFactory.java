@@ -3,6 +3,7 @@ package rushdef;
 import battlecode.common.*;
 
 import static rushdef.Cast.*;
+import static rushdef.Util.directions;
 
 public class LandscaperFactory extends Building {
 
@@ -56,6 +57,34 @@ public class LandscaperFactory extends Building {
                 factoryLocation = rc.getLocation();
                 infoQ.add(Cast.getMessage(InformationCategory.FACTORY, factoryLocation));
             }
+            // if it's going to drown soon, mass spawn landscapers without caring for resources
+            int minElevation = rc.senseElevation(rc.getLocation());
+            for (Direction dir: directions) {
+                MapLocation loc = rc.getLocation().add(dir);
+                if (rc.canSenseLocation(loc)) {
+                    minElevation = Math.min(minElevation, rc.senseElevation(loc));
+                }
+            }
+            minElevation = Math.max(1, minElevation);
+            if (landscaperCount < 16 && rc.getRoundNum() > Util.floodRound(minElevation)-40) {
+                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                for (int i = 0; i < 8; i++) {
+                    MapLocation loc = rc.getLocation().add(optDir);
+                    if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
+                        optDir = optDir.rotateRight();
+                        continue;
+                    }
+                    if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                        rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                        landscaperCount++;
+                        if (landscaperCount == 12) {
+                            infoQ.add(getMessage(InformationCategory.VAPORATOR, rc.getLocation()));
+                        }
+                        break;
+                    }
+                    optDir = optDir.rotateRight();
+                }
+            }
             // spawning 6 turtle landscapers with a bit of leeway for refineries
             if (!isTurtle && landscaperCount < 6 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 150 + rushCost) {
                 System.out.println("first condition");
@@ -86,10 +115,6 @@ public class LandscaperFactory extends Building {
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 for (int i = 0; i < 8; i++) {
                     MapLocation loc = rc.getLocation().add(optDir);
-                    if (loc.x % 3 == HQLocation.x % 3 && loc.y % 3 == HQLocation.y % 3) {
-                        optDir = optDir.rotateRight();
-                        continue;
-                    }
                     if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
                         optDir = optDir.rotateRight();
                         continue;
@@ -109,10 +134,6 @@ public class LandscaperFactory extends Building {
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 for (int i = 0; i < 8; i++) {
                     MapLocation loc = rc.getLocation().add(optDir);
-                    if (loc.x % 3 == HQLocation.x % 3 && loc.y % 3 == HQLocation.y % 3) {
-                        optDir = optDir.rotateRight();
-                        continue;
-                    }
                     if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
                         optDir = optDir.rotateRight();
                         continue;

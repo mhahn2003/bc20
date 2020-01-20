@@ -387,7 +387,7 @@ public class Landscaper extends Unit {
                         if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
                         } else {
-                            Direction fill = rc.getLocation().directionTo(HQLocation);
+                            Direction fill = lowestElevation();
                             if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
                         }
                     } else {
@@ -695,5 +695,23 @@ public class Landscaper extends Unit {
             }
         }
         return holeTo();
+    }
+
+    public Direction lowestElevation() throws GameActionException {
+        int low = 100000;
+        Direction lowest = rc.getLocation().directionTo(HQLocation);
+        for (Direction dir: directions) {
+            MapLocation fill = rc.getLocation().add(dir);
+            if (fill.isAdjacentTo(HQLocation)) {
+                if (rc.canSenseLocation(fill)) {
+                    int el = rc.senseElevation(fill);
+                    if (el < low) {
+                        low = el;
+                        lowest = dir;
+                    }
+                }
+            }
+        }
+        return lowest;
     }
 }
