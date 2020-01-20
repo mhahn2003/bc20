@@ -12,8 +12,10 @@ public class Landscaper extends Unit {
     private ArrayList<MapLocation> visitedHole;
     private Vector[] untouchable;
     private Vector[] reinforce;
+    private Vector[] digging;
     private MapLocation[] untouchableLoc;
     private MapLocation[] reinforceLoc;
+    private MapLocation[] diggingLoc;
     private int untouchSize = 12;
     private int reinforceSize = 8;
     private Direction fill;
@@ -37,6 +39,7 @@ public class Landscaper extends Unit {
         super.initialize();
         untouchable = new Vector[]{new Vector(1, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-1, 0), new Vector(-1, 1), new Vector(0, 1), new Vector(1, 1), new Vector(0, 2), new Vector(2, 0), new Vector(0, -2), new Vector(-2, 0)};
         reinforce = new Vector[]{new Vector(1, 2), new Vector(2, 1), new Vector(-1, 2), new Vector(2, -1), new Vector(1, -2), new Vector(-2, 1), new Vector(-1, -2), new Vector(-2, -1)};
+        digging = new Vector[]{new Vector(0, 2), new Vector(0, 2), new Vector(0, -2), new Vector(-2, 0)};
         untouchableLoc = new MapLocation[untouchSize];
         for (int i = 0; i < untouchSize; i++) {
             untouchableLoc[i] = untouchable[i].addWith(HQLocation);
@@ -44,6 +47,10 @@ public class Landscaper extends Unit {
         reinforceLoc = new MapLocation[reinforceSize];
         for (int i = 0; i < reinforceSize; i++) {
             reinforceLoc[i] = reinforce[i].addWith(HQLocation);
+        }
+        diggingLoc = new MapLocation[4];
+        for (int i = 0; i < 4; i++) {
+            diggingLoc[i] = digging[i].addWith(HQLocation);
         }
     }
 
@@ -373,8 +380,8 @@ public class Landscaper extends Unit {
             // reinforce the turtle
             for (MapLocation loc: reinforceLoc) {
                 if (rc.getLocation().equals(loc)) {
-                    Direction dig = holeTo();
-                    RobotInfo rob = rc.senseRobotAtLocation(loc);
+                    Direction dig = digReinforce();
+                    RobotInfo rob = rc.senseRobotAtLocation(rc.getLocation().add(dig));
                     if (rc.senseElevation(rc.getLocation()) >= 20) {
                         // refinforce turtle
                         if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
@@ -676,5 +683,17 @@ public class Landscaper extends Unit {
             }
         }
         return elevate;
+    }
+
+    public Direction digReinforce() throws GameActionException {
+        for (Direction dir: directions) {
+            MapLocation dig = rc.getLocation().add(dir);
+            for (MapLocation digLoc: diggingLoc) {
+                if (dig.equals(digLoc)) {
+                    if (rc.canDigDirt(dir)) return dir;
+                }
+            }
+        }
+        return holeTo();
     }
 }

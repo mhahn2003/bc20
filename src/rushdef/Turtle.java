@@ -16,8 +16,7 @@ public class Turtle {
     // TODO: implement state 3
     private int rotateState;
     private MapLocation HQLocation;
-    private MapLocation netGunCenter;
-    private ArrayList<MapLocation> digLocation;
+    public ArrayList<MapLocation> digLocation;
     private Vector[] outerLoc;
     private Vector[] innerLoc;
 
@@ -25,7 +24,6 @@ public class Turtle {
     public Turtle(RobotController rc, MapLocation HQLocation, int rotateState) throws GameActionException {
         this.HQLocation = HQLocation;
         this.rotateState = rotateState;
-        netGunCenter = new Vector(6, 6).rotate(rotateState).addWith(HQLocation);
         // TODO: fix this
 //        if (Vector.vectorSubtract(rc.getLocation(), HQLocation).equals(new Vector(-1, 1))) landscaperState = 3;
         outerLoc = new Vector[]{new Vector(2, 2), new Vector(2, 1), new Vector(2, 0), new Vector(2, -1), new Vector(2, -2), new Vector(1, -2), new Vector(0, -2), new Vector(-1, -2), new Vector(1, 2), new Vector(0, 2), new Vector(-1, 2), new Vector(-2, 2), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1)};
