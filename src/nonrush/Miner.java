@@ -17,22 +17,6 @@ public class Miner extends Unit {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        if (isAttacker) {
-            if (rc.getRoundNum() > 180 && !Rush.engaged() && Rush.getRush()) {
-                rushHappening = false;
-                Rush.turnOff();
-                infoQ.add(getMessage(InformationCategory.RUSH, HQLocation));
-                // call off the rush
-            }
-            System.out.println("I'm a rusher!");
-            if (Rush.getRush()) {
-                System.out.println("Rushing enemy!");
-                Rush.killEnemy();
-                return;
-            }
-            else if (rc.getLocation().distanceSquaredTo(HQLocation) > 100) nav.bugNav(rc, HQLocation);
-        }
-
         // check if it's in help mode and it moved so it can go free
         if (helpMode == 1) {
             if (nav.outOfDrone(rc)) helpMode = 0;
@@ -77,7 +61,7 @@ public class Miner extends Unit {
                 if (factoryLocation == null && isBuilder) {
                     System.out.println("rotateState is: " + rotateState);
                     System.out.println("LFLoc is: " + LFLoc.toString());
-                    if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost + rushCost) {
+                    if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                         for (Direction dir : directions) {
                             MapLocation loc = rc.getLocation().add(dir);
                             if (loc.equals(LFLoc)) {
@@ -114,7 +98,7 @@ public class Miner extends Unit {
                 }
                 // build drone factory
                 if (droneFactoryLocation == null && isBuilder) {
-                    if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + 60 + rushCost) {
+                    if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + 60) {
                         for (Direction dir : directions) {
                             MapLocation loc = rc.getLocation().add(dir);
                             if (loc.distanceSquaredTo(HQLocation) > 20) {
@@ -244,7 +228,7 @@ public class Miner extends Unit {
                     } else {
                         if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                             // just build a refinery?
-                            if (rc.getTeamSoup() >= RobotType.REFINERY.cost + rushCost) {
+                            if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
                                 Direction optDir = rc.getLocation().directionTo(referencePoint);
                                 for (int i = 0; i < 8; i++) {
                                     MapLocation robotLoc = rc.getLocation();

@@ -16,7 +16,7 @@ public class Cast {
     public static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 20;
+    private static int numCase = 19;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -57,8 +57,6 @@ public class Cast {
         ROTATION,
         // FIRST DRONE SPAWN
         DRONE_SPAWN,
-        // RUSHING
-        RUSH,
         // VAPORATOR
         VAPORATOR,
         // DRONE FACTORY
@@ -120,17 +118,14 @@ public class Cast {
             case DRONE_SPAWN:
                 message += 17;
                 break;
-            case RUSH:
+            case VAPORATOR:
                 message += 18;
                 break;
-            case VAPORATOR:
+            case DRONE_FACTORY:
                 message += 19;
                 break;
-            case DRONE_FACTORY:
-                message += 20;
-                break;
             default:
-                message += 21;
+                message += 20;
                 break;
         }
         message=addCoord(message, coord);
@@ -175,9 +170,8 @@ public class Cast {
             case 15: return InformationCategory.TURTLE;
             case 16: return InformationCategory.ROTATION;
             case 17: return InformationCategory.DRONE_SPAWN;
-            case 18: return InformationCategory.RUSH;
-            case 19: return InformationCategory.VAPORATOR;
-            case 20: return InformationCategory.DRONE_FACTORY;
+            case 18: return InformationCategory.VAPORATOR;
+            case 19: return InformationCategory.DRONE_FACTORY;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -434,10 +428,6 @@ public class Cast {
                                 break;
                             case DRONE_SPAWN:
                                 areDrones = true;
-                                break;
-                            case RUSH:
-                                if (rushHappening) rushHappening = false;
-                                else rushHappening = true;
                                 break;
                             case VAPORATOR:
                                 isVaporator = true;

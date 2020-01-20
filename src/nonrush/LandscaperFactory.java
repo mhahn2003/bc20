@@ -25,6 +25,7 @@ public class LandscaperFactory extends Building {
             for (RobotInfo r: robots) {
                 if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) netGunPlaced = true;
             }
+            checkFlying();
             Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
             Direction left = optDir.rotateLeft();
             Direction right = optDir.rotateRight();
@@ -57,7 +58,7 @@ public class LandscaperFactory extends Building {
                 infoQ.add(Cast.getMessage(InformationCategory.FACTORY, factoryLocation));
             }
             // spawning 5 turtle landscapers with a bit of leeway for refineries
-            if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 150 + rushCost) {
+            if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 150) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation);
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);
@@ -73,7 +74,7 @@ public class LandscaperFactory extends Building {
                 }
             }
             // spawn the teraforming landscapers
-            if (landscaperCount < 15 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300 + rushCost) {
+            if (landscaperCount < 15 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 for (int i = 0; i < 8; i++) {
                     MapLocation loc = rc.getLocation().add(optDir);
@@ -103,7 +104,7 @@ public class LandscaperFactory extends Building {
                     landscaperCount++;
                 }
             }
-            if (landscaperCount < 25 && rc.getTeamSoup() >= 550 + rushCost) {
+            if (landscaperCount < 25 && rc.getTeamSoup() >= 550) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 for (int i = 0; i < 3; i++) {
                     MapLocation loc = rc.getLocation().add(optDir);
