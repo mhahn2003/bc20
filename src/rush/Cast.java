@@ -16,7 +16,7 @@ public class Cast {
     public static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 18;
+    private static int numCase = 19;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -59,6 +59,8 @@ public class Cast {
         DRONE_SPAWN,
         // RUSHING
         RUSH,
+        // VAPORATOR
+        VAPORATOR,
         // enemy?
         OTHER
     }
@@ -119,8 +121,11 @@ public class Cast {
             case RUSH:
                 message += 18;
                 break;
-            default:
+            case VAPORATOR:
                 message += 19;
+                break;
+            default:
+                message += 20;
                 break;
         }
         message=addCoord(message, coord);
@@ -166,6 +171,7 @@ public class Cast {
             case 16: return InformationCategory.ROTATION;
             case 17: return InformationCategory.DRONE_SPAWN;
             case 18: return InformationCategory.RUSH;
+            case 19: return InformationCategory.VAPORATOR;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -426,6 +432,9 @@ public class Cast {
                             case RUSH:
                                 if (rushHappening) rushHappening = false;
                                 else rushHappening = true;
+                                break;
+                            case VAPORATOR:
+                                isVaporator = true;
                                 break;
                         }
                     }

@@ -73,7 +73,7 @@ public class LandscaperFactory extends Building {
                 }
             }
             // spawn the teraforming landscapers
-            if (landscaperCount < 12 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300 + rushCost) {
+            if (landscaperCount < 15 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 300 + rushCost) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 for (int i = 0; i < 8; i++) {
                     MapLocation loc = rc.getLocation().add(optDir);
@@ -88,6 +88,9 @@ public class LandscaperFactory extends Building {
                     if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                         rc.buildRobot(RobotType.LANDSCAPER, optDir);
                         landscaperCount++;
+                        if (landscaperCount == 12) {
+                            infoQ.add(getMessage(InformationCategory.VAPORATOR, rc.getLocation()));
+                        }
                         break;
                     }
                     optDir = optDir.rotateRight();
@@ -100,7 +103,7 @@ public class LandscaperFactory extends Building {
                     landscaperCount++;
                 }
             }
-            if (landscaperCount < 25 && rc.getTeamSoup() >= 900) {
+            if (landscaperCount < 25 && rc.getTeamSoup() >= 550 + rushCost) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                 for (int i = 0; i < 3; i++) {
                     MapLocation loc = rc.getLocation().add(optDir);

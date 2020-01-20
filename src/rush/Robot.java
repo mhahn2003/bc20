@@ -77,6 +77,8 @@ public class Robot {
     static boolean areDrones = false;
     // are we rushing right now
     static boolean rushHappening = true;
+    // can we build vaporators now
+    static boolean isVaporator = false;
     // rush cost
     static int rushCost = 250;
 
