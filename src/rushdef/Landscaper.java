@@ -374,16 +374,17 @@ public class Landscaper extends Unit {
             for (MapLocation loc: reinforceLoc) {
                 if (rc.getLocation().equals(loc)) {
                     Direction dig = holeTo();
+                    RobotInfo rob = rc.senseRobotAtLocation(loc);
                     if (rc.senseElevation(rc.getLocation()) >= 20) {
                         // refinforce turtle
-                        if (rc.getDirtCarrying() == 0) {
+                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
                         } else {
                             Direction fill = rc.getLocation().directionTo(HQLocation);
                             if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
                         }
                     } else {
-                        if (rc.getDirtCarrying() == 0) {
+                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
                         } else {
                             if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
