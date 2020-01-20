@@ -84,4 +84,5 @@ Our current strategy is to:
 35. Work on rush defense
 36. Make netgun prioritize drones carry units -> drones that are closer
 37. Implement proper bugnav with following wall
-38. Make two variables: Rush initiated and rush cancel
+38. Fix miner soup bug
+39. Make drones grab landscapers and place them on turtle if not complete
