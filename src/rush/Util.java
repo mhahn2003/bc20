@@ -53,11 +53,40 @@ public class Util {
     // when to explode drone
     static int explodeThresh = 10;
 
-    public int floodRound(int level) {
-        if (level == 1) return 230;
-        if (level == 2) return 420;
-        if (level == 3) return 620;
-        if (level == 4) return 880;
-        return 0;
+    public int floodRound (int elevation) {
+        //returns the round it gets flooded the given elevation. Last one is for 30
+        switch(elevation) {
+            case 0: return 0;
+            case 1: return 256;
+            case 2: return 464;
+            case 3: return 677;
+            case 4: return 931;
+            case 5: return 1210;
+            case 6: return 1413;
+            case 7: return 1546;
+            case 8: return 1640;
+            case 9: return 1713;
+            case 10: return 1771;
+            case 11: return 1819;
+            case 12: return 1861;
+            case 13: return 1893;
+            case 14: return 1929;
+            case 15: return 1957;
+            case 16: return 1983;
+            case 17: return 2007;
+            case 18: return 2028;
+            case 19: return 2048;
+            case 20: return 2067;
+            case 21: return 2084;
+            case 22: return 2100;
+            case 23: return 2115;
+            case 24: return 5459;
+            case 25: return 2143;
+            case 26: return 2155;
+            case 27: return 2168;
+            case 28: return 2179;
+            case 29: return 2190;
+            default: return 0;
+        }
     }
 }
