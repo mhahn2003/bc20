@@ -163,7 +163,7 @@ public class Nav {
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
         if (!free && (moveTo.equals(lastLoc) || moveTo.equals(lastLastLoc))) return false;
-        if (!free) {
+        if (!free && isTurtle) {
             for (MapLocation loc: untouchableLoc) {
                 if (moveTo.equals(loc)) return false;
             }
@@ -310,6 +310,7 @@ public class Nav {
     public void nextExplore() throws GameActionException {
         int closestDist = 1000000;
         for (int i = 0; i < 8; i++) {
+            System.out.println("For i: " + i + " we have: " + suspectsVisited.get(suspects.get(i)));
             if (!suspectsVisited.get(suspects.get(i))) {
                 if (rc.getLocation().distanceSquaredTo(suspects.get(i)) < closestDist) {
                     closestDist = rc.getLocation().distanceSquaredTo(suspects.get(i));
@@ -319,4 +320,5 @@ public class Nav {
         }
         if (closestDist == 1000000) exploreTo = enemyHQLocation;
     }
+
 }

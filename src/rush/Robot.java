@@ -105,7 +105,7 @@ public class Robot {
     }
 
     public void takeTurn() throws GameActionException {
-        if (rushHappening) rushCost = 250;
+        if (rushHappening && rc.getRoundNum() < 250) rushCost = 250;
         else rushCost = 0;
         turnCount += 1;
         if (turnCount == 1) {

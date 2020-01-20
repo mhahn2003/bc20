@@ -16,7 +16,7 @@ public class Cast {
     public static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 19;
+    private static int numCase = 20;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -61,6 +61,8 @@ public class Cast {
         RUSH,
         // VAPORATOR
         VAPORATOR,
+        // DRONE FACTORY
+        DRONE_FACTORY,
         // enemy?
         OTHER
     }
@@ -124,8 +126,11 @@ public class Cast {
             case VAPORATOR:
                 message += 19;
                 break;
-            default:
+            case DRONE_FACTORY:
                 message += 20;
+                break;
+            default:
+                message += 21;
                 break;
         }
         message=addCoord(message, coord);
@@ -172,6 +177,7 @@ public class Cast {
             case 17: return InformationCategory.DRONE_SPAWN;
             case 18: return InformationCategory.RUSH;
             case 19: return InformationCategory.VAPORATOR;
+            case 20: return InformationCategory.DRONE_FACTORY;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -436,6 +442,9 @@ public class Cast {
                             case VAPORATOR:
                                 isVaporator = true;
                                 break;
+                            case DRONE_FACTORY:
+                                droneFactoryLocation = loc;
+                                break;
                         }
                     }
                 }
@@ -487,7 +496,8 @@ public class Cast {
                 }
             }
         }
-        if (!isAttacker && !(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
+        if (!(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
+            System.out.println("I'm a miner and I'm getting to here");
             boolean doAdd;
             soupLoc = null;
             for (int x = -maxV; x <= maxV; x += 2) {
@@ -549,10 +559,12 @@ public class Cast {
                     break;
                 }
             }
+            System.out.println("Still getting here");
             if (suspects != null) {
                 for (MapLocation l : suspects) {
-                    if (suspectsVisited.get(l)) {
-                        if (rc.getLocation().equals(l)) {
+                    if (!suspectsVisited.get(l)) {
+                        if (rc.getLocation().isAdjacentTo(l)) {
+                            System.out.println("I've already visited this place!");
                             suspectsVisited.replace(l, true);
                             infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                         } else if (rc.canSenseLocation(l)) {
@@ -560,9 +572,11 @@ public class Cast {
                             if (r != null) {
                                 RobotType t = r.getType();
                                 if (r.getTeam() != rc.getTeam() && (t == RobotType.HQ || t == RobotType.NET_GUN)) {
+                                    System.out.println("There's a thing here!");
                                     suspectsVisited.replace(l, true);
                                     infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                                 } else if (rc.getLocation().distanceSquaredTo(l) < 9) {
+                                    System.out.println("There's a thing here!");
                                     suspectsVisited.replace(l, true);
                                     infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                                 }

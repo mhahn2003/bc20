@@ -93,8 +93,8 @@ public class Miner extends Unit {
                 }
                 // TODO: if buildings are destroyed then rebuild
                 // build refinery
-                if (refineryLocation.isEmpty() && isBuilder) {
-                    if (rc.getTeamSoup() >= RobotType.REFINERY.cost + rushCost) {
+                if (refineryLocation.isEmpty()) {
+                    if (rc.getRoundNum() > 250 && rc.getTeamSoup() >= RobotType.REFINERY.cost) {
                         for (Direction dir : directions) {
                             MapLocation loc = rc.getLocation().add(dir);
                             if (loc.distanceSquaredTo(HQLocation) > 16) {
@@ -124,11 +124,28 @@ public class Miner extends Unit {
                                         continue;
                                     rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
                                     droneFactoryLocation = rc.getLocation().add(dir);
+                                    infoQ.add(getMessage(InformationCategory.DRONE_FACTORY, droneFactoryLocation));
                                     break;
                                 }
                             }
                         }
                         if (factoryLocation != null) nav.bugNav(rc, factoryLocation);
+                    }
+                }
+                if (rc.getRoundNum() > 300 && droneFactoryLocation == null && isTurtle) {
+                    if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+60) {
+                        for (Direction dir : directions) {
+                            MapLocation loc = rc.getLocation().add(dir);
+                            if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
+                                MapLocation placeLoc = rc.getLocation().add(dir);
+                                if (placeLoc.x % 2 == HQLocation.x % 2 && placeLoc.y % 2 == HQLocation.y % 2)
+                                    continue;
+                                rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
+                                droneFactoryLocation = rc.getLocation().add(dir);
+                                infoQ.add(getMessage(InformationCategory.DRONE_FACTORY, droneFactoryLocation));
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -302,10 +319,15 @@ public class Miner extends Unit {
                             }
                         }
                     } else {
-                        System.out.println("Going to enemyHQ!");
+                        System.out.println("Exploring!");
                         // check if getting close to flooded
                         // scout for soup
-                        nav.searchEnemyHQ(rc);
+                        // explore
+                        if (exploreTo == null || suspectsVisited.get(exploreTo)) {
+                            nav.nextExplore();
+                        }
+                        System.out.println("I'm exploring to " + exploreTo.toString());
+                        nav.bugNav(rc, exploreTo);
                     }
                 }
             }

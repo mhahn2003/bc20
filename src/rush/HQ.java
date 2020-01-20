@@ -24,10 +24,10 @@ public class HQ extends Shooter {
         else if (HQLocation.x == 0 || HQLocation.x == rc.getMapWidth()-1 || HQLocation.y == 0 || HQLocation.y == rc.getMapHeight()-1) space = 5;
         else if (HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2 || HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2) space = 7;
         else space = 8;
+        int landscapers = 0;
         System.out.println("space is: " + space);
         if (!isTurtle) {
             System.out.println("Checking turtle");
-            int landscapers = 0;
             for (Direction dir : directions) {
                 MapLocation loc = rc.getLocation().add(dir);
                 if (rc.canSenseLocation(loc)) {
@@ -84,10 +84,18 @@ public class HQ extends Shooter {
             }
         }
         // build all the miners we can get in the first few turns
-        // maximum of 10 miners at 250th round
-        // TODO: spawn appropriate number of miners according to length of soupLoc
-        Direction optDir = Direction.NORTH;
-        if (!oneSpace && !isTurtle && minerCount < Math.min(4+rc.getRoundNum()/100, 7) && (minerCount < 4 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
+        MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
+        Direction optDir = rc.getLocation().directionTo(center);
+        if (minerCount < 3) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
+                    rc.buildRobot(RobotType.MINER, optDir);
+                    minerCount++;
+                } else optDir = optDir.rotateLeft();
+            }
+        }
+        optDir = rc.getLocation().directionTo(center);
+        if (minerCount < 8 && !oneSpace && !isTurtle && space-landscapers < 5 && rc.getRoundNum() > 250) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
