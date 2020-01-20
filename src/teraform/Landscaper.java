@@ -36,6 +36,9 @@ public class Landscaper extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         if (teraformMode == 0) {
+            if (rc.getLocation().isAdjacentTo(HQLocation)){
+                teraformMode=2;
+            }
             System.out.println("Initially I have: " + Clock.getBytecodesLeft());
             if (teraformLoc[0] == null) {
                 System.out.println("My teraformLoc is: null");
@@ -112,7 +115,6 @@ public class Landscaper extends Unit {
                     }
                 }
             } else {
-                teraformMode=2;
                 MapLocation hole = closestHole();
                 System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
                 if (hole != null) {
