@@ -16,7 +16,7 @@ public class Rush {
     static private boolean netGunPlaced = false;
     static private boolean flyingDetected = false;
     static private MapLocation landscaperFactory = null;
-    static private MapLocation[] suspects = new MapLocation[]{verRef(HQLocation), horVerRef(HQLocation), horRef(HQLocation)};
+    static private MapLocation[] suspects = new MapLocation[]{horRef(HQLocation), horVerRef(HQLocation), verRef(HQLocation)};
     static private MapLocation currentDest;
     static private MapLocation lastLoc;
     static private boolean isBugging;
@@ -165,14 +165,15 @@ public class Rush {
             }
             // go to the closest location
             MapLocation goTo = null;
-            int curDist = 0;
-            for (MapLocation loc: nonVisited) {
-                int tempD = rc.getLocation().distanceSquaredTo(loc);
-                if (goTo == null || tempD < curDist) {
-                    goTo = loc;
-                    curDist = tempD;
-                }
-            }
+            goTo = nonVisited.get(0);
+//            int curDist = 0;
+//            for (MapLocation loc: nonVisited) {
+//                int tempD = rc.getLocation().distanceSquaredTo(loc);
+//                if (goTo == null || tempD < curDist) {
+//                    goTo = loc;
+//                    curDist = tempD;
+//                }
+//            }
             System.out.println("Going to pos: " + goTo);
             // go to pos
             if (rc.isReady()) bugNav(goTo);
