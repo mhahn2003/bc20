@@ -324,8 +324,8 @@ public class Rush {
         }
         secondMove = new Direction[5][5];
         heights = new int[5][5];
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
+        for (int i = 4; i >= 0; i--) {
+            for (int j = 4; j >= 0; j--) {
                 secondMove[i][j] = Direction.CENTER;
                 MapLocation loc = rc.getLocation().translate(i-2, j-2);
                 if (rc.canSenseLocation(loc)) {
@@ -338,12 +338,12 @@ public class Rush {
                 System.out.println("Height at i: " + i + " j: " + j + " is at: " + heights[i][j]);
             }
         }
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (int i = 2; i >= 0; i--) {
+            for (int j = 2; j >= 0; j--) {
                 if (i == 1 && j == 1) continue;
                 firstMove[i][j] = canMove(2, 2, i+1, j+1);
                 if (firstMove[i][j]) {
-                    System.out.println("First move for i: " + i + ", j: " + j);
+                    System.out.println("First move for i: " + (i-1) + ", j: " + (j-1));
                     for (int x = -1; x <= 1; x++) {
                         for (int y = -1; y <= 1; y++) {
                             // check the second iteration
@@ -359,8 +359,8 @@ public class Rush {
         }
         Direction optDir = Direction.CENTER;
         // first check if we can just get there with only one move
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (int i = 2; i >= 0; i--) {
+            for (int j = 2; j >= 0; j--) {
                 if (firstMove[i][j]) {
                     MapLocation loc = rc.getLocation().translate(i-1, j-1);
                     int tempD = loc.distanceSquaredTo(dest);
@@ -371,8 +371,8 @@ public class Rush {
                 }
             }
         }
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
+        for (int i = 4; i >= 0; i--) {
+            for (int j = 4; j >= 0; j--) {
                 if (!secondMove[i][j].equals(Direction.CENTER)) {
                     MapLocation loc = rc.getLocation().translate(i-2, j-2);
                     int tempD = loc.distanceSquaredTo(dest);
