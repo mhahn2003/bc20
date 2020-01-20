@@ -370,12 +370,20 @@ public class Landscaper extends Unit {
     public Direction holeTo() throws GameActionException {
         int modX = HQLocation.x % 2;
         int modY = HQLocation.y % 2;
+        int deepest=2000000000;
+        Direction deepest_direction=Direction.CENTER;
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
-            if (dig.x % 2 == modX && dig.y % 2 == modY && ! rc.senseFlooding(dig) && surroundedLand(dig)) {
-                if (rc.canDigDirt(dir)) return dir;
+            if (dig.x % 2 == modX && dig.y % 2 == modY && rc.canDigDirt(dir)) {
+                if (!rc.senseFlooding(dig) && surroundedLand(dig)) return dir;
+                if (rc.senseElevation(dig)<deepest){
+                    deepest=rc.senseElevation(dig);
+                    deepest_direction=dir;
+                }
             }
         }
+        if (deepest<2000000000 && deepest_direction!=Direction.CENTER) return deepest_direction;
+        System.out.println("ill be a grave bot");
         // this shouldn't happen
         return Direction.CENTER;
     }
