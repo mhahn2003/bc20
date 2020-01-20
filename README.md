@@ -78,11 +78,10 @@ Our current strategy is to:
 23. When refinery is destroyed removed from refineryLoc
 26. If a building that we want to bury is in a hole, then we should dig center location
 29. Miners timing out
-30. teraform is broken on these maps: GSF, IsThisProcedural
 31. Miners doing weird thing with refineries? On Soup map and SoupOnTheSide
 32. Look forward a bit more with rush miner (maybe 2/3 steps)
 33. Install unkillable net gun if you can
-34. Do other stuff if everything is blocked
 35. Work on rush defense
 36. Make netgun prioritize drones carry units -> drones that are closer
 37. Implement proper bugnav with following wall
+38. Make two variables: Rush initiated and rush cancel

@@ -67,22 +67,28 @@ public class LandscaperFactory extends Building {
             }
             minElevation = Math.max(1, minElevation);
             if (landscaperCount < 16 && rc.getRoundNum() > Util.floodRound(minElevation)-40) {
-                Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
-                for (int i = 0; i < 8; i++) {
-                    MapLocation loc = rc.getLocation().add(optDir);
-                    if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
-                        optDir = optDir.rotateRight();
-                        continue;
-                    }
-                    if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
-                        rc.buildRobot(RobotType.LANDSCAPER, optDir);
-                        landscaperCount++;
-                        if (landscaperCount == 12) {
-                            infoQ.add(getMessage(InformationCategory.VAPORATOR, rc.getLocation()));
+                Direction optDir = rc.getLocation().directionTo(HQLocation);
+                if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                    rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                    landscaperCount++;
+                } else {
+                    optDir = rc.getLocation().directionTo(HQLocation).opposite();
+                    for (int i = 0; i < 8; i++) {
+                        MapLocation loc = rc.getLocation().add(optDir);
+                        if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
+                            optDir = optDir.rotateRight();
+                            continue;
                         }
-                        break;
+                        if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
+                            rc.buildRobot(RobotType.LANDSCAPER, optDir);
+                            landscaperCount++;
+                            if (landscaperCount == 12) {
+                                infoQ.add(getMessage(InformationCategory.VAPORATOR, rc.getLocation()));
+                            }
+                            break;
+                        }
+                        optDir = optDir.rotateRight();
                     }
-                    optDir = optDir.rotateRight();
                 }
             }
             // spawning 6 turtle landscapers with a bit of leeway for refineries
