@@ -69,7 +69,7 @@ public class Util {
             case 10: return 1771;
             case 11: return 1819;
             case 12: return 1861;
-            case 13: return 1893;
+            case 13: return 1897;
             case 14: return 1929;
             case 15: return 1957;
             case 16: return 1983;
@@ -80,7 +80,7 @@ public class Util {
             case 21: return 2084;
             case 22: return 2100;
             case 23: return 2115;
-            case 24: return 5459;
+            case 24: return 2129;
             case 25: return 2143;
             case 26: return 2155;
             case 27: return 2168;
