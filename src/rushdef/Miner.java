@@ -10,6 +10,7 @@ public class Miner extends Unit {
 
     static double expandVaporator = 14;
     static int vaporatorCount = 0;
+    static boolean netGun = false;
 
     public Miner(RobotController r) {
         super(r);
@@ -39,36 +40,68 @@ public class Miner extends Unit {
         if (helpMode == 0) {
             // if we can build vaporators now
             if (isVaporator && isBuilder) {
-                expandVaporator += 0.1;
-                for (Direction dir: directions) {
-                    MapLocation loc = rc.getLocation().add(dir);
-                    if (loc.x % 2 == HQLocation.x % 2 || loc.y % 2 == HQLocation.y % 2) continue;
-                    if (rc.senseElevation(loc) >= 6) {
-                        if (vaporatorCount == 0) if (rc.canBuildRobot(RobotType.VAPORATOR, dir)) {
-                            rc.buildRobot(RobotType.VAPORATOR, dir);
-                            vaporatorCount++;
+                if (!netGun) {
+                    System.out.println("I need to build a net gun!");
+                    // build net gun close to factory
+                    if (rc.getLocation().distanceSquaredTo(factoryLocation) > 5) {
+                        System.out.println("Still getting there");
+                        // move in
+                        if (nav.needHelp(rc, turnCount, factoryLocation)) {
+                            helpMode = 1;
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), factoryLocation));
                         } else {
-                            // if you've already built a vaporator, then wait a bit until you build
-                            if (rc.getTeamSoup() >= 700 && rc.canBuildRobot(RobotType.VAPORATOR, dir)) {
+                            nav.bugNav(rc, factoryLocation);
+                        }
+                    } else {
+                        System.out.println("Close enough");
+                        // try to build net gun
+                        Direction optDir = rc.getLocation().directionTo(factoryLocation);
+                        for (int i = 0; i < 8; i++) {
+                            MapLocation loc = rc.getLocation().add(optDir);
+                            if (loc.x % 2 == HQLocation.x % 2 || loc.y % 2 == HQLocation.y % 2) {
+                                optDir = optDir.rotateRight();
+                                continue;
+                            }
+                            if (rc.canBuildRobot(RobotType.NET_GUN, optDir)) {
+                                System.out.println("I built a net gun!");
+                                rc.buildRobot(RobotType.NET_GUN, optDir);
+                                netGun = true;
+                            } else optDir = optDir.rotateRight();
+                        }
+                    }
+                } else {
+                    expandVaporator += 0.1;
+                    for (Direction dir : directions) {
+                        MapLocation loc = rc.getLocation().add(dir);
+                        if (loc.x % 2 == HQLocation.x % 2 || loc.y % 2 == HQLocation.y % 2) continue;
+                        if (rc.senseElevation(loc) >= 6) {
+                            if (vaporatorCount == 0) if (rc.canBuildRobot(RobotType.VAPORATOR, dir)) {
                                 rc.buildRobot(RobotType.VAPORATOR, dir);
                                 vaporatorCount++;
+                            } else {
+                                // if you've already built a vaporator, then wait a bit until you build
+                                if (rc.getTeamSoup() >= 700 && rc.canBuildRobot(RobotType.VAPORATOR, dir)) {
+                                    rc.buildRobot(RobotType.VAPORATOR, dir);
+                                    vaporatorCount++;
+                                }
                             }
                         }
                     }
-                }
-                // if it can't build a vaporator
-                if (rc.getLocation().distanceSquaredTo(HQLocation) >= expandVaporator) {
-                    // if they're too far, move to factoryLocation
-                    if (nav.needHelp(rc, turnCount, factoryLocation)) {
-                        helpMode = 1;
-                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        infoQ.add(Cast.getMessage(rc.getLocation(), factoryLocation));
+                    // if it can't build a vaporator
+                    if (rc.getLocation().distanceSquaredTo(HQLocation) >= expandVaporator) {
+                        // if they're too far, move to factoryLocation
+                        if (nav.needHelp(rc, turnCount, factoryLocation)) {
+                            helpMode = 1;
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), factoryLocation));
+                        } else {
+                            nav.bugNav(rc, factoryLocation);
+                        }
                     } else {
-                        nav.bugNav(rc, factoryLocation);
+                        // if not too far, try going out to enemyHQSuspect?
+                        nav.bugNav(rc, enemyHQLocationSuspect);
                     }
-                } else {
-                    // if not too far, try going out to enemyHQSuspect?
-                    nav.bugNav(rc, enemyHQLocationSuspect);
                 }
             } else {
                 // build landscaper factory
