@@ -53,7 +53,7 @@ public class Util {
     // when to explode drone
     static int explodeThresh = 10;
 
-    public int floodRound (int elevation) {
+    static int floodRound (int elevation) {
         //returns the round it gets flooded the given elevation. Last one is for 30
         switch(elevation) {
             case 0: return 0;

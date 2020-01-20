@@ -11,8 +11,11 @@ public class Landscaper extends Unit {
 
     private ArrayList<MapLocation> visitedHole;
     private Vector[] untouchable;
+    private Vector[] reinforce;
     private MapLocation[] untouchableLoc;
+    private MapLocation[] reinforceLoc;
     private int untouchSize = 12;
+    private int reinforceSize = 8;
     private Direction fill;
     private Direction digLoc;
 
@@ -33,15 +36,25 @@ public class Landscaper extends Unit {
     public void initialize() throws GameActionException {
         super.initialize();
         untouchable = new Vector[]{new Vector(1, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-1, 0), new Vector(-1, 1), new Vector(0, 1), new Vector(1, 1), new Vector(0, 2), new Vector(2, 0), new Vector(0, -2), new Vector(-2, 0)};
+        reinforce = new Vector[]{new Vector(1, 2), new Vector(2, 1), new Vector(-1, 2), new Vector(2, -1), new Vector(1, -2), new Vector(-2, 1), new Vector(-1, -2), new Vector(-2, -1)};
         untouchableLoc = new MapLocation[untouchSize];
         for (int i = 0; i < untouchSize; i++) {
             untouchableLoc[i] = untouchable[i].addWith(HQLocation);
+        }
+        reinforceLoc = new MapLocation[reinforceSize];
+        for (int i = 0; i < reinforceSize; i++) {
+            reinforceLoc[i] = reinforce[i].addWith(HQLocation);
         }
     }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         if (teraformMode == 0) {
+            System.out.println("floods at: " + (Util.floodRound(factoryHeight)-40));
+            if (rc.getRoundNum() > Util.floodRound(factoryHeight)-40) {
+                System.out.println("Switching to teraform mode 4");
+                teraformMode = 4;
+            }
             // teraform mode
             System.out.println("Initially I have: " + Clock.getBytecodesLeft());
             if (teraformLoc[0] == null) {
@@ -263,21 +276,12 @@ public class Landscaper extends Unit {
                                         } else {
                                             // if you're next to miner, dig him down / fill him up
                                             Direction minerDir = rc.getLocation().directionTo(minerSpot);
-                                            if (rc.senseElevation(enemyHQLocation) > rc.senseElevation(minerSpot)) {
-                                                // if lower, dig it
-                                                if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
-                                                    if (rc.canDigDirt(minerDir)) rc.digDirt(minerDir);
-                                                } else {
-                                                    Direction optDir = rc.getLocation().directionTo(enemyHQLocation).opposite();
-                                                    if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
-                                                }
+                                            // always lower it
+                                            if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                                                if (rc.canDigDirt(minerDir)) rc.digDirt(minerDir);
                                             } else {
-                                                // if higher, fill it
-                                                if (rc.getDirtCarrying() == 0) {
-                                                    if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
-                                                } else {
-                                                    if (rc.canDepositDirt(minerDir)) rc.depositDirt(minerDir);
-                                                }
+                                                Direction optDir = rc.getLocation().directionTo(enemyHQLocation).opposite();
+                                                if (rc.canDepositDirt(optDir)) rc.depositDirt(optDir);
                                             }
                                         }
                                     } else {
@@ -364,6 +368,41 @@ public class Landscaper extends Unit {
             }
             // build the turtle
             turtle.buildFort(rc);
+        }
+        else if (teraformMode == 4) {
+            // reinforce the turtle
+            for (MapLocation loc: reinforceLoc) {
+                if (rc.getLocation().equals(loc)) {
+                    Direction dig = holeTo();
+                    if (rc.senseElevation(rc.getLocation()) >= 20) {
+                        // refinforce turtle
+                        if (rc.getDirtCarrying() == 0) {
+                            if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                        } else {
+                            Direction fill = rc.getLocation().directionTo(HQLocation);
+                            if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
+                        }
+                    } else {
+                        if (rc.getDirtCarrying() == 0) {
+                            if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                        } else {
+                            if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+                        }
+                    }
+                    break;
+                }
+            }
+            if (rc.isReady()) {
+                for (MapLocation loc: reinforceLoc) {
+                    if (rc.getLocation().isAdjacentTo(loc)) {
+                        Direction dir = rc.getLocation().directionTo(loc);
+                        if (rc.canMove(dir)) rc.move(dir);
+                    }
+                }
+            }
+            if (rc.isReady()) {
+                nav.bugNav(rc, HQLocation);
+            }
         }
     }
 
@@ -605,6 +644,12 @@ public class Landscaper extends Unit {
                     // check elevation difference
                     if (Math.abs(rc.senseElevation(enemyHQLocation)-rc.senseElevation(r.getLocation())) < 4) return digDir;
                 }
+            }
+        }
+        for (Direction dir: directions) {
+            MapLocation loc = rc.getLocation().add(dir);
+            if (rc.canSenseLocation(loc)) {
+                if (rc.senseFlooding(loc)) return dir;
             }
         }
         return Direction.CENTER;

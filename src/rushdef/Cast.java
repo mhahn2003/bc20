@@ -568,19 +568,8 @@ public class Cast {
                             suspectsVisited.replace(l, true);
                             infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                         } else if (rc.canSenseLocation(l)) {
-                            RobotInfo r = rc.senseRobotAtLocation(l);
-                            if (r != null) {
-                                RobotType t = r.getType();
-                                if (r.getTeam() != rc.getTeam() && (t == RobotType.HQ || t == RobotType.NET_GUN)) {
-                                    System.out.println("There's a thing here!");
-                                    suspectsVisited.replace(l, true);
-                                    infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
-                                } else if (rc.getLocation().distanceSquaredTo(l) < 9) {
-                                    System.out.println("There's a thing here!");
-                                    suspectsVisited.replace(l, true);
-                                    infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
-                                }
-                            }
+                            suspectsVisited.replace(l, true);
+                            infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                         }
                     }
                 }

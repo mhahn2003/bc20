@@ -30,7 +30,6 @@ public class Miner extends Unit {
                 Rush.killEnemy();
                 return;
             }
-            else if (rc.getLocation().distanceSquaredTo(HQLocation) > 100) nav.bugNav(rc, HQLocation);
         }
 
         // check if it's in help mode and it moved so it can go free
@@ -39,12 +38,12 @@ public class Miner extends Unit {
         }
         if (helpMode == 0) {
             // if we can build vaporators now
-            if (isVaporator) {
+            if (isVaporator && isBuilder) {
                 expandVaporator += 0.1;
                 for (Direction dir: directions) {
                     MapLocation loc = rc.getLocation().add(dir);
-                    if (loc.x % 2 != HQLocation.x % 2 || loc.y % 2 != HQLocation.y % 2) continue;
-                    if (rc.senseElevation(loc) >= 7) {
+                    if (loc.x % 2 == HQLocation.x % 2 || loc.y % 2 == HQLocation.y % 2) continue;
+                    if (rc.senseElevation(loc) >= 6) {
                         if (vaporatorCount == 0) if (rc.canBuildRobot(RobotType.VAPORATOR, dir)) {
                             rc.buildRobot(RobotType.VAPORATOR, dir);
                             vaporatorCount++;

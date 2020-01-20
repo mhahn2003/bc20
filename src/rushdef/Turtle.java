@@ -104,11 +104,29 @@ public class Turtle {
 
     // when building inner fort, automatically apply even option
 
-    private void buildInnerFort(RobotController rc) throws GameActionException {
+    public void buildInnerFort(RobotController rc) throws GameActionException {
         int index = positionIn(rc.getLocation());
         if (index == -1) return;
         boolean even = isTurtle;
         Direction evenDir = rc.getLocation().directionTo(lowestElevationInner(rc));
+        // if hq is close to getting flooded just fill evenDir
+        if (rc.getRoundNum() > Util.floodRound(rc.senseElevation(HQLocation))-15) {
+            if (rc.getDirtCarrying() == 0) {
+                // dig
+                System.out.println("I have no dirt");
+                Direction digDir = getDig();
+                if (rc.canDigDirt(digDir)) {
+                    System.out.println("Digging towards " + digDir.toString());
+                    rc.digDirt(digDir);
+                }
+            } else {
+                // fill
+                if (rc.canDepositDirt(evenDir)) {
+                    System.out.println("Filling out at " + evenDir.toString());
+                    rc.depositDirt(evenDir);
+                }
+            }
+        }
         // if don't need to move don't move
         if (rc.getLocation().x == 0 || rc.getLocation().y == 0 || rc.getLocation().x == rc.getMapWidth()-1 || rc.getLocation().y == rc.getMapHeight()-1) {
             // then pretend this is last position

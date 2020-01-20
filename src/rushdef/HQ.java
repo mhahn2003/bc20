@@ -65,7 +65,7 @@ public class HQ extends Shooter {
         }
         if (!isUnderAttack) {
             for (RobotInfo r : robots) {
-                if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER) && r.getTeam() != rc.getTeam()) {
+                if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER || (r.getType() == RobotType.DELIVERY_DRONE && r.currentlyHoldingUnit)) && r.getTeam() != rc.getTeam()) {
                     infoQ.add(Cast.getMessage(InformationCategory.DEFENSE, HQLocation));
                     isUnderAttack = true;
                     break;
@@ -74,7 +74,7 @@ public class HQ extends Shooter {
         } else {
             isUnderAttack = false;
             for (RobotInfo r : robots) {
-                if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER) && r.getTeam() != rc.getTeam()) {
+                if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER || (r.getType() == RobotType.DELIVERY_DRONE && r.currentlyHoldingUnit)) && r.getTeam() != rc.getTeam()) {
                     isUnderAttack = true;
                     break;
                 }
