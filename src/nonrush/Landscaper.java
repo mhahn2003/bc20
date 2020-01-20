@@ -1,11 +1,11 @@
-package rush;
+package nonrush;
 
 import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static rush.Cast.infoQ;
-import static rush.Util.directions;
+import static nonrush.Cast.infoQ;
+import static nonrush.Util.directions;
 
 public class Landscaper extends Unit {
 

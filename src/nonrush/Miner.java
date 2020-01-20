@@ -1,10 +1,10 @@
-package rush;
+package nonrush;
 
 import battlecode.common.*;
 
-import static rush.Cast.*;
-import static rush.Util.directions;
-import static rush.Util.refineryDist;
+import static nonrush.Cast.*;
+import static nonrush.Util.directions;
+import static nonrush.Util.refineryDist;
 
 public class Miner extends Unit {
 
@@ -103,7 +103,7 @@ public class Miner extends Unit {
                                     if (placeLoc.x % 2 == HQLocation.x % 2 && placeLoc.y % 2 == HQLocation.y % 2)
                                         continue;
                                     rc.buildRobot(RobotType.REFINERY, dir);
-                                    infoQ.add(getMessage(Cast.InformationCategory.NEW_REFINERY, placeLoc));
+                                    infoQ.add(getMessage(InformationCategory.NEW_REFINERY, placeLoc));
                                     refineryLocation.add(placeLoc);
                                     break;
                                 }
@@ -232,7 +232,7 @@ public class Miner extends Unit {
                                     optDir = optDir.rotateRight();
                                 }
                             }
-                            infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size() - 1)));
+                            infoQ.add(Cast.getMessage(InformationCategory.NEW_REFINERY, refineryLocation.get(refineryLocation.size() - 1)));
                         }
                         //                System.out.println("after new refinery procedures" + Clock.getBytecodesLeft());
                     }
