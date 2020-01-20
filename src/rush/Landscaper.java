@@ -105,8 +105,10 @@ public class Landscaper extends Unit {
                         }
                     } else {
                         if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                            System.out.println("Digging at digLoc: " + digLoc.toString());
                             if (rc.canDigDirt(digLoc)) rc.digDirt(digLoc);
                         } else {
+                            System.out.println("Depositing at dig: " + dig.toString());
                             if (rc.canDepositDirt(dig)) rc.depositDirt(dig);
                         }
                     }
@@ -416,13 +418,13 @@ public class Landscaper extends Unit {
             if (bad) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
-                if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)
-                        && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) {
+                if ((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill) && (rob == null || !rob.getType().isBuilding())) ||
+                        (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam())) {
                     this.fill = dir;
                     return;
                 }
                 if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40)
-                        || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) {
+                        && (rob == null || !rob.getType().isBuilding() || (rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0))) {
                     this.digLoc = dir;
                     return;
                 }
@@ -492,9 +494,10 @@ public class Landscaper extends Unit {
             if (bad) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
-                if (((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < 40 && rc.senseElevation(fill) != optHeight(fill)) ||
-                        (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0))
-                && !(rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying == 0)) {
+                if (((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill) && (rob == null || !rob.getType().isBuilding())) ||
+                        (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()))
+                || ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40)
+                        && (rob == null || !rob.getType().isBuilding() || (rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)))) {
 //                    if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)) System.out.println("first");
 //                    if (rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) System.out.println("second");
 //                    if (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) System.out.println("third");

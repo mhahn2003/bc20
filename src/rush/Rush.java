@@ -175,7 +175,7 @@ public class Rush {
             }
             System.out.println("Going to pos: " + goTo);
             // go to pos
-            bugNav(goTo);
+            if (rc.isReady()) bugNav(goTo);
         }
     }
 
@@ -272,6 +272,7 @@ public class Rush {
             }
         }
         if (isBugging) {
+            if (optDir.equals(Direction.CENTER)) optDir = rc.getLocation().directionTo(dest);
             System.out.println("Bugging right now");
             for (int i = 0; i < 8; i++) {
                 if (canGo(optDir)) {
@@ -324,38 +325,44 @@ public class Rush {
                 } else heights[i][j] = 10000;
                 if (i == 2 && j == 2) heights[i][j] = rc.senseElevation(rc.getLocation());
                 System.out.println("Height at i: " + i + " j: " + j + " is at: " + heights[i][j]);
-                System.out.println("One itereation takes: " + Clock.getBytecodesLeft());
+//                System.out.println("One itereation takes: " + Clock.getBytecodesLeft());
             }
         }
 
-        System.out.println("After initializing arrays, I have: " + Clock.getBytecodesLeft());
+//        System.out.println("After initializing arrays, I have: " + Clock.getBytecodesLeft());
         Direction optDir = rc.getLocation().directionTo(dest);
+//        System.out.println("optDir is: " + optDir.toString());
         Direction left = optDir.rotateLeft();
         Direction right = optDir.rotateRight();
+        Direction leftLeft = left.rotateLeft();
+        Direction rightRight = right.rotateRight();
         if (canGo(optDir) && canGo(left) && canGo(right)) {
+//            System.out.println("I can go anywhere");
             return optDir;
         }
-        System.out.println("Still computing now");
+//        System.out.println("Still computing now");
         for (int i = 2; i >= 0; i--) {
             for (int j = 2; j >= 0; j--) {
                 Direction d = new Vector(i-1, j-1).getDir();
-                if (optDir.equals(d) || left.equals(d) || right.equals(d)) firstMove[i][j] = true;
+                if (optDir.equals(d) || left.equals(d) || right.equals(d) || leftLeft.equals(d) || rightRight.equals(d)) firstMove[i][j] = true;
+                if (!canMove(2, 2, i+1, j+1)) firstMove[i][j] = false;
                 if (firstMove[i][j]) {
                     System.out.println("First move for i: " + (i-1) + ", j: " + (j-1));
                     for (int x = -1; x <= 1; x++) {
                         for (int y = -1; y <= 1; y++) {
+                            d = new Vector(x, y).getDir();
+                            if (!(optDir.equals(d) || left.equals(d) || right.equals(d) || leftLeft.equals(d) || rightRight.equals(d))) continue;
                             // check the second iteration
-                            if (x == 0 && y == 0) continue;
                             if (canMove(i+1, j+1, i+1+x, j+1+y)) {
                                 System.out.println("Can move to x: " + x + ", y: " + y);
-                                secondMove[i+1+x][j+1+y] = new Vector(x, y).getDir();
+                                secondMove[i+1+x][j+1+y] = d;
                             }
                         }
                     }
                 }
             }
         }
-        System.out.println("After doing 2 steps, I have: " + Clock.getBytecodesLeft());
+//        System.out.println("After doing 2 steps, I have: " + Clock.getBytecodesLeft());
         optDir = Direction.CENTER;
         // first check if we can just get there with only one move
         for (int i = 2; i >= 0; i--) {
@@ -370,8 +377,8 @@ public class Rush {
                 }
             }
         }
-        System.out.println("After checking 1 step, I have: " + Clock.getBytecodesLeft());
-        
+//        System.out.println("After checking 1 step, I have: " + Clock.getBytecodesLeft());
+
         for (int i = 4; i >= 0; i--) {
             for (int j = 4; j >= 0; j--) {
                 System.out.println("For i: " + i + ", j: " + j + ", we have secondMove: " + secondMove[i][j].toString());
