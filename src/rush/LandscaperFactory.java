@@ -14,6 +14,7 @@ public class LandscaperFactory extends Building {
     }
 
     public void takeTurn() throws GameActionException {
+        // TODO: fix build order of units
         super.takeTurn();
         if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < 18) {
             // attacking factory

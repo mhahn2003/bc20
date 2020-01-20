@@ -1,4 +1,4 @@
-package teraform;
+package rngform;
 import battlecode.common.*;
 
 public class Shooter extends Building {
@@ -9,7 +9,7 @@ public class Shooter extends Building {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        // TODO: prioritize enemy drones holding units / closer
+
         // shoot nearby enemies
         Team enemy = rc.getTeam().opponent();
         RobotInfo[] enemiesInRange = rc.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, enemy);

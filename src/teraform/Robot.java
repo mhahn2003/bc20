@@ -28,8 +28,6 @@ public class Robot {
     static Cast cast = null;
     // turtle object
     static Turtle turtle = null;
-    // blueprint object (only the first miner will have this)
-    static Blueprint blueprint;
 
     // hole array
     static boolean[][] holeLocation;

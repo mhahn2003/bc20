@@ -1,11 +1,10 @@
-package rush;
+package rngform;
 
 import battlecode.common.*;
 
 import java.util.ArrayList;
 
-import static rush.Util.*;
-import static rush.Util.directions;
+import static rngform.Util.*;
 
 public class Drone extends Unit {
 
@@ -134,6 +133,8 @@ public class Drone extends Unit {
                         // find opponent units
                         RobotInfo pickup = null;
                         for (RobotInfo r : rc.senseNearbyRobots()) {
+                            // check if it's inside the barrier somehow
+                            if (rc.getRoundNum() >= 450 && r.getLocation().distanceSquaredTo(HQLocation) < 8) continue;
                             if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
                                 if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
                                     if (r.getType() == RobotType.COW) {
@@ -179,6 +180,8 @@ public class Drone extends Unit {
                             }
                         }
                     } else {
+                        System.out.println("I am adjacent to my self is " + rc.getLocation().isAdjacentTo(rc.getLocation()));
+                        System.out.println("I'm here and distance is: " + rc.getLocation().distanceSquaredTo(HQLocation));
                         // if within distance 13 of HQ first things first move away
                         if (rc.getLocation().distanceSquaredTo(HQLocation) <= 13) {
                             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
@@ -217,14 +220,15 @@ public class Drone extends Unit {
                             MapLocation water = findWater();
                             MapLocation robotLoc = rc.getLocation();
                             if (water != null) {
-                                for (Direction dir: directions) {
-                                    MapLocation loc = rc.getLocation().add(dir);
-                                    if (rc.canSenseLocation(loc) && rc.senseFlooding(loc)) {
-                                        if (rc.canDropUnit(dir)) rc.dropUnit(dir);
-                                    }
+                                if (water.isAdjacentTo(robotLoc)) {
+                                    System.out.println("Dropping off unit!");
+                                    // drop off unit
+                                    Direction dropDir = robotLoc.directionTo(water);
+                                    if (rc.canDropUnit(dropDir)) rc.dropUnit(dropDir);
+                                } else {
+                                    System.out.println("Navigating to water at " + water.toString());
+                                    nav.bugNav(rc, water);
                                 }
-                                // if no water
-                                if (rc.isReady()) nav.bugNav(rc, water);
                             } else {
                                 // explore
                                 if (exploreTo == null || suspectsVisited.get(exploreTo)) {
