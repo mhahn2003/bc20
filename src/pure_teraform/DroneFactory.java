@@ -16,9 +16,9 @@ public class DroneFactory extends Building {
         System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
         Direction optDir = Direction.NORTHEAST;
-        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150) {
+        if (droneCount < 3 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost) {
             for (int i = 0; i < 8; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 400){
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
                     if (droneCount == 1) {
@@ -31,37 +31,37 @@ public class DroneFactory extends Building {
                 }
             }
         }
-        optDir = Direction.NORTHEAST;
-        if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost && helpLoc.size() >= 5) {
-            for (int i = 0; i < 2; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 350){
-                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
-                    droneCount++;
-                    break;
-                } else {
-                    optDir = optDir.rotateLeft();
-                }
-            }
-        }
-
-        // spam drones
-        if (rc.getTeamSoup() >= 1000) {
-            for (int i = 0; i < 8; i++) {
-                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
-                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
-                    droneCount++;
-                    if (droneCount == maxDroneCount-attackLandscaperCount) {
-                        infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, HQLocation));
-                    }
-                    if (droneCount == maxDroneCount) {
-                        infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, HQLocation));
-                    }
-                    break;
-                } else {
-                    optDir = optDir.rotateLeft();
-                }
-            }
-        }
+//        optDir = Direction.NORTHEAST;
+//        if (droneCount < 6 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost && helpLoc.size() >= 5) {
+//            for (int i = 0; i < 2; i++) {
+//                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 350){
+//                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
+//                    droneCount++;
+//                    break;
+//                } else {
+//                    optDir = optDir.rotateLeft();
+//                }
+//            }
+//        }
+//
+//        // spam drones
+//        if (rc.getTeamSoup() >= 1000) {
+//            for (int i = 0; i < 8; i++) {
+//                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
+//                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
+//                    droneCount++;
+//                    if (droneCount == maxDroneCount-attackLandscaperCount) {
+//                        infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, HQLocation));
+//                    }
+//                    if (droneCount == maxDroneCount) {
+//                        infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, HQLocation));
+//                    }
+//                    break;
+//                } else {
+//                    optDir = optDir.rotateLeft();
+//                }
+//            }
+//        }
 
 
 //        boolean isVaporator = false;

@@ -190,7 +190,13 @@ public class Landscaper extends Unit {
 
     // returns the optimal height of a location. Adds 2 to the height if near water.
     public int optHeight(MapLocation loc) throws GameActionException {
+<<<<<<< HEAD
         return 8;
+=======
+        return 9;
+//        int distFromFactory = loc.distanceSquaredTo(factoryLocation);
+//        return Math.min(8, (int) (Math.floor(Math.sqrt(distFromFactory)*2)) + factoryHeight);
+>>>>>>> 111044cf518c0c7294045b73d67fe334c9531e24
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {

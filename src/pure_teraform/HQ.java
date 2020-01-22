@@ -7,10 +7,16 @@ import static pure_teraform.Cast.infoQ;
 import static pure_teraform.Util.directions;
 
 public class HQ extends Shooter {
-    static int numMiners = 0;
+    static Vector[] complete;
+    static MapLocation[] completeLoc;
 
     public HQ(RobotController r) {
         super(r);
+        complete = new Vector[]{new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 3), new Vector(3, 2), new Vector(3, 1), new Vector(3, 0), new Vector(3, -1), new Vector(3, -2), new Vector(3, -3), new Vector(2, -3), new Vector(1, -3), new Vector(0, -3), new Vector(-1, -3), new Vector(-2, -3), new Vector(-3, -3), new Vector(-3, -2), new Vector(-3, -1), new Vector(-3, 0), new Vector(-3, 1), new Vector(-3, 2), new Vector(-3, 3), new Vector(-2, 3), new Vector(-1, 3)};
+        completeLoc = new MapLocation[24];
+        for (int i = 0; i < 24; i++) {
+            completeLoc[i] = complete[i].addWith(rc.getLocation());
+        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -22,16 +28,6 @@ public class HQ extends Shooter {
 //        System.out.println("enemy hq is at" + enemyHQLocation.toString());
 //        }
         RobotInfo[] robots = rc.senseNearbyRobots();
-        boolean isVaporator = false;
-        int netGunCount = 0;
-        for (RobotInfo r : robots) {
-            if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
-                isVaporator = true;
-            }
-            if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) {
-                netGunCount++;
-            }
-        }
         if (!isUnderAttack) {
             for (RobotInfo r : robots) {
                 if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER) && r.getTeam() != rc.getTeam()) {
@@ -52,11 +48,28 @@ public class HQ extends Shooter {
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.SURRENDER, HQLocation));
             }
         }
+        if (!completeTeraform) {
+            // check all the surrounding locations and check if they're either infinite water tiles or 8 and higher
+            completeTeraform = true;
+            for (MapLocation loc: completeLoc) {
+                if (rc.canSenseLocation(loc)) {
+                    int height = rc.senseElevation(loc);
+                    if (height >= -10000 && height <= 8) {
+                        completeTeraform = false;
+                        break;
+                    }
+                }
+            }
+            if (completeTeraform) {
+                // signal that teraform is complete
+                infoQ.add(getMessage(Cast.InformationCategory.TERAFORM_COMPLETE, HQLocation));
+            }
+        }
         // build all the miners we can get in the first few turns
         // maximum of 10 miners at 250th round
         // TODO: fix this
         Direction optDir = Direction.NORTH;
-        if (minerCount < Math.min(5+rc.getRoundNum()/50, 7)) {
+        if (minerCount < Math.min(5+rc.getRoundNum()/125, 7)) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);

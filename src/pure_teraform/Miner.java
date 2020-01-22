@@ -8,6 +8,9 @@ import static pure_teraform.Util.refineryDist;
 
 public class Miner extends Unit {
 
+    private static boolean isLF = false;
+    private static boolean isDF = false;
+
     public Miner(RobotController r) {
         super(r);
     }
@@ -20,45 +23,141 @@ public class Miner extends Unit {
             if (nav.outOfDrone(rc)) helpMode = 0;
         }
         if (helpMode == 0) {
-            // build landscaper factory
-            if (factoryLocation == null && isBuilder) {
+            // build drone factory
+            if (!isDF && isBuilder) {
+                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
+                    for (Direction dir: directions) {
+                        MapLocation loc = rc.getLocation().add(dir);
+                        if (loc.isAdjacentTo(HQLocation)) {
+                            if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
+                                rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
+                                isDF = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (!isLF && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.x % 2 != HQLocation.x % 2 && loc.y % 2 == HQLocation.y % 2) continue;
                         if (loc.isAdjacentTo(HQLocation)) {
                             if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
                                 rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
-                                factoryLocation = rc.getLocation().add(dir);
+                                isLF = true;
                                 break;
                             }
                         }
                     }
                 }
             }
-            // TODO: if buildings are destroyed then rebuild
-            // build refinery
-            if (refineryLocation.isEmpty()) {
-                System.out.println("refinery loc is empty!");
-            } else {
-                System.out.println("refinery loc is: " + refineryLocation.toString());
+            if (!completeTeraform && isBuilder) {
+                if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                    MapLocation closestVap = null;
+                    int dist = 0;
+                    int curHeight = rc.senseElevation(rc.getLocation());
+                    for (MapLocation loc: vapInsideLoc) {
+                        if (rc.canSenseLocation(loc) && Math.abs(rc.senseElevation(loc)-curHeight) <= 3) {
+                            RobotInfo r = rc.senseRobotAtLocation(loc);
+                            if (r == null) {
+                                int tempD = rc.getLocation().distanceSquaredTo(loc);
+                                if (closestVap == null || tempD < dist) {
+                                    closestVap = loc;
+                                    dist = tempD;
+                                }
+                            }
+                        }
+                    }
+                    if (closestVap != null) {
+                        if (rc.getLocation().isAdjacentTo(closestVap)) {
+                            Direction buildDir = rc.getLocation().directionTo(closestVap);
+                            if (rc.canBuildRobot(RobotType.VAPORATOR, buildDir)) rc.buildRobot(RobotType.VAPORATOR, buildDir);
+                        } else {
+                            // navigate to that spot
+                            nav.bugNav(rc, closestVap);
+                        }
+                    } else {
+                        if (nav.needHelp(rc, turnCount, HQLocation)) {
+                            helpMode = 1;
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), HQLocation));
+                        }
+                        else nav.bugNav(rc, HQLocation);
+                    }
+                }
             }
-
-            // build drone factory
-            if (droneFactoryLocation == null && isBuilder ) {
-                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+60) {
-                    for (Direction dir: directions) {
-                        MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) > 20) {
-                            if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
-                                rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
-                                droneFactoryLocation = rc.getLocation().add(dir);
-                                break;
+            if (completeTeraform) {
+                // then build vaporators randomly i guess
+                MapLocation closestVap = null;
+                int dist = 0;
+                int maxV = 3;
+                for (int i = -maxV; i <= maxV; i++) {
+                    for (int j = -maxV; j <= maxV; j++) {
+                        MapLocation loc = rc.getLocation().translate(i, j);
+                        if (rc.canSenseLocation(loc) && rc.senseElevation(loc) == 8 && loc.x % 2 != HQLocation.x % 2 && loc.y % 2 != HQLocation.y % 2) {
+                            RobotInfo r = rc.senseRobotAtLocation(loc);
+                            if (r == null) {
+                                int tempD = rc.getLocation().distanceSquaredTo(loc);
+                                if (closestVap == null || tempD < dist) {
+                                    closestVap = loc;
+                                    dist = tempD;
+                                }
                             }
                         }
                     }
                 }
+                if (closestVap != null) {
+                    if (rc.getLocation().isAdjacentTo(closestVap)) {
+                        Direction buildDir = rc.getLocation().directionTo(closestVap);
+                        if (rc.canBuildRobot(RobotType.VAPORATOR, buildDir)) rc.buildRobot(RobotType.VAPORATOR, buildDir);
+                    } else {
+                        // navigate to that spot
+                        nav.bugNav(rc, closestVap);
+                    }
+                } else {
+                    // go to enemy location suspect and spread out?
+                    nav.bugNav(rc, enemyHQLocationSuspect);
+                }
             }
+//            if (factoryLocation == null && isBuilder) {
+//                if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
+//                    for (Direction dir: directions) {
+//                        MapLocation loc = rc.getLocation().add(dir);
+//                        if (loc.x % 2 != HQLocation.x % 2 && loc.y % 2 == HQLocation.y % 2) continue;
+//                        if (loc.isAdjacentTo(HQLocation)) {
+//                            if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
+//                                rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
+//                                factoryLocation = rc.getLocation().add(dir);
+//                                break;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            // TODO: if buildings are destroyed then rebuild
+//            // build refinery
+//            if (refineryLocation.isEmpty()) {
+//                System.out.println("refinery loc is empty!");
+//            } else {
+//                System.out.println("refinery loc is: " + refineryLocation.toString());
+//            }
+//
+//            // build drone factory
+//            if (droneFactoryLocation == null && isBuilder ) {
+//                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+60) {
+//                    for (Direction dir: directions) {
+//                        MapLocation loc = rc.getLocation().add(dir);
+//                        if (loc.distanceSquaredTo(HQLocation) > 20) {
+//                            if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
+//                                rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
+//                                droneFactoryLocation = rc.getLocation().add(dir);
+//                                break;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
 
             if (soupLoc == null) {
                 // if soup location is far or we just didn't notice
@@ -125,27 +224,6 @@ public class Miner extends Unit {
                 } else {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                         // just build a refinery?
-                        if (rc.getTeamSoup() >= RobotType.REFINERY.cost) {
-                            Direction optDir = rc.getLocation().directionTo(referencePoint);
-                            for (int i = 0; i < 8; i++) {
-                                MapLocation robotLoc = rc.getLocation();
-                                MapLocation placeLoc = robotLoc.add(optDir);
-                                if (placeLoc.x % 3 == HQLocation.x && placeLoc.y % 3 == HQLocation.y) {
-                                    optDir = optDir.rotateRight();
-                                    continue;
-                                }
-                                if (rc.canBuildRobot(RobotType.REFINERY, optDir)) {
-                                    //                            System.out.println("can build refinery");
-                                    rc.buildRobot(RobotType.REFINERY, optDir);
-                                    //                            System.out.println("built refinery");
-                                    refineryLocation.add(placeLoc);
-                                    closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
-                                    return;
-                                } else {
-                                    optDir = optDir.rotateRight();
-                                }
-                            }
-                        }
                         helpMode = 1;
                         System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
