@@ -83,6 +83,20 @@ public class Miner extends Unit {
                     if (closestVap != null) {
                         if (rc.getLocation().isAdjacentTo(closestVap)) {
                             Direction buildDir = rc.getLocation().directionTo(closestVap);
+                            if (vaporatorCount > 30) {
+                                if (!isLF) {
+                                    if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, buildDir)) {
+                                        rc.buildRobot(RobotType.DESIGN_SCHOOL, buildDir);
+                                        isLF = true;
+                                    }
+                                }
+                                if (!isDF) {
+                                    if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, buildDir)) {
+                                        rc.buildRobot(RobotType.FULFILLMENT_CENTER, buildDir);
+                                        isDF = true;
+                                    }
+                                }
+                            }
                             if (rc.canBuildRobot(RobotType.VAPORATOR, buildDir)) rc.buildRobot(RobotType.VAPORATOR, buildDir);
                         } else {
                             // navigate to that spot
