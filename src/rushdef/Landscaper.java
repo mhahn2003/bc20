@@ -60,7 +60,7 @@ public class Landscaper extends Unit {
         if (rc.getLocation().isAdjacentTo(HQLocation)) teraformMode = 2;
         if (teraformMode == 0) {
             System.out.println("floods at: " + (Util.floodRound(factoryHeight)-40));
-            if (rc.getRoundNum() > Util.floodRound(factoryHeight)-40) {
+            if (rc.getRoundNum() > Util.floodRound(factoryHeight)-40 && rc.getRoundNum() < Util.floodRound(factoryHeight)+40) {
                 System.out.println("Switching to teraform mode 4");
                 teraformMode = 4;
             }

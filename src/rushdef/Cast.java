@@ -439,11 +439,11 @@ public class Cast {
                                 if (rushHappening) rushHappening = false;
                                 else rushHappening = true;
                                 break;
-                            case VAPORATOR:
-                                isVaporator = true;
-                                break;
                             case DRONE_FACTORY:
                                 droneFactoryLocation = loc;
+                                break;
+                            case VAPORATOR:
+                                vaporatorCount++;
                                 break;
                         }
                     }

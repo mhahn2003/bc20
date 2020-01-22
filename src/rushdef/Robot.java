@@ -79,8 +79,6 @@ public class Robot {
     static boolean areDrones = false;
     // are we rushing right now
     static boolean rushHappening = true;
-    // can we build vaporators now
-    static boolean isVaporator = false;
     // rush cost
     static int rushCost = 250;
 
@@ -99,6 +97,7 @@ public class Robot {
     static int minerCount = 0;
     static int droneCount = 0;
     static int landscaperCount = 0;
+    static int vaporatorCount = 0;
 
 
     public Robot(RobotController r) {
@@ -188,6 +187,9 @@ public class Robot {
                     factoryHeight = rc.senseElevation(factoryLocation);
                 }
             }
+        }
+        if (rc.getType() == RobotType.VAPORATOR) {
+            infoQ.add(getMessage(InformationCategory.VAPORATOR, rc.getLocation()));
         }
     }
 
