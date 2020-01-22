@@ -31,8 +31,8 @@ public class Robot {
     // important locations
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
-//    static MapLocation factoryLocation = null;
-//    static MapLocation droneFactoryLocation = null;
+    static Vector[] vapInside;
+    static MapLocation[] vapInsideLoc;
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
@@ -69,6 +69,8 @@ public class Robot {
     static boolean isAttackerBuilder = false;
     // have drones spawned yet
     static boolean areDrones = false;
+    // have we completed the innermost teraform yet
+    static boolean completeTeraform = false;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;
@@ -121,6 +123,11 @@ public class Robot {
         exploreLoc();
 
         if (rc.getType() == RobotType.MINER) {
+            vapInside = new Vector[]{new Vector(1, 0), new Vector(0,1), new Vector(-1, 0), new Vector(0, -1), new Vector(-1, 2), new Vector(1, 2), new Vector(2, 1), new Vector(2, -1), new Vector(1, -2), new Vector(-1, -2), new Vector(-2, -1), new Vector(-2, 1)};
+            vapInsideLoc = new MapLocation[12];
+            for (int i = 0; i < 12; i++) {
+                vapInsideLoc[i] = vapInside[i].addWith(HQLocation);
+            }
             if (rc.getRoundNum() == 2) {
                 isBuilder = true;
             }
