@@ -11,9 +11,6 @@ import static pure_teraform.Util.directions;
 public class Landscaper extends Unit {
 
     private ArrayList<MapLocation> visitedHole;
-    private Vector[] untouchable;
-    private MapLocation[] untouchableLoc;
-    private int untouchSize = 12;
     private Direction fill;
     private Direction digLoc;
 
@@ -26,11 +23,6 @@ public class Landscaper extends Unit {
 
     public void initialize() throws GameActionException {
         super.initialize();
-        untouchable = new Vector[]{new Vector(1, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-1, 0), new Vector(-1, 1), new Vector(0, 1), new Vector(1, 1), new Vector(0, 2), new Vector (2, 0), new Vector(0, -2), new Vector(-2, 0)};
-        untouchableLoc = new MapLocation[untouchSize];
-        for (int i = 0; i < untouchSize; i++) {
-            untouchableLoc[i] = untouchable[i].addWith(HQLocation);
-        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -190,13 +182,7 @@ public class Landscaper extends Unit {
 
     // returns the optimal height of a location. Adds 2 to the height if near water.
     public int optHeight(MapLocation loc) throws GameActionException {
-<<<<<<< HEAD
         return 8;
-=======
-        return 9;
-//        int distFromFactory = loc.distanceSquaredTo(factoryLocation);
-//        return Math.min(8, (int) (Math.floor(Math.sqrt(distFromFactory)*2)) + factoryHeight);
->>>>>>> 111044cf518c0c7294045b73d67fe334c9531e24
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
