@@ -162,15 +162,8 @@ public class Nav {
     }
 
     public boolean canGoLandscaper(RobotController rc, Direction dir) throws GameActionException {
-        // TODO: change this to account for landscapers being able to dig
-        MapLocation moveTo = rc.getLocation().add(dir);
-        if (!rc.canMove(dir)) return false;
-        if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
-        if (moveTo.equals(lastLoc) || moveTo.equals(lastLastLoc)) return false;
-        if (isHole(moveTo)) return false;
-        // run away from enemy drones
-        if (droneThreat(rc, moveTo)) return false;
-        return true;
+        MapLocation loc = rc.getLocation().add(dir);
+        return !isHole(dir) && rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc) && !(jitter == 0 && loc.distanceSquaredTo(HQLocation) <= 8 && !droneThreat(rc, loc) && !loc.equals(lastLoc));
     }
 
     public boolean canGoDrone(RobotController rc, Direction dir, boolean free) throws GameActionException {

@@ -13,7 +13,6 @@ public class Landscaper extends Unit {
     private ArrayList<MapLocation> visitedHole;
     private Direction fill;
     private Direction digLoc;
-    private int jitter = 0;
     private boolean inHelp = false;
 
 
@@ -228,7 +227,7 @@ public class Landscaper extends Unit {
             if (fill.distanceSquaredTo(HQLocation) <= 8 && !rc.senseFlooding(fill)) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
-                if (rc.senseElevation(fill) > -40 && rc.senseElevation(fill) < optHeight(fill)
+                if (rc.senseElevation(fill) > -100 && rc.senseElevation(fill) < optHeight(fill)
                         && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) {
                     this.fill = dir;
                     return;
@@ -260,6 +259,7 @@ public class Landscaper extends Unit {
 
     // because we reduced everything (except deep tiles or super tall tiles) we should be able to move pretty freely
     public void moveTo(MapLocation loc) throws GameActionException {
+//        nav.bugNav(rc, loc);
         Direction optDir = rc.getLocation().directionTo(loc);
         Direction left = optDir.rotateLeft();
         Direction right = optDir.rotateRight();
@@ -293,7 +293,7 @@ public class Landscaper extends Unit {
             if (fill.distanceSquaredTo(HQLocation) <= 8 && !rc.senseFlooding(fill)) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
-                if (((rc.senseElevation(fill) > -40 && rc.senseElevation(fill) < 30 && rc.senseElevation(fill) != optHeight(fill)) ||
+                if (((rc.senseElevation(fill) > -100 && rc.senseElevation(fill) < 30 && rc.senseElevation(fill) != optHeight(fill)) ||
                         (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam()) || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0))
                 && !(rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying == 0)) {
 //                    if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)) System.out.println("first");

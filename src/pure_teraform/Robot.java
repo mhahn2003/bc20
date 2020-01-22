@@ -19,6 +19,7 @@ public class Robot {
 //    static int factoryHeight;
     static int sizeX;
     static int sizeY;
+    static int jitter = 0;
 
     // navigation object
     static Nav nav = null;
