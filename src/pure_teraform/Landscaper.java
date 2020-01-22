@@ -11,9 +11,6 @@ import static pure_teraform.Util.directions;
 public class Landscaper extends Unit {
 
     private ArrayList<MapLocation> visitedHole;
-    private Vector[] untouchable;
-    private MapLocation[] untouchableLoc;
-    private int untouchSize = 12;
     private Direction fill;
     private Direction digLoc;
 
@@ -155,12 +152,20 @@ public class Landscaper extends Unit {
     public Direction holeTo() throws GameActionException {
         int modX = HQLocation.x % 2;
         int modY = HQLocation.y % 2;
+        int deepest=2000000000;
+        Direction deepest_direction=Direction.CENTER;
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
-            if (dig.x % 2 == modX && dig.y % 2 == modY && ! rc.senseFlooding(dig) && surroundedLand(dig) && dig.distanceSquaredTo(HQLocation) > 8) {
-                return dir;
+            if (dig.x % 2 == modX && dig.y % 2 == modY && rc.canDigDirt(dir)) {
+                if (!rc.senseFlooding(dig) && surroundedLand(dig)) return dir;
+                if (rc.senseElevation(dig)<deepest){
+                    deepest=rc.senseElevation(dig);
+                    deepest_direction=dir;
+                }
             }
         }
+        if (deepest<2000000000 && deepest_direction!=Direction.CENTER) return deepest_direction;
+        System.out.println("ill be a grave bot");
         // this shouldn't happen
         return Direction.CENTER;
     }
@@ -180,11 +185,13 @@ public class Landscaper extends Unit {
         return pos.x%2 == HQLocation.x % 2 && pos.y%2 == HQLocation.y % 2 && pos.distanceSquaredTo(HQLocation) > 8;
     }
 
+    public boolean isHole(MapLocation pos){
+        return pos.x%2 == HQLocation.x % 2 && pos.y%2 == HQLocation.y % 2;
+    }
+
     // returns the optimal height of a location. Adds 2 to the height if near water.
     public int optHeight(MapLocation loc) throws GameActionException {
-        return 9;
-//        int distFromFactory = loc.distanceSquaredTo(factoryLocation);
-//        return Math.min(8, (int) (Math.floor(Math.sqrt(distFromFactory)*2)) + factoryHeight);
+        return 8;
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
