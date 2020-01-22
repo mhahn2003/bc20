@@ -47,7 +47,25 @@ public class HQ extends Shooter {
             }
             if (landscapers == space-1) oneSpace = true;
         }
-
+        if (isTurtle) {
+            System.out.println("Checking turtle");
+            for (Direction dir : directions) {
+                MapLocation loc = rc.getLocation().add(dir);
+                if (rc.canSenseLocation(loc)) {
+                    RobotInfo rob = rc.senseRobotAtLocation(loc);
+                    if (rob != null && rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam()) {
+                        landscapers++;
+                    }
+                }
+            }
+            System.out.println("I have landscapers: " + landscapers);
+            if (landscapers < space) {
+                // broadcast turtle
+                System.out.println("turtle broken!!!!!!!!!!");
+                infoQ.add(getMessage(InformationCategory.TURTLE, HQLocation));
+                isTurtle = false;
+            }
+        }
         // find drones and shoot them
 //        System.out.println("enemy hq might be at " + enemyHQLocationSuspect.toString());
 //        if (enemyHQLocation!=null){

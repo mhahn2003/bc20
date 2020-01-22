@@ -426,7 +426,8 @@ public class Cast {
                                 holeLocation[h.getX()][h.getY()] = true;
                                 break;
                             case TURTLE:
-                                isTurtle = true;
+                                if (isTurtle) isTurtle = false;
+                                else isTurtle = true;
                                 break;
                             case ROTATION:
                                 rotateState = loc.y;
