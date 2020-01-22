@@ -21,6 +21,7 @@ public class Landscaper extends Unit {
     private Direction fill;
     private Direction digLoc;
     private int digState = -1;
+    private int jitter = 0;
 
     // rushing stuff
     private ArrayList<MapLocation> emptySpots;
@@ -108,6 +109,7 @@ public class Landscaper extends Unit {
                                 System.out.println("There's more to do!");
                                 moveTo(closeHole);
                             } else {
+                                teraformMode = 4;
                                 sendHole(closeHole);
                                 System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
                                 if (hole != null) {
@@ -379,6 +381,9 @@ public class Landscaper extends Unit {
             turtle.buildFort(rc);
         }
         else if (teraformMode == 4) {
+            if (jitter >= 10) {
+                teraformMode = 0;
+            }
             // reinforce the turtle
             for (MapLocation loc: reinforceLoc) {
                 if (rc.getLocation().equals(loc)) {
@@ -412,6 +417,7 @@ public class Landscaper extends Unit {
             }
             if (rc.isReady()) {
                 nav.bugNav(rc, HQLocation);
+                jitter++;
             }
         }
     }

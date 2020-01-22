@@ -498,48 +498,50 @@ public class Cast {
         }
         if (!(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
             System.out.println("I'm a miner and I'm getting to here");
-            boolean doAdd;
-            soupLoc = null;
-            for (int x = -maxV; x <= maxV; x += 2) {
-                for (int y = -maxV; y <= maxV; y += 2) {
-                    // running out of bytecode so exiting early
-                    if (Clock.getBytecodesLeft() < 1000) break;
-                    MapLocation check = robotLoc.translate(x, y);
-                    if (rc.canSenseLocation(check)) {
-                        // for now only check soup on dry land
-                        if (rc.senseSoup(check) > 0 && !rc.senseFlooding(check)) {
-                            int checkDist = check.distanceSquaredTo(rc.getLocation());
-                            if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
-                                    || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
-                                soupLoc = check;
-                            doAdd = true;
-                            for (MapLocation soup : soupLocation) {
-                                if (soup.distanceSquaredTo(check) <= soupClusterDist) {
-                                    doAdd = false;
-                                    break;
+            if (!(soupLoc != null && rc.canSenseLocation(soupLoc) && rc.senseSoup(soupLoc) > 0)) {
+                boolean doAdd;
+                soupLoc = null;
+                for (int x = -maxV; x <= maxV; x += 2) {
+                    for (int y = -maxV; y <= maxV; y += 2) {
+                        // running out of bytecode so exiting early
+                        if (Clock.getBytecodesLeft() < 1000) break;
+                        MapLocation check = robotLoc.translate(x, y);
+                        if (rc.canSenseLocation(check)) {
+                            // for now only check soup on dry land
+                            if (rc.senseSoup(check) > 0 && !rc.senseFlooding(check)) {
+                                int checkDist = check.distanceSquaredTo(rc.getLocation());
+                                if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
+                                        || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
+                                    soupLoc = check;
+                                doAdd = true;
+                                for (MapLocation soup : soupLocation) {
+                                    if (soup.distanceSquaredTo(check) <= soupClusterDist) {
+                                        doAdd = false;
+                                        break;
+                                    }
+                                }
+                                if (doAdd) {
+                                    soupLocation.add(check);
+                                    infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_SOUP, check));
                                 }
                             }
-                            if (doAdd) {
-                                soupLocation.add(check);
-                                infoQ.add(Cast.getMessage(Cast.InformationCategory.NEW_SOUP, check));
-                            }
-                        }
-                        if ((rc.getRoundNum() <= 300 || (x % 3 == 0 && y % 3 == 0)) && rc.senseFlooding(check)) {
-                            doAdd = true;
-                            for (MapLocation water : waterLocation) {
-                                if (water.distanceSquaredTo(check) <= waterClusterDist) {
-                                    doAdd = false;
-                                    break;
+                            if ((rc.getRoundNum() <= 300 || (x % 3 == 0 && y % 3 == 0)) && rc.senseFlooding(check)) {
+                                doAdd = true;
+                                for (MapLocation water : waterLocation) {
+                                    if (water.distanceSquaredTo(check) <= waterClusterDist) {
+                                        doAdd = false;
+                                        break;
+                                    }
                                 }
-                            }
-                            if (doAdd) {
-                                waterLocation.add(check);
-                                infoQ.add(Cast.getMessage(Cast.InformationCategory.WATER, check));
+                                if (doAdd) {
+                                    waterLocation.add(check);
+                                    infoQ.add(Cast.getMessage(Cast.InformationCategory.WATER, check));
+                                }
                             }
                         }
                     }
+                    if (Clock.getBytecodesLeft() < 1000) break;
                 }
-                if (Clock.getBytecodesLeft() < 1000) break;
             }
             for (MapLocation water : waterLocation) {
                 if (rc.canSenseLocation(water)) {

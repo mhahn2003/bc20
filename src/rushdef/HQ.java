@@ -85,6 +85,8 @@ public class HQ extends Shooter {
             }
         }
         if (rc.getMapHeight() > 47 && rc.getMapWidth() > 47) plusMiners = 3;
+        else if (rc.getMapHeight() > 36 && rc.getMapWidth() > 36) plusMiners = 2;
+        else plusMiners = 1;
         // build all the miners we can get in the first few turns
         MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction optDir = rc.getLocation().directionTo(center);

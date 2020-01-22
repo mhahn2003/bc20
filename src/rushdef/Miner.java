@@ -18,6 +18,7 @@ public class Miner extends Unit {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        if (rc.getRoundNum() > 500 && rc.getLocation().isAdjacentTo(HQLocation)) rc.disintegrate();
         if (isAttacker) {
             if (rc.getRoundNum() > 180 && !Rush.engaged() && Rush.getRush()) {
                 rushHappening = false;
