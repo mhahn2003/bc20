@@ -45,8 +45,6 @@ public class Cast {
         SURRENDER,
         // DEFENSE
         DEFENSE,
-//        // FACTORY LOC
-//        FACTORY,
         // TERAFORM
         TERAFORM,
         // TERAFORM DONE

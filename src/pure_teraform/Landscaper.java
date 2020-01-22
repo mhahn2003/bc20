@@ -26,11 +26,138 @@ public class Landscaper extends Unit {
 
     public void initialize() throws GameActionException {
         super.initialize();
-
+        untouchable = new Vector[]{new Vector(1, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-1, 0), new Vector(-1, 1), new Vector(0, 1), new Vector(1, 1), new Vector(0, 2), new Vector (2, 0), new Vector(0, -2), new Vector(-2, 0)};
+        untouchableLoc = new MapLocation[untouchSize];
+        for (int i = 0; i < untouchSize; i++) {
+            untouchableLoc[i] = untouchable[i].addWith(HQLocation);
+        }
     }
 
     public void takeTurn() throws GameActionException {
+        super.takeTurn();
+        if (teraformMode == 0) {
+            if (rc.getLocation().isAdjacentTo(HQLocation)){
+                teraformMode=2;
+            }
+            System.out.println("Initially I have: " + Clock.getBytecodesLeft());
+            if (teraformLoc[0] == null) {
+                System.out.println("My teraformLoc is: null");
+            } else {
+                for (MapLocation loc : teraformLoc) {
+                    System.out.println("My teraformLoc is: " + loc.toString());
+                }
+            }
+            // if in position to build turtle, build it instead
+//            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) teraformMode = 1;
+                // build the teraform
+                // assume landscaper factory is distance 10 away from HQ
+            if (rc.getLocation().distanceSquaredTo(HQLocation) > 2 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
+                System.out.println("Case 1");
+                Direction dig = holeTo();
+                System.out.println("before checking hole locations, I have: " + Clock.getBytecodesLeft());
+                fill = null;
+                digLoc = null;
+                checkFillAndDig(dig);
+                System.out.println("After checking both locations, I have: " + Clock.getBytecodesLeft());
+                if (fill == null) {
+                    System.out.println("No place to fill");
+                    // no place to fill, check if we need to shave off height instead
+                    if (digLoc == null) {
+                        System.out.println("No place to dig");
+                        // nothing to do here, move onto another location after crossing this one out
+                        MapLocation closeHole = rc.getLocation().add(dig);
+                        if (visitedHole.contains(closeHole)) {
+                            MapLocation hole = closestHole();
+                            System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+                            if (rc.getID() % 3 != 0) {
+                                if (hole != null) {
+                                    System.out.println("closest hole is: " + hole);
+                                    moveTo(hole);
+                                } else {
+                                    moveTo(enemyHQLocationSuspect);
+                                }
+                            } else {
+                                moveTo(enemyHQLocationSuspect);
+                            }
+                        } else {
+                            if (fillMore(closeHole)) {
+                                System.out.println("There's more to do!");
+                                moveTo(closeHole);
+                            } else {
+                                sendHole(closeHole);
+                                MapLocation hole = closestHole();
+                                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+                                if (rc.getID() % 2 != 0) {
+                                    if (hole != null) {
+                                        System.out.println("closest hole is: " + hole);
+                                        moveTo(hole);
+                                    } else {
+                                        moveTo(enemyHQLocationSuspect);
+                                    }
+                                } else {
+                                    moveTo(enemyHQLocationSuspect);
+                                }
+                            }
+                        }
+                    } else {
+                        if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                            if (rc.canDigDirt(digLoc)) rc.digDirt(digLoc);
+                        } else {
+                            if (rc.canDepositDirt(dig)) rc.depositDirt(dig);
+                        }
+                    }
 
+                } else {
+                    if (rc.getDirtCarrying() == 0) {
+                        if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                    } else {
+                        if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
+                    }
+                }
+            } else {
+                MapLocation hole = closestHole();
+                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+                if (hole != null) {
+                    System.out.println("closest hole is: " + hole);
+                    moveTo(hole);
+                } else {
+                    moveTo(enemyHQLocationSuspect);
+                }
+            }
+        }
+        if (teraformMode == 2) {
+            // dig hq if you can
+            if (rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
+            // if spawn location has bad height then dig it
+            MapLocation spawn = HQLocation.add(rotateDir(Direction.NORTHEAST));
+            if (rc.getLocation().isAdjacentTo(spawn)) {
+                if (rc.canSenseLocation(spawn) && Math.abs(rc.senseElevation(spawn) - factoryHeight) > 3) {
+                    RobotInfo rob = rc.senseRobotAtLocation(spawn);
+                    if (rob == null) {
+                        if (rc.senseElevation(spawn) > factoryHeight) {
+                            // if the spawn location is higher
+                            if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                                Direction dig = rc.getLocation().directionTo(spawn);
+                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                            } else {
+                                if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+                            }
+                        } else {
+                            // if the spawn location is lower
+                            if (rc.getDirtCarrying() == 0) {
+                                Direction dig = turtle.getDig();
+                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                            } else {
+                                Direction fill = rc.getLocation().directionTo(spawn);
+                                if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
+                            }
+                        }
+                    }
+                }
+            }
+            // build the turtle
+            turtle.buildFort(rc);
+        }
     }
 
     public Direction holeTo() throws GameActionException {
@@ -46,33 +173,47 @@ public class Landscaper extends Unit {
         return Direction.CENTER;
     }
 
+    public boolean surroundedLand(MapLocation pos) throws GameActionException {
+        // return true if surrounded by land
+        for (int i = 0 ; i<8 ; i++){
+            if ( rc.canSenseLocation(pos.add(directions[i])) && rc.senseFlooding(pos.add(directions[i])) ){
+                return false;
+            }
+        }
+        return true;
+    } 
+
+    public boolean isHole(Direction dir){
+        MapLocation pos =rc.getLocation().add(dir);
+        return pos.x%2 == HQLocation.x % 2 && pos.y%2 == HQLocation.y % 2;
+    }
+
     // returns the optimal height of a location. Adds 2 to the height if near water.
     public int optHeight(MapLocation loc) throws GameActionException {
-        int distFromFactory = loc.distanceSquaredTo(factoryLocation);
-        return Math.min(8, (int) (Math.floor(Math.sqrt(distFromFactory)*2)) + factoryHeight);
+        return 8;
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
         for (Direction dir: directions) {
+            if (dig.equals(dir) || isHole(dir) && ! rc.senseFlooding(rc.getLocation().add(dir))) continue;
             MapLocation fill = rc.getLocation().add(dir);
-            if (dig.equals(dir) || isHole(fill) && ! rc.senseFlooding(fill)) continue;
-
+            boolean bad = false;
             for (int i = 0; i < untouchSize; i++) {
                 if (fill.equals(untouchableLoc[i])) {
-                    continue;
+                    bad = true;
+                    break;
                 }
             }
-
+            if (bad) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
-                if (rc.senseElevation(fill) > -30 && 
-                    rc.senseElevation(fill) < optHeight(fill) && 
-                    (rob == null || rob.getTeam() == rc.getTeam() && !(rob.getType().isBuilding() )) ) {
+                if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)
+                        && (rob == null || !(rob.getType().isBuilding() && rob.getTeam() == rc.getTeam()))) {
                     this.fill = dir;
                     return;
                 }
-                if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40) || 
-                    (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying < 25)) {
+                if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40)
+                        || (rob != null && rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0)) {
                     this.digLoc = dir;
                     return;
                 }
