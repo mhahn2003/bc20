@@ -16,7 +16,7 @@ public class Robot {
 
     // spawn variables
     static int turnCount = 0;
-    static int factoryHeight;
+//    static int factoryHeight;
     static int sizeX;
     static int sizeY;
 
@@ -31,8 +31,8 @@ public class Robot {
     // important locations
     static MapLocation HQLocation = null;
     static MapLocation enemyHQLocation = null;
-    static MapLocation factoryLocation = null;
-    static MapLocation droneFactoryLocation = null;
+//    static MapLocation factoryLocation = null;
+//    static MapLocation droneFactoryLocation = null;
     static ArrayList<MapLocation> soupLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> refineryLocation = new ArrayList<MapLocation>();
     static ArrayList<MapLocation> waterLocation = new ArrayList<MapLocation>();
@@ -131,25 +131,25 @@ public class Robot {
             teraformLoc[0] = null;
             teraformLoc[1] = null;
             teraformLoc[2] = null;
-            // find design school and record location
-            if (factoryLocation == null) {
-                for (Direction dir : directions) {
-                    MapLocation loc = rc.getLocation().add(dir);
-                    if (rc.canSenseLocation(loc)) {
-                        RobotInfo factory = rc.senseRobotAtLocation(loc);
-                        if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
-                            factoryLocation = loc;
-                            factoryHeight = rc.senseElevation(factoryLocation);
-                            System.out.println("direction of factory is: " + dir.toString());
-                            break;
-                        }
-                    }
-                }
-            } else {
-                if (rc.canSenseLocation(factoryLocation)) {
-                    factoryHeight = rc.senseElevation(factoryLocation);
-                }
-            }
+//            // find design school and record location
+//            if (factoryLocation == null) {
+//                for (Direction dir : directions) {
+//                    MapLocation loc = rc.getLocation().add(dir);
+//                    if (rc.canSenseLocation(loc)) {
+//                        RobotInfo factory = rc.senseRobotAtLocation(loc);
+//                        if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
+//                            factoryLocation = loc;
+//                            factoryHeight = rc.senseElevation(factoryLocation);
+//                            System.out.println("direction of factory is: " + dir.toString());
+//                            break;
+//                        }
+//                    }
+//                }
+//            } else {
+//                if (rc.canSenseLocation(factoryLocation)) {
+//                    factoryHeight = rc.senseElevation(factoryLocation);
+//                }
+//            }
         }
     }
 

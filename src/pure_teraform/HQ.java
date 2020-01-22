@@ -56,7 +56,7 @@ public class HQ extends Shooter {
         // maximum of 10 miners at 250th round
         // TODO: fix this
         Direction optDir = Direction.NORTH;
-        if (minerCount < Math.min(3+rc.getRoundNum()/100, 7) && (minerCount < 3 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
+        if (minerCount < Math.min(5+rc.getRoundNum()/50, 7)) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);

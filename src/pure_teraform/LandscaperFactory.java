@@ -12,10 +12,10 @@ public class LandscaperFactory extends Building {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        if (factoryLocation == null) {
-            factoryLocation = rc.getLocation();
-            infoQ.add(Cast.getMessage(Cast.InformationCategory.FACTORY, factoryLocation));
-        }
+//        if (factoryLocation == null) {
+//            factoryLocation = rc.getLocation();
+//            infoQ.add(Cast.getMessage(Cast.InformationCategory.FACTORY, factoryLocation));
+//        }
         // spawning 5 turtle landscapers with a bit of leeway for refineries
         if (landscaperCount < 5 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost+150) {
             Direction optDir = rc.getLocation().directionTo(HQLocation);

@@ -16,7 +16,7 @@ public class Cast {
     static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 15;
+    private static int numCase = 14;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -45,8 +45,8 @@ public class Cast {
         SURRENDER,
         // DEFENSE
         DEFENSE,
-        // FACTORY LOC
-        FACTORY,
+//        // FACTORY LOC
+//        FACTORY,
         // TERAFORM
         TERAFORM,
         // TERAFORM DONE
@@ -95,17 +95,17 @@ public class Cast {
             case DEFENSE:
                 message += 12;
                 break;
-            case FACTORY:
+//            case FACTORY:
+//                message += 13;
+//                break;
+            case HOLE:
                 message += 13;
                 break;
-            case HOLE:
+            case DRONE_SPAWN:
                 message += 14;
                 break;
-            case DRONE_SPAWN:
-                message += 15;
-                break;
             default:
-                message += 16;
+                message += 15;
                 break;
         }
         message=addCoord(message, coord);
@@ -145,9 +145,9 @@ public class Cast {
             case 10: return InformationCategory.ATTACK;
             case 11: return InformationCategory.SURRENDER;
             case 12: return InformationCategory.DEFENSE;
-            case 13: return InformationCategory.FACTORY;
-            case 14: return InformationCategory.HOLE;
-            case 15: return InformationCategory.DRONE_SPAWN;
+//            case 13: return InformationCategory.FACTORY;
+            case 13: return InformationCategory.HOLE;
+            case 14: return InformationCategory.DRONE_SPAWN;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -375,9 +375,9 @@ public class Cast {
                             case DEFENSE:
                                 phase = RobotPlayer.actionPhase.DEFENSE;
                                 break;
-                            case FACTORY:
-                                factoryLocation = loc;
-                                break;
+//                            case FACTORY:
+//                                factoryLocation = loc;
+//                                break;
                             case TERAFORM:
                                 if (rc.getType() != RobotType.LANDSCAPER) break;
                                 System.out.println("I got teraform!");
