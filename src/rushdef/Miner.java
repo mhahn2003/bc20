@@ -349,23 +349,13 @@ public class Miner extends Unit {
                 MapLocation op = rc.getLocation().add(rc.getLocation().directionTo(HQLocation).opposite());
                 if (rc.canMineSoup(Direction.CENTER)) {
                     System.out.println("I can mine " + Direction.CENTER.toString());
-                    if (rc.getLocation().isAdjacentTo(HQLocation)) {
-                        System.out.println("I'm bugnaving!");
-                        nav.bugNav(rc, op);
-                    } else {
-                        rc.mineSoup(Direction.CENTER);
-                    }
+                    rc.mineSoup(Direction.CENTER);
                     canMine = true;
                 }
                 for (Direction d : directions) {
                     if (rc.canMineSoup(d)) {
-                        if (rc.getLocation().isAdjacentTo(HQLocation)) {
-                            System.out.println("I'm bugnaving!");
-                            nav.bugNav(rc, op);
-                        } else {
-                            System.out.println("I can mine " + d.toString());
-                            rc.mineSoup(d);
-                        }
+                        System.out.println("I can mine " + d.toString());
+                        rc.mineSoup(d);
                         canMine = true;
                         break;
                     }
