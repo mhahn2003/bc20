@@ -113,6 +113,12 @@ public class Miner extends Unit {
                         if (rc.canBuildRobot(RobotType.VAPORATOR, buildDir)) rc.buildRobot(RobotType.VAPORATOR, buildDir);
                     } else {
                         // navigate to that spot
+                        if (nav.needHelp(rc, turnCount, closestVap)) {
+                            helpMode = 1;
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), closestVap));
+                        }
+                        else nav.bugNav(rc, closestVap);
                         nav.bugNav(rc, closestVap);
                     }
                 } else {

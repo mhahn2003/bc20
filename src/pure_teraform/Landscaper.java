@@ -36,9 +36,9 @@ public class Landscaper extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         if (teraformMode == 0) {
-            if (rc.getLocation().isAdjacentTo(HQLocation)){
-                teraformMode=2;
-            }
+//            if (rc.getLocation().isAdjacentTo(HQLocation)){
+//                teraformMode=2;
+//            }
             System.out.println("Initially I have: " + Clock.getBytecodesLeft());
             if (teraformLoc[0] == null) {
                 System.out.println("My teraformLoc is: null");
@@ -51,7 +51,7 @@ public class Landscaper extends Unit {
 //            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) teraformMode = 1;
                 // build the teraform
                 // assume landscaper factory is distance 10 away from HQ
-            if (rc.getLocation().distanceSquaredTo(HQLocation) > 2 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
+            if (rc.getLocation().distanceSquaredTo(HQLocation) > 8 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
                 System.out.println("Case 1");
                 Direction dig = holeTo();
                 System.out.println("before checking hole locations, I have: " + Clock.getBytecodesLeft());
@@ -125,39 +125,39 @@ public class Landscaper extends Unit {
                 }
             }
         }
-        if (teraformMode == 2) {
-            // dig hq if you can
-            if (rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
-            // if spawn location has bad height then dig it
-            MapLocation spawn = HQLocation.add(rotateDir(Direction.NORTHEAST));
-            if (rc.getLocation().isAdjacentTo(spawn)) {
-                if (rc.canSenseLocation(spawn) && Math.abs(rc.senseElevation(spawn) - factoryHeight) > 3) {
-                    RobotInfo rob = rc.senseRobotAtLocation(spawn);
-                    if (rob == null) {
-                        if (rc.senseElevation(spawn) > factoryHeight) {
-                            // if the spawn location is higher
-                            if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
-                                Direction dig = rc.getLocation().directionTo(spawn);
-                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
-                            } else {
-                                if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
-                            }
-                        } else {
-                            // if the spawn location is lower
-                            if (rc.getDirtCarrying() == 0) {
-                                Direction dig = turtle.getDig();
-                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
-                            } else {
-                                Direction fill = rc.getLocation().directionTo(spawn);
-                                if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
-                            }
-                        }
-                    }
-                }
-            }
-            // build the turtle
-            turtle.buildFort(rc);
-        }
+//        if (teraformMode == 2) {
+//            // dig hq if you can
+//            if (rc.canDigDirt(rc.getLocation().directionTo(HQLocation))) rc.digDirt(rc.getLocation().directionTo(HQLocation));
+//            // if spawn location has bad height then dig it
+//            MapLocation spawn = HQLocation.add(rotateDir(Direction.NORTHEAST));
+//            if (rc.getLocation().isAdjacentTo(spawn)) {
+//                if (rc.canSenseLocation(spawn) && Math.abs(rc.senseElevation(spawn) - factoryHeight) > 3) {
+//                    RobotInfo rob = rc.senseRobotAtLocation(spawn);
+//                    if (rob == null) {
+//                        if (rc.senseElevation(spawn) > factoryHeight) {
+//                            // if the spawn location is higher
+//                            if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+//                                Direction dig = rc.getLocation().directionTo(spawn);
+//                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
+//                            } else {
+//                                if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
+//                            }
+//                        } else {
+//                            // if the spawn location is lower
+//                            if (rc.getDirtCarrying() == 0) {
+//                                Direction dig = turtle.getDig();
+//                                if (rc.canDigDirt(dig)) rc.digDirt(dig);
+//                            } else {
+//                                Direction fill = rc.getLocation().directionTo(spawn);
+//                                if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            // build the turtle
+//            turtle.buildFort(rc);
+//        }
     }
 
     public Direction holeTo() throws GameActionException {
@@ -190,13 +190,9 @@ public class Landscaper extends Unit {
 
     // returns the optimal height of a location. Adds 2 to the height if near water.
     public int optHeight(MapLocation loc) throws GameActionException {
-<<<<<<< HEAD
-        return 8;
-=======
         return 9;
 //        int distFromFactory = loc.distanceSquaredTo(factoryLocation);
 //        return Math.min(8, (int) (Math.floor(Math.sqrt(distFromFactory)*2)) + factoryHeight);
->>>>>>> 111044cf518c0c7294045b73d67fe334c9531e24
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {

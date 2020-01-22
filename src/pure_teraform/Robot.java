@@ -87,6 +87,7 @@ public class Robot {
     static int minerCount = 0;
     static int droneCount = 0;
     static int landscaperCount = 0;
+    static int vaporatorCount = 0;
 
 
     public Robot(RobotController r) {
@@ -157,6 +158,10 @@ public class Robot {
 //                    factoryHeight = rc.senseElevation(factoryLocation);
 //                }
 //            }
+        }
+        if (rc.getType() == RobotType.VAPORATOR) {
+            // send out signal
+            infoQ.add(getMessage(Cast.InformationCategory.VAPORATOR, rc.getLocation()));
         }
     }
 
