@@ -16,6 +16,7 @@ public class Nav {
     private ArrayList<MapLocation> threats;
     private MapLocation lastLoc;
     private MapLocation lastLastLoc;
+    private ArrayList<MapLocation> stuckLoc;
     private int travelDist;
     private int travelRound;
     private int wander;
@@ -35,6 +36,7 @@ public class Nav {
         wander = 0;
         helpReq = null;
         stuck = 0;
+        stuckLoc = new ArrayList<>();
         threats = new ArrayList<>();
         untouchable = new Vector[]{new Vector(0, 2), new Vector(0, -2), new Vector(2, 0), new Vector(-2, 0), new Vector(1, 1)};
         untouchableLoc = new MapLocation[5];
@@ -100,6 +102,7 @@ public class Nav {
             if (canMove) {
                 lastLastLoc = lastLoc;
                 lastLoc = rc.getLocation();
+                addToStuck(rc.getLocation());
                 rc.move(optDir);
             }
             else {
@@ -161,7 +164,11 @@ public class Nav {
         MapLocation moveTo = rc.getLocation().add(dir);
         if (!rc.canMove(dir)) return false;
         if (rc.senseFlooding(rc.getLocation().add(dir))) return false;
-        if (!free && (moveTo.equals(lastLoc) || moveTo.equals(lastLastLoc))) return false;
+        if (!free) {
+            for (MapLocation loc: stuckLoc) {
+                if (moveTo.equals(loc)) return false;
+            }
+        }
         if (!free && isTurtle) {
             for (MapLocation loc: untouchableLoc) {
                 if (moveTo.equals(loc)) return false;
@@ -212,6 +219,7 @@ public class Nav {
         currentDest = dest;
         wander = 0;
         stuck = 0;
+        stuckLoc = new ArrayList<>();
     }
 
     public void addThreat(MapLocation loc) {
@@ -318,6 +326,13 @@ public class Nav {
             }
         }
         if (closestDist == 1000000) exploreTo = enemyHQLocation;
+    }
+
+    public void addToStuck(MapLocation loc) {
+        if (stuckLoc.size() >= 15) {
+            stuckLoc.remove(0);
+        }
+        stuckLoc.add(loc);
     }
 
 }

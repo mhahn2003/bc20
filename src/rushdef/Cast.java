@@ -466,7 +466,7 @@ public class Cast {
         boolean saved;
         for (RobotInfo r : robots) {
             saved = false;
-            if (enemyHQLocation == null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam()) {
+            if (enemyHQLocation == null && r.getType() == RobotType.HQ && r.getTeam() != rc.getTeam() && turnCount > 3) {
                 enemyHQLocation = r.getLocation();
                 infoQ.add(0, Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));

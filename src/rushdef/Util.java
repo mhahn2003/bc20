@@ -56,9 +56,6 @@ public class Util {
     static int floodRound (int elevation) {
         //returns the round it gets flooded the given elevation. Last one is for 30
         switch(elevation) {
-            case 0: return 0;
-            case 1: return 256;
-            case 2: return 464;
             case 3: return 677;
             case 4: return 931;
             case 5: return 1210;
@@ -86,7 +83,7 @@ public class Util {
             case 27: return 2168;
             case 28: return 2179;
             case 29: return 2190;
-            default: return 0;
+            default: return 464;
         }
     }
 }

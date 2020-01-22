@@ -176,7 +176,9 @@ public class Rush {
 //            }
             System.out.println("Going to pos: " + goTo);
             // go to pos
-            if (rc.isReady()) bugNav(goTo);
+            if (rc.isReady()) {
+                nav.bugNav(rc, goTo);
+            }
         }
     }
 
