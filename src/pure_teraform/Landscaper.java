@@ -26,11 +26,6 @@ public class Landscaper extends Unit {
 
     public void initialize() throws GameActionException {
         super.initialize();
-        untouchable = new Vector[]{new Vector(1, 0), new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1), new Vector(-1, 0), new Vector(-1, 1), new Vector(0, 1), new Vector(1, 1), new Vector(0, 2), new Vector (2, 0), new Vector(0, -2), new Vector(-2, 0)};
-        untouchableLoc = new MapLocation[untouchSize];
-        for (int i = 0; i < untouchSize; i++) {
-            untouchableLoc[i] = untouchable[i].addWith(HQLocation);
-        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -115,14 +110,11 @@ public class Landscaper extends Unit {
                     }
                 }
             } else {
-                MapLocation hole = closestHole();
-                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
-                if (hole != null) {
-                    System.out.println("closest hole is: " + hole);
-                    moveTo(hole);
-                } else {
-                    moveTo(enemyHQLocationSuspect);
-                }
+                // TODO: let drones carry them over
+                System.out.println("HQLocation is: " + HQLocation);
+                Direction op = rc.getLocation().directionTo(HQLocation).opposite();
+                MapLocation loc = rc.getLocation().add(op);
+                moveTo(loc);
             }
         }
 //        if (teraformMode == 2) {
@@ -165,7 +157,7 @@ public class Landscaper extends Unit {
         int modY = HQLocation.y % 2;
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
-            if (dig.x % 2 == modX && dig.y % 2 == modY && ! rc.senseFlooding(dig) && surroundedLand(dig)) {
+            if (dig.x % 2 == modX && dig.y % 2 == modY && ! rc.senseFlooding(dig) && surroundedLand(dig) && dig.distanceSquaredTo(HQLocation) > 8) {
                 return dir;
             }
         }
@@ -185,7 +177,7 @@ public class Landscaper extends Unit {
 
     public boolean isHole(Direction dir){
         MapLocation pos =rc.getLocation().add(dir);
-        return pos.x%2 == HQLocation.x % 2 && pos.y%2 == HQLocation.y % 2;
+        return pos.x%2 == HQLocation.x % 2 && pos.y%2 == HQLocation.y % 2 && pos.distanceSquaredTo(HQLocation) > 8;
     }
 
     // returns the optimal height of a location. Adds 2 to the height if near water.
@@ -199,14 +191,7 @@ public class Landscaper extends Unit {
         for (Direction dir: directions) {
             if (dig.equals(dir) || isHole(dir) && ! rc.senseFlooding(rc.getLocation().add(dir))) continue;
             MapLocation fill = rc.getLocation().add(dir);
-            boolean bad = false;
-            for (int i = 0; i < untouchSize; i++) {
-                if (fill.equals(untouchableLoc[i])) {
-                    bad = true;
-                    break;
-                }
-            }
-            if (bad) continue;
+            if (fill.distanceSquaredTo(HQLocation) <= 8) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
                 if (rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill)
@@ -263,26 +248,15 @@ public class Landscaper extends Unit {
     }
 
     public boolean canMove(Direction dir) throws GameActionException {
-        Direction hole = holeTo();
         MapLocation loc = rc.getLocation().add(dir);
-        for (int i = 0; i < untouchSize; i++) {
-            if (untouchableLoc[i].equals(loc)|| loc.x%2 == HQLocation.x%2 && loc.y%2 == HQLocation.y%2) return false;
-        }
-        return !hole.equals(dir) && rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc);
+        return !isHole(dir) && rc.canMove(dir) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc);
     }
 
     public boolean fillMore(MapLocation hole) throws GameActionException {
         System.out.println("Before completing fillMore I have: " + Clock.getBytecodesLeft());
         for (Direction dir: directions) {
             MapLocation fill = hole.add(dir);
-            boolean bad = false;
-            for (int i = 0; i < untouchSize; i++) {
-                if (fill.equals(untouchableLoc[i])) {
-                    bad = true;
-                    break;
-                }
-            }
-            if (bad) continue;
+            if (fill.distanceSquaredTo(HQLocation) <= 8) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
                 if (((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < 40 && rc.senseElevation(fill) != optHeight(fill)) ||
