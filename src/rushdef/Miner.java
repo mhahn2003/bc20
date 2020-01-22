@@ -109,16 +109,22 @@ public class Miner extends Unit {
             // build vaporators if this particular miner hasn't build one
             if (builtVaporatorCount == 0) {
                 if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                    Direction vapDir = null;
+                    int height = 0;
                     for (Direction dir: directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.x % 2 != HQLocation.x % 2 && loc.y % 2 != HQLocation.y % 2) {
+                        if (rc.canSenseLocation(loc) && loc.x % 2 != HQLocation.x % 2 && loc.y % 2 != HQLocation.y % 2) {
                             if (loc.distanceSquaredTo(HQLocation) > 9) {
-                                if (rc.canBuildRobot(RobotType.VAPORATOR, dir)) {
-                                    rc.buildRobot(RobotType.VAPORATOR, dir);
-                                    builtVaporatorCount++;
+                                if (vapDir == null || rc.senseElevation(loc) < height) {
+                                    vapDir = dir;
+                                    height = rc.senseElevation(loc);
                                 }
                             }
                         }
+                    }
+                    if (rc.canBuildRobot(RobotType.VAPORATOR, vapDir)) {
+                        rc.buildRobot(RobotType.VAPORATOR, vapDir);
+                        builtVaporatorCount++;
                     }
                 }
             } else {
@@ -302,6 +308,8 @@ public class Miner extends Unit {
                 }
                 // if HQ is next to miner deposit
                 if (closestRefineryLocation.isAdjacentTo(rc.getLocation())) {
+                    RobotInfo ref = rc.senseRobotAtLocation(closestRefineryLocation);
+                    if (ref == null) refineryLocation.remove(closestRefineryLocation);
                     Direction soupDepositDir = rc.getLocation().directionTo(closestRefineryLocation);
                     tryRefine(soupDepositDir);
                     nav.navReset(rc, rc.getLocation());

@@ -99,10 +99,10 @@ public class Landscaper extends Unit {
                                 System.out.println("closest hole is: " + hole);
                                 moveTo(hole);
                             } else {
-                                moveTo(enemyHQLocationSuspect);
+                                moveTo(HQLocation);
                             }
                         } else {
-                            if (hole != null && hole.distanceSquaredTo(HQLocation) <= 8) {
+                            if (hole != null && hole.distanceSquaredTo(HQLocation) <= 32) {
                                 System.out.println("closest hole is: " + hole);
                                 moveTo(hole);
                             } else if (fillMore(closeHole)) {
@@ -128,7 +128,6 @@ public class Landscaper extends Unit {
                             if (rc.canDepositDirt(dig)) rc.depositDirt(dig);
                         }
                     }
-
                 } else {
                     if (rc.getDirtCarrying() == 0) {
                         if (rc.canDigDirt(dig)) rc.digDirt(dig);
@@ -405,14 +404,42 @@ public class Landscaper extends Unit {
             }
             if (rc.isReady()) {
                 for (MapLocation loc: reinforceLoc) {
-                    if (rc.getLocation().isAdjacentTo(loc)) {
+                    if (rc.getLocation().isAdjacentTo(loc) && rc.canSenseLocation(loc) && !rc.senseFlooding(loc)) {
                         Direction dir = rc.getLocation().directionTo(loc);
                         if (rc.canMove(dir)) rc.move(dir);
                     }
                 }
             }
             if (rc.isReady()) {
-                nav.bugNav(rc, HQLocation);
+                // TODO: implement landscapers digging their way through
+                Direction dig = holeTo();
+                System.out.println("After checking hole locations, I have: " + Clock.getBytecodesLeft());
+                fill = null;
+                digLoc = null;
+                checkFillAndDig(dig);
+                MapLocation hole = closestHole();
+                System.out.println("After checking both locations, I have: " + Clock.getBytecodesLeft());
+                if (fill == null) {
+                    System.out.println("No place to fill");
+                    // no place to fill, move to available spots
+                    MapLocation emptySpot = null;
+                    for (MapLocation loc: reinforceLoc) {
+                        if (rc.canSenseLocation(loc)) {
+                            RobotInfo r = rc.senseRobotAtLocation(loc);
+                            if (r == null) {
+                                emptySpot = loc;
+                            }
+                        }
+                    }
+                    if (emptySpot != null) moveTo(emptySpot);
+                    else nav.bugNav(rc, HQLocation);
+                } else {
+                    if (rc.getDirtCarrying() == 0) {
+                        if (rc.canDigDirt(dig)) rc.digDirt(dig);
+                    } else {
+                        if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
+                    }
+                }
             }
         }
     }
@@ -459,7 +486,7 @@ public class Landscaper extends Unit {
             MapLocation posWater = loc.add(dir);
             if (rc.canSenseLocation(posWater) && rc.senseFlooding(posWater)) waterHeight = 2;
         }
-        return Math.min(6, (int) (Math.floor(Math.sqrt(distFromFactory)/1.5)) + factoryHeight)+waterHeight;
+        return Math.min(7, (int) (Math.floor(Math.sqrt(distFromFactory)/1.5)) + factoryHeight);
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
