@@ -156,7 +156,7 @@ public class Landscaper extends Unit {
         Direction deepest_direction=Direction.CENTER;
         for (Direction dir: directions) {
             MapLocation dig = rc.getLocation().add(dir);
-            if (dig.x % 2 == modX && dig.y % 2 == modY && rc.canDigDirt(dir)) {
+            if (dig.x % 2 == modX && dig.y % 2 == modY && rc.canDigDirt(dir) && dig.distanceSquaredTo(HQLocation) > 8) {
                 if (!rc.senseFlooding(dig) && surroundedLand(dig)) return dir;
                 if (rc.senseElevation(dig)<deepest){
                     deepest=rc.senseElevation(dig);
@@ -195,9 +195,9 @@ public class Landscaper extends Unit {
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
-        for (Direction dir: directions) {
-            if (dig.equals(dir) || isHole(dir) && ! rc.senseFlooding(rc.getLocation().add(dir))) continue;
+        for (Direction dir: Direction.allDirections()) {
             MapLocation fill = rc.getLocation().add(dir);
+            if (!rc.canSenseLocation(fill) || dig.equals(dir) || isHole(dir) && ! rc.senseFlooding(rc.getLocation().add(dir))) continue;
             if (fill.distanceSquaredTo(HQLocation) <= 8) continue;
             if (rc.canSenseLocation(fill)) {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
