@@ -13,16 +13,8 @@ public class LandscaperFactory extends Building {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        RobotInfo[] robots = rc.senseNearbyRobots();
-        int vaporatorCount = 0;
-        for (RobotInfo r : robots) {
-            if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
-                vaporatorCount++;
-            }
-        }
-
         // if there are more vaporators than landscapers start building
-        if (landscaperCount < vaporatorCount && !completeTeraform) {
+        if (landscaperCount < vaporatorCount) {
             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
             for (int i = 0; i < 8; i++) {
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
