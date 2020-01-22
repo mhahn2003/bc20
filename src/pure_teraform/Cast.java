@@ -16,7 +16,7 @@ public class Cast {
     static ArrayList<Integer> infoQ = new ArrayList<>();
 
     // number of possible cases for InfoCategory enum class
-    private static int numCase = 17;
+    private static int numCase = 15;
  
     public Cast(RobotController r) { rc = r; }
 
@@ -51,10 +51,6 @@ public class Cast {
         TERAFORM,
         // TERAFORM DONE
         HOLE,
-        // TURTLE DONE
-        TURTLE,
-        // ROTATION
-        ROTATION,
         // FIRST DRONE SPAWN
         DRONE_SPAWN,
         // enemy?
@@ -105,17 +101,11 @@ public class Cast {
             case HOLE:
                 message += 14;
                 break;
-            case TURTLE:
+            case DRONE_SPAWN:
                 message += 15;
                 break;
-            case ROTATION:
-                message += 16;
-                break;
-            case DRONE_SPAWN:
-                message += 17;
-                break;
             default:
-                message += 18;
+                message += 16;
                 break;
         }
         message=addCoord(message, coord);
@@ -157,9 +147,7 @@ public class Cast {
             case 12: return InformationCategory.DEFENSE;
             case 13: return InformationCategory.FACTORY;
             case 14: return InformationCategory.HOLE;
-            case 15: return InformationCategory.TURTLE;
-            case 16: return InformationCategory.ROTATION;
-            case 17: return InformationCategory.DRONE_SPAWN;
+            case 15: return InformationCategory.DRONE_SPAWN;
             default:
                 if (message/100000000 == 1) return InformationCategory.HELP;
                 if (message < 0) return InformationCategory.TERAFORM;
@@ -406,13 +394,6 @@ public class Cast {
                                 Hole h = Hole.getHole(loc);
                                 System.out.println("I got hole location: " + h.getX() + " " + h.getY());
                                 holeLocation[h.getX()][h.getY()] = true;
-                                break;
-                            case TURTLE:
-                                isTurtle = true;
-                                break;
-                            case ROTATION:
-                                rotateState = loc.y;
-                                System.out.println("Recieved rotate state of: " + rotateState);
                                 break;
                             case DRONE_SPAWN:
                                 areDrones = true;

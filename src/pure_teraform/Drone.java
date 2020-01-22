@@ -105,7 +105,8 @@ public class Drone extends Unit {
                 nav.bugNav(rc, strandLoc);
             } else if (helpMode == 2) {
                 MapLocation requestLoc = helpLoc.get(helpIndex).getValue();
-                if (requestLoc.equals(HQLocation) && isTurtle || rc.getLocation().isAdjacentTo(requestLoc)) {
+                // TODO: things might break here
+                if (rc.getLocation().isAdjacentTo(requestLoc)) {
                     Direction optDir = rc.getLocation().directionTo(requestLoc);
                     for (int i = 0; i < 8; i++) {
                         if (rc.canDropUnit(optDir) && !rc.senseFlooding(rc.getLocation().add(optDir))) {

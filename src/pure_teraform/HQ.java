@@ -15,38 +15,6 @@ public class HQ extends Shooter {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        // if HQ is surrounded by complete turtle then send turtle signal
-        boolean oneSpace = false;
-        int space;
-        if ((HQLocation.x == 0 || HQLocation.x == rc.getMapWidth()-1) && (HQLocation.y == 0 || HQLocation.y == rc.getMapHeight()-1)) space = 3;
-        else if ((HQLocation.x == 0 || HQLocation.x == rc.getMapWidth()-1) && (HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2)) space = 4;
-        else if ((HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2) && (HQLocation.y == 0 || HQLocation.y == rc.getMapHeight()-1)) space = 4;
-        else if ((HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2) && (HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2)) space = 5;
-        else if (HQLocation.x == 0 || HQLocation.x == rc.getMapWidth()-1 || HQLocation.y == 0 || HQLocation.y == rc.getMapHeight()-1) space = 5;
-        else if (HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2 || HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2) space = 7;
-        else space = 8;
-        System.out.println("space is: " + space);
-        if (!isTurtle) {
-            System.out.println("Checking turtle");
-            int landscapers = 0;
-            for (Direction dir : directions) {
-                MapLocation loc = rc.getLocation().add(dir);
-                if (rc.canSenseLocation(loc)) {
-                    RobotInfo rob = rc.senseRobotAtLocation(loc);
-                    if (rob != null && rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam()) {
-                        landscapers++;
-                    }
-                }
-            }
-            System.out.println("I have landscapers: " + landscapers);
-            if (landscapers == space) {
-                // broadcast turtle
-                System.out.println("turtle!!!!!!!!!!");
-                infoQ.add(getMessage(Cast.InformationCategory.TURTLE, HQLocation));
-                isTurtle = true;
-            }
-            if (landscapers == space-1) oneSpace = true;
-        }
 
         // find drones and shoot them
 //        System.out.println("enemy hq might be at " + enemyHQLocationSuspect.toString());
@@ -86,9 +54,9 @@ public class HQ extends Shooter {
         }
         // build all the miners we can get in the first few turns
         // maximum of 10 miners at 250th round
-        // TODO: spawn appropriate number of miners according to length of soupLoc
+        // TODO: fix this
         Direction optDir = Direction.NORTH;
-        if (!oneSpace && !isTurtle && minerCount < Math.min(3+rc.getRoundNum()/100, 7) && (minerCount < 3 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
+        if (minerCount < Math.min(3+rc.getRoundNum()/100, 7) && (minerCount < 3 || rc.getTeamSoup() >= RobotType.REFINERY.cost + RobotType.MINER.cost) && !isVaporator) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);

@@ -30,6 +30,7 @@ public class Landscaper extends Unit {
     }
 
     public void takeTurn() throws GameActionException {
+
     }
 
     public Direction holeTo() throws GameActionException {
