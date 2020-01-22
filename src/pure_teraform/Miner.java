@@ -23,6 +23,17 @@ public class Miner extends Unit {
             if (nav.outOfDrone(rc)) helpMode = 0;
         }
         if (helpMode == 0) {
+            // check if it's over round 250 and you're a builder, then stay pretty close to HQ
+            if (rc.getRoundNum() > 150 && isBuilder && !completeTeraform) {
+                if (rc.getLocation().distanceSquaredTo(HQLocation) > 8) {
+                    if (nav.needHelp(rc, turnCount, HQLocation)) {
+                        helpMode = 1;
+                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        infoQ.add(Cast.getMessage(rc.getLocation(), HQLocation));
+                    }
+                    else nav.bugNav(rc, HQLocation);
+                }
+            }
             // build drone factory
             if (!isDF && isBuilder) {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost) {
@@ -86,6 +97,13 @@ public class Miner extends Unit {
                         else nav.bugNav(rc, HQLocation);
                     }
                 }
+                else if (rc.getRoundNum() > 150) {
+                    if (rc.getLocation().distanceSquaredTo(HQLocation) > 8) {
+                        nav.bugNav(rc, HQLocation);
+                    } else {
+                        return;
+                    }
+                }
             }
             if (completeTeraform) {
                 // then build vaporators randomly i guess
@@ -119,12 +137,20 @@ public class Miner extends Unit {
                             infoQ.add(Cast.getMessage(rc.getLocation(), closestVap));
                         }
                         else nav.bugNav(rc, closestVap);
-                        nav.bugNav(rc, closestVap);
                     }
                 } else {
+                    if (rc.getLocation().distanceSquaredTo(HQLocation) > 100) {
+                        // navigate to that spot
+                        if (nav.needHelp(rc, turnCount, HQLocation)) {
+                            helpMode = 1;
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), HQLocation));
+                        }
+                        else nav.bugNav(rc, HQLocation);
+                    } else nav.bugNav(rc, enemyHQLocationSuspect);
                     // go to enemy location suspect and spread out?
-                    nav.bugNav(rc, enemyHQLocationSuspect);
                 }
+                return;
             }
 //            if (factoryLocation == null && isBuilder) {
 //                if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost) {
@@ -311,6 +337,7 @@ public class Miner extends Unit {
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
             int checkDist = check.distanceSquaredTo(rc.getLocation());
+            if (rc.senseElevation(check) > 30) continue;
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
                 soupLoc = check;

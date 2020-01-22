@@ -50,11 +50,12 @@ public class HQ extends Shooter {
         }
         if (!completeTeraform) {
             // check all the surrounding locations and check if they're either infinite water tiles or 8 and higher
+            System.out.println("teraform is not complete");
             completeTeraform = true;
             for (MapLocation loc: completeLoc) {
                 if (rc.canSenseLocation(loc)) {
                     int height = rc.senseElevation(loc);
-                    if (height >= -10000 && height <= 8) {
+                    if (height >= -10000 && height < 5) {
                         completeTeraform = false;
                         break;
                     }
@@ -62,6 +63,7 @@ public class HQ extends Shooter {
             }
             if (completeTeraform) {
                 // signal that teraform is complete
+                System.out.println("TERAFORM COMPLETE!!!!");
                 infoQ.add(getMessage(Cast.InformationCategory.TERAFORM_COMPLETE, HQLocation));
             }
         }

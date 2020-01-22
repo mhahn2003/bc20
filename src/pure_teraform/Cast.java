@@ -406,6 +406,7 @@ public class Cast {
                                 break;
                             case TERAFORM_COMPLETE:
                                 completeTeraform = true;
+                                System.out.println("Received teraform complete!");
                                 break;
                             case VAPORATOR:
                                 vaporatorCount++;
@@ -609,6 +610,7 @@ public class Cast {
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
             int checkDist = check.distanceSquaredTo(rc.getLocation());
+            if (rc.senseElevation(check) > 30) continue;
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
                 soupLoc = check;
