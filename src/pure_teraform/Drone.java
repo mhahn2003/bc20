@@ -109,7 +109,7 @@ public class Drone extends Unit {
                 if (rc.getLocation().isAdjacentTo(requestLoc)) {
                     Direction optDir = rc.getLocation().directionTo(requestLoc);
                     for (int i = 0; i < 8; i++) {
-                        if (rc.canDropUnit(optDir) && !rc.senseFlooding(rc.getLocation().add(optDir))) {
+                        if (rc.canDropUnit(optDir) && !rc.senseFlooding(rc.getLocation().add(optDir)) && rc.senseElevation(rc.getLocation().add(optDir)) > -8) {
                             rc.dropUnit(optDir);
                             helpLoc.remove(helpIndex);
                             helpMode = 0;

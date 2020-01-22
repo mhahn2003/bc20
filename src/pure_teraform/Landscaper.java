@@ -13,6 +13,8 @@ public class Landscaper extends Unit {
     private ArrayList<MapLocation> visitedHole;
     private Direction fill;
     private Direction digLoc;
+    private int jitter = 0;
+    private boolean inHelp = false;
 
 
     public Landscaper(RobotController r) throws GameActionException {
@@ -43,7 +45,8 @@ public class Landscaper extends Unit {
 //            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) teraformMode = 1;
                 // build the teraform
                 // assume landscaper factory is distance 10 away from HQ
-            if (rc.getLocation().distanceSquaredTo(HQLocation) > 8 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
+            if (rc.getLocation().distanceSquaredTo(HQLocation) > 8) {
+                inHelp = false;
                 System.out.println("Case 1");
                 Direction dig = holeTo();
                 System.out.println("before checking hole locations, I have: " + Clock.getBytecodesLeft());
@@ -107,11 +110,26 @@ public class Landscaper extends Unit {
                     }
                 }
             } else {
+                if (inHelp) {
+                    System.out.println("In help mode rn");
+                    return;
+                }
+                if (jitter >= 15 && areDrones) {
+                    // request for help
+                    MapLocation loc = onTeraform();
+                    if (!loc.equals(rc.getLocation())) {
+                        infoQ.add(getMessage(rc.getLocation(), loc));
+                        inHelp = true;
+                        System.out.println("Sending help!!!!");
+                        return;
+                    }
+                }
                 // TODO: let drones carry them over
                 System.out.println("HQLocation is: " + HQLocation);
                 Direction op = rc.getLocation().directionTo(HQLocation).opposite();
                 MapLocation loc = rc.getLocation().add(op);
                 moveTo(loc);
+                jitter++;
             }
         }
 //        if (teraformMode == 2) {
@@ -307,5 +325,22 @@ public class Landscaper extends Unit {
             visitedHole.remove(0);
         }
         visitedHole.add(loc);
+    }
+
+    public MapLocation onTeraform() throws GameActionException {
+        Vector[] on = new Vector[]{new Vector(-3, 0), new Vector(3, 0), new Vector(0, -3), new Vector(0, 3)};
+        MapLocation[] onLoc = new MapLocation[4];
+        for (int i = 0; i < 4; i++) {
+            onLoc[i] = on[i].addWith(HQLocation);
+        }
+        for (MapLocation loc: onLoc) {
+            if (rc.canSenseLocation(loc)) {
+                RobotInfo r = rc.senseRobotAtLocation(loc);
+                if (r == null) {
+                    return loc;
+                }
+            }
+        }
+        return rc.getLocation();
     }
 }

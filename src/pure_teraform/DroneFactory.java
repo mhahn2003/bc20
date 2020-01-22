@@ -43,25 +43,25 @@ public class DroneFactory extends Building {
 //                }
 //            }
 //        }
-//
-//        // spam drones
-//        if (rc.getTeamSoup() >= 1000) {
-//            for (int i = 0; i < 8; i++) {
-//                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
-//                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
-//                    droneCount++;
-//                    if (droneCount == maxDroneCount-attackLandscaperCount) {
-//                        infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, HQLocation));
-//                    }
-//                    if (droneCount == maxDroneCount) {
-//                        infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, HQLocation));
-//                    }
-//                    break;
-//                } else {
-//                    optDir = optDir.rotateLeft();
-//                }
-//            }
-//        }
+
+        // spam drones
+        if (rc.getTeamSoup() >= 1000) {
+            for (int i = 0; i < 8; i++) {
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
+                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
+                    droneCount++;
+                    if (droneCount == maxDroneCount-attackLandscaperCount) {
+                        infoQ.add(Cast.getMessage(Cast.InformationCategory.PREPARE, HQLocation));
+                    }
+                    if (droneCount == maxDroneCount) {
+                        infoQ.add(Cast.getMessage(Cast.InformationCategory.ATTACK, HQLocation));
+                    }
+                    break;
+                } else {
+                    optDir = optDir.rotateLeft();
+                }
+            }
+        }
 
 
 //        boolean isVaporator = false;
