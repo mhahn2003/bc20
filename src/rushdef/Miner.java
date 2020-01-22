@@ -382,6 +382,7 @@ public class Miner extends Unit {
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
             if (rc.senseFlooding(check)) continue;
+            if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(check)) > 3) continue;
             int checkDist = check.distanceSquaredTo(rc.getLocation());
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))

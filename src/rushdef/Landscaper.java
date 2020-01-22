@@ -20,6 +20,7 @@ public class Landscaper extends Unit {
     private int reinforceSize = 8;
     private Direction fill;
     private Direction digLoc;
+    private int digState = -1;
 
     // rushing stuff
     private ArrayList<MapLocation> emptySpots;
@@ -82,6 +83,7 @@ public class Landscaper extends Unit {
                 fill = null;
                 digLoc = null;
                 checkFillAndDig(dig);
+                MapLocation hole = closestHole();
                 System.out.println("After checking both locations, I have: " + Clock.getBytecodesLeft());
                 if (fill == null) {
                     System.out.println("No place to fill");
@@ -91,33 +93,26 @@ public class Landscaper extends Unit {
                         // nothing to do here, move onto another location after crossing this one out
                         MapLocation closeHole = rc.getLocation().add(dig);
                         if (visitedHole.contains(closeHole)) {
-                            MapLocation hole = closestHole();
                             System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
-                            if (rc.getID() % 2 != 0) {
-                                if (hole != null) {
-                                    System.out.println("closest hole is: " + hole);
-                                    moveTo(hole);
-                                } else {
-                                    moveTo(enemyHQLocationSuspect);
-                                }
+                            if (hole != null) {
+                                System.out.println("closest hole is: " + hole);
+                                moveTo(hole);
                             } else {
                                 moveTo(enemyHQLocationSuspect);
                             }
                         } else {
-                            if (fillMore(closeHole)) {
+                            if (hole != null && hole.distanceSquaredTo(HQLocation) <= 8) {
+                                System.out.println("closest hole is: " + hole);
+                                moveTo(hole);
+                            } else if (fillMore(closeHole)) {
                                 System.out.println("There's more to do!");
                                 moveTo(closeHole);
                             } else {
                                 sendHole(closeHole);
-                                MapLocation hole = closestHole();
                                 System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
-                                if (rc.getID() % 3 != 0) {
-                                    if (hole != null) {
-                                        System.out.println("closest hole is: " + hole);
-                                        moveTo(hole);
-                                    } else {
-                                        moveTo(enemyHQLocationSuspect);
-                                    }
+                                if (hole != null) {
+                                    System.out.println("closest hole is: " + hole);
+                                    moveTo(hole);
                                 } else {
                                     moveTo(enemyHQLocationSuspect);
                                 }
@@ -181,6 +176,13 @@ public class Landscaper extends Unit {
                 getEmpty();
                 if (emptySpots.isEmpty()) {
                     // try to dig down buildings if you can
+                    if (digState == 1) {
+                        // dig from our own building
+                        if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
+                            // dig from there
+                            if (rc.canDigDirt(digTo)) rc.digDirt(digTo);
+                        }
+                    }
                     if (LFdir != null) {
                         if (rc.getDirtCarrying() > 0) {
                             if (rc.canDepositDirt(LFdir)) rc.depositDirt(LFdir);
@@ -382,7 +384,7 @@ public class Landscaper extends Unit {
                 if (rc.getLocation().equals(loc)) {
                     Direction dig = digReinforce();
                     RobotInfo rob = rc.senseRobotAtLocation(rc.getLocation().add(dig));
-                    if (rc.senseElevation(rc.getLocation()) >= 20) {
+                    if (rc.senseElevation(rc.getLocation()) >= 80) {
                         // refinforce turtle
                         if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
@@ -456,7 +458,7 @@ public class Landscaper extends Unit {
             MapLocation posWater = loc.add(dir);
             if (rc.canSenseLocation(posWater) && rc.senseFlooding(posWater)) waterHeight = 2;
         }
-        return Math.min(12, (int) (Math.floor(Math.sqrt(distFromFactory)/1.5)) + factoryHeight)+waterHeight;
+        return Math.min(6, (int) (Math.floor(Math.sqrt(distFromFactory)/1.5)) + factoryHeight)+waterHeight;
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
@@ -633,18 +635,24 @@ public class Landscaper extends Unit {
         // priorities: our design school, our net guns, and opponent miners
         Direction digDir;
         RobotInfo[] ourRobots = rc.senseNearbyRobots(2);
+        digState = 1;
         for (RobotInfo r: ourRobots) {
             if (r.getType() == RobotType.DESIGN_SCHOOL && r.getTeam() == rc.getTeam()) {
                 digDir = rc.getLocation().directionTo(r.getLocation());
-                if (rc.canDigDirt(digDir)) return digDir;
+                if (rc.canDigDirt(digDir)) {
+                    return digDir;
+                }
             }
         }
         for (RobotInfo r: ourRobots) {
             if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) {
                 digDir = rc.getLocation().directionTo(r.getLocation());
-                if (rc.canDigDirt(digDir)) return digDir;
+                if (rc.canDigDirt(digDir)) {
+                    return digDir;
+                }
             }
         }
+        digState = -1;
         for (RobotInfo r: ourRobots) {
             if (r.getType() == RobotType.MINER && r.getTeam() != rc.getTeam()) {
                 digDir = rc.getLocation().directionTo(r.getLocation());

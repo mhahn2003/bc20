@@ -7,6 +7,7 @@ import static rushdef.Util.directions;
 
 public class HQ extends Shooter {
     static int numMiners = 0;
+    static int plusMiners = 0;
 
     public HQ(RobotController r) {
         super(r);
@@ -83,6 +84,7 @@ public class HQ extends Shooter {
                 infoQ.add(Cast.getMessage(InformationCategory.SURRENDER, HQLocation));
             }
         }
+        if (rc.getMapHeight() > 47 && rc.getMapWidth() > 47) plusMiners = 3;
         // build all the miners we can get in the first few turns
         MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction optDir = rc.getLocation().directionTo(center);
@@ -94,8 +96,7 @@ public class HQ extends Shooter {
                 } else optDir = optDir.rotateLeft();
             }
         }
-        optDir = rc.getLocation().directionTo(center);
-        if (minerCount < 8 && !oneSpace && !isTurtle && space-landscapers < 5 && rc.getRoundNum() > 250) {
+        if (minerCount < 3 + plusMiners && rc.getRoundNum() > 150) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
@@ -103,6 +104,15 @@ public class HQ extends Shooter {
                 } else optDir = optDir.rotateLeft();
             }
         }
+//        optDir = rc.getLocation().directionTo(center);
+//        if (minerCount < 8 && !oneSpace && !isTurtle && space-landscapers < 5 && rc.getRoundNum() > 250) {
+//            for (int i = 0; i < 8; i++) {
+//                if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
+//                    rc.buildRobot(RobotType.MINER, optDir);
+//                    minerCount++;
+//                } else optDir = optDir.rotateLeft();
+//            }
+//        }
         // attack
         if (rc.getRoundNum() == 1000) {
             infoQ.add(getMessage(InformationCategory.PREPARE, HQLocation));

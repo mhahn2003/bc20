@@ -19,7 +19,7 @@ public class LandscaperFactory extends Building {
         super.takeTurn();
         if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < 18) {
             // attacking factory
-
+            checkFlying();
             // get count of how many landscapers and net guns we already have
             boolean netGunPlaced = false;
             RobotInfo[] robots = rc.senseNearbyRobots();
