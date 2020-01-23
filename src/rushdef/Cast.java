@@ -426,8 +426,10 @@ public class Cast {
                                 holeLocation[h.getX()][h.getY()] = true;
                                 break;
                             case TURTLE:
-                                if (isTurtle) isTurtle = false;
-                                else isTurtle = true;
+                                if (rc.getType() != RobotType.HQ) {
+                                    if (isTurtle) isTurtle = false;
+                                    else isTurtle = true;
+                                }
                                 break;
                             case ROTATION:
                                 rotateState = loc.y;

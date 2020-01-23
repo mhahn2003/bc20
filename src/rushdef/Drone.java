@@ -200,18 +200,21 @@ public class Drone extends Unit {
             // if not helping and no one to help
             switch(phase) {
                 case NON_ATTACKING:
+                    System.out.println("Not attacking right now");
                     if (!isTurtle) {
+                        System.out.println("Not turtle right now");
                         // check if there are any landscapers nearby that are not in turtle position
                         if (!rc.isCurrentlyHoldingUnit()) {
                             RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
                             RobotInfo landscaper = null;
                             for (RobotInfo rob : robots) {
-                                if (rob.getType() == RobotType.LANDSCAPER && !rob.getLocation().isAdjacentTo(HQLocation)) {
+                                if (rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam() && !rob.getLocation().isAdjacentTo(HQLocation)) {
                                     landscaper = rob;
                                     break;
                                 }
                             }
                             if (landscaper != null) {
+                                System.out.println("I found our landscaper!");
                                 // then go pick it up
                                 if (landscaper.getLocation().isAdjacentTo(rc.getLocation())) {
                                     if (rc.canPickUpUnit(landscaper.getID())) {
@@ -227,6 +230,7 @@ public class Drone extends Unit {
                         } else {
                             // if it is holding a unit, check if it's a friendly landscaper
                             if (isLandscaper) {
+                                System.out.println("I'm holding our landscaper");
                                 // if it is, then navigate to HQ and try to find closest empty spot
                                 MapLocation emptySpot = null;
                                 int dist = 100000;
@@ -253,6 +257,8 @@ public class Drone extends Unit {
                                         // navigate to there
                                         nav.bugNav(rc, emptySpot);
                                     }
+                                } else {
+                                    patrolHQ();
                                 }
                             }
                         }
@@ -271,6 +277,9 @@ public class Drone extends Unit {
                                         if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) > 48)
                                             pickup = r;
                                     } else {
+                                        if (enemyHQLocation == null) {
+                                            System.out.println("enemy hq is null");
+                                        } else System.out.println("distance to enemy HQ is: " + r.getLocation().distanceSquaredTo(enemyHQLocation));
                                         if (enemyHQLocation == null || r.getLocation().distanceSquaredTo(enemyHQLocation) >= 8)
                                             pickup = r;
                                     }
@@ -333,10 +342,13 @@ public class Drone extends Unit {
                             nav.searchEnemyHQ(rc);
                         }
                         else if (isLandscaper) {
+                            System.out.println("It's not turtle and I have a ladnscaper");
                             // if it's a friendly landscaper and the turtle is closed, just drop it off anywhere nonwater
                             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
                             for (int i = 0; i < 8; i++) {
-                                if (rc.canDropUnit(optDir) && !rc.senseFlooding(rc.getLocation().add(optDir))) {
+                                MapLocation loc = rc.getLocation().add(optDir);
+                                if (rc.canDropUnit(optDir) && !(loc.x % 2 == HQLocation.x % 2 && loc.y % 2 == HQLocation.y % 2) && !rc.senseFlooding(rc.getLocation().add(optDir))) {
+                                    System.out.println("Dropping it off at: " + optDir.toString());
                                     rc.dropUnit(optDir);
                                     isLandscaper = false;
                                     break;
@@ -369,6 +381,7 @@ public class Drone extends Unit {
                     }
                     break;
                 case PREPARE:
+                    System.out.println("preparing");
                     if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= enemyPatrolRadiusMax) {
                         System.out.println("Too far");
                         // if too far, move in
@@ -395,6 +408,7 @@ public class Drone extends Unit {
                     }
                     break;
                 case ATTACK:
+                    System.out.println("attacking");
                     if (rc.isCurrentlyHoldingUnit() && !isAttackerBuilder) {
                         // throw unit out if it's not our unit
                         // check the 8 adjacent tiles and see if there's any water
@@ -525,6 +539,7 @@ public class Drone extends Unit {
                     }
                     break;
                 case SURRENDER:
+                    System.out.println("Surrendering");
                     if (enemyHQLocation != null && rc.getLocation().distanceSquaredTo(enemyHQLocation) < enemyPatrolRadiusMin) {
                         // if close, move away
                         nav.bugNav(rc, HQLocation);
@@ -534,6 +549,7 @@ public class Drone extends Unit {
                     }
                     break;
                 case DEFENSE:
+                    System.out.println("Defending");
                     if (rc.isCurrentlyHoldingUnit()) {
                         // find water if not cow
 //                        System.out.println("I'm holding a unit!");
