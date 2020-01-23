@@ -206,10 +206,10 @@ public class Miner extends Unit {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + 60 + rushCost) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) > 20) {
+                        if (loc.distanceSquaredTo(HQLocation) > 9 && loc.distanceSquaredTo(HQLocation) < 50) {
                             if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
                                 MapLocation placeLoc = rc.getLocation().add(dir);
-                                if (placeLoc.x % 2 == HQLocation.x % 2 && placeLoc.y % 2 == HQLocation.y % 2)
+                                if (placeLoc.x % 2 != HQLocation.x % 2 || placeLoc.y % 2 != HQLocation.y % 2)
                                     continue;
                                 rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
                                 droneFactoryLocation = rc.getLocation().add(dir);

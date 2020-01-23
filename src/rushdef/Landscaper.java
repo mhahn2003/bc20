@@ -490,12 +490,11 @@ public class Landscaper extends Unit {
     // returns the optimal height of a location. Adds 2 to the height if near water.
     public int optHeight(MapLocation loc) throws GameActionException {
         int distFromFactory = loc.distanceSquaredTo(factoryLocation);
-        int waterHeight = 0;
-        for (Direction dir: directions) {
-            MapLocation posWater = loc.add(dir);
-            if (rc.canSenseLocation(posWater) && rc.senseFlooding(posWater)) waterHeight = 2;
+        int droneHeight = 0;
+        if (droneFactoryLocation != null) {
+            if (loc.isAdjacentTo(droneFactoryLocation)) droneHeight+=2;
         }
-        return Math.min(7, (int) (Math.floor(Math.sqrt(distFromFactory)/1.5)) + factoryHeight);
+        return Math.min(7, (int) (Math.floor(Math.sqrt(distFromFactory)/1.5)) + factoryHeight)+droneHeight;
     }
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
