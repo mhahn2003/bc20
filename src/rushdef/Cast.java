@@ -641,7 +641,17 @@ public class Cast {
         // try to find soup very close
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
-            if (rc.senseFlooding(check)) continue;
+            if (rc.senseFlooding(check)) {
+                boolean isLand = false;
+                for (Direction dir: directions) {
+                    MapLocation loc = check.add(dir);
+                    if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc)) {
+                        isLand = true;
+                        break;
+                    }
+                }
+                if (!isLand) continue;
+            }
             int checkDist = check.distanceSquaredTo(rc.getLocation());
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))

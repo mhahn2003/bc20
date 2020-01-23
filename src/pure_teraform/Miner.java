@@ -329,7 +329,7 @@ public class Miner extends Unit {
                     System.out.println("Going to enemyHQ!");
                     // check if getting close to flooded
                     // scout for soup
-                    nav.searchEnemyHQ(rc);
+                    nav.bugNav(rc, new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2));
                 }
             }
         }

@@ -107,7 +107,15 @@ public class Miner extends Unit {
 //                }
 //            } else {
             // build vaporators if this particular miner hasn't build one
-            if (builtVaporatorCount == 0) {
+            if (rc.getRoundNum() > Util.floodRound(Math.max(2, rc.senseElevation(rc.getLocation()))-80) && rc.getLocation().distanceSquaredTo(HQLocation) > 100) {
+                // if it's going to drown, then go back to HQ
+                if (nav.needHelp(rc, turnCount, HQLocation)) {
+                    helpMode = 1;
+                    System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    infoQ.add(Cast.getMessage(rc.getLocation(), HQLocation));
+                } else nav.bugNav(rc, HQLocation);
+            }
+            if (vaporatorCount < 3) {
                 if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
                     Direction vapDir = null;
                     int height = 0;
@@ -115,16 +123,15 @@ public class Miner extends Unit {
                         MapLocation loc = rc.getLocation().add(dir);
                         if (rc.canSenseLocation(loc) && loc.x % 2 != HQLocation.x % 2 && loc.y % 2 != HQLocation.y % 2) {
                             if (loc.distanceSquaredTo(HQLocation) > 9) {
-                                if (vapDir == null || rc.senseElevation(loc) < height) {
+                                if (vapDir == null || rc.senseElevation(loc) > height) {
                                     vapDir = dir;
                                     height = rc.senseElevation(loc);
                                 }
                             }
                         }
                     }
-                    if (rc.canBuildRobot(RobotType.VAPORATOR, vapDir)) {
+                    if (rc.canBuildRobot(RobotType.VAPORATOR, vapDir) && (rc.getLocation().add(vapDir).distanceSquaredTo(HQLocation) < 100 || rc.senseElevation(rc.getLocation().add(vapDir)) > 5)) {
                         rc.buildRobot(RobotType.VAPORATOR, vapDir);
-                        builtVaporatorCount++;
                     }
                 }
             } else {
@@ -315,28 +322,6 @@ public class Miner extends Unit {
                     nav.navReset(rc, rc.getLocation());
                 } else {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
-                        // just build a refinery?
-                        if (rc.getTeamSoup() >= RobotType.REFINERY.cost + rushCost) {
-                            Direction optDir = rc.getLocation().directionTo(referencePoint);
-                            for (int i = 0; i < 8; i++) {
-                                MapLocation robotLoc = rc.getLocation();
-                                MapLocation placeLoc = robotLoc.add(optDir);
-                                if (placeLoc.x % 3 == HQLocation.x && placeLoc.y % 3 == HQLocation.y) {
-                                    optDir = optDir.rotateRight();
-                                    continue;
-                                }
-                                if (rc.canBuildRobot(RobotType.REFINERY, optDir)) {
-                                    //                            System.out.println("can build refinery");
-                                    rc.buildRobot(RobotType.REFINERY, optDir);
-                                    //                            System.out.println("built refinery");
-                                    refineryLocation.add(placeLoc);
-                                    closestRefineryLocation = refineryLocation.get(refineryLocation.size() - 1);
-                                    return;
-                                } else {
-                                    optDir = optDir.rotateRight();
-                                }
-                            }
-                        }
                         helpMode = 1;
                         System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
@@ -384,12 +369,7 @@ public class Miner extends Unit {
                     System.out.println("Exploring!");
                     // check if getting close to flooded
                     // scout for soup
-                    // explore
-                    if (exploreTo == null || suspectsVisited.get(exploreTo)) {
-                        nav.nextExplore();
-                    }
-                    System.out.println("I'm exploring to " + exploreTo.toString());
-                    nav.bugNav(rc, exploreTo);
+                    nav.bugNav(rc, new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2));
                 }
             }
         }
@@ -410,8 +390,19 @@ public class Miner extends Unit {
         System.out.println("Before calling I have: " + Clock.getBytecodesLeft());
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
-            if (rc.senseFlooding(check)) continue;
-            if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(check)) > 3) continue;
+            if (rc.senseFlooding(check)) {
+                // check if there's anything near it that's land
+                boolean isLand = false;
+                for (Direction dir: directions) {
+                    MapLocation loc = check.add(dir);
+                    if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc)) {
+                        isLand = true;
+                        break;
+                    }
+                }
+                if (!isLand) continue;
+            }
+//            if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(check)) > 3) continue;
             int checkDist = check.distanceSquaredTo(rc.getLocation());
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))

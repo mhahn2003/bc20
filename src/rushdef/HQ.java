@@ -108,7 +108,7 @@ public class HQ extends Shooter {
         // build all the miners we can get in the first few turns
         MapLocation center = new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2);
         Direction optDir = rc.getLocation().directionTo(center);
-        if (minerCount < 3) {
+        if (minerCount < 4) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
@@ -116,7 +116,7 @@ public class HQ extends Shooter {
                 } else optDir = optDir.rotateLeft();
             }
         }
-        if (minerCount < 3 + plusMiners && rc.getRoundNum() > 150) {
+        if (minerCount < 4 + plusMiners && rc.getRoundNum() > 150) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
@@ -134,13 +134,13 @@ public class HQ extends Shooter {
 //            }
 //        }
         // attack
-        if (rc.getRoundNum() == 1000) {
+        if (rc.getRoundNum() == 2300) {
             infoQ.add(getMessage(InformationCategory.PREPARE, HQLocation));
         }
-        if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 1100) {
+        if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 2400) {
             infoQ.add(getMessage(InformationCategory.ATTACK, HQLocation));
         }
-        if (rc.getRoundNum() == 1150) {
+        if (rc.getRoundNum() == 2450) {
             infoQ.add(getMessage(InformationCategory.SURRENDER, HQLocation));
         }
     }

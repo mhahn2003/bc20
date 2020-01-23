@@ -16,7 +16,7 @@ public class Drone extends Unit {
         System.out.println("My stuck value is " + nav.getStuck());
         System.out.println("My threats are: " + nav.getThreats().toString());
         // check if it needs to explode
-        if (nav.getStuck() >= explodeThresh) {
+        if (nav.getStuck() >= explodeThresh && rc.getRoundNum() < 1000) {
             explode = true;
             return;
         }
@@ -48,6 +48,10 @@ public class Drone extends Unit {
 //                }
 //            }
 //        }
+        if (rc.getRoundNum() > 1000) {
+            // form a wall
+            return;
+        }
         // check for help mode
         if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
             // check for unit to help

@@ -1,13 +1,9 @@
 package rushdef;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 import static rushdef.Cast.*;
-import static rushdef.Util.attackLandscaperCount;
-import static rushdef.Util.maxDroneCount;
+import static rushdef.Util.*;
 
 public class DroneFactory extends Building {
     public DroneFactory(RobotController r) {
@@ -18,6 +14,31 @@ public class DroneFactory extends Building {
         super.takeTurn();
         System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
+        int minElevation = rc.senseElevation(rc.getLocation());
+        for (Direction dir: directions) {
+            MapLocation loc = rc.getLocation().add(dir);
+            if (rc.canSenseLocation(loc)) {
+                minElevation = Math.min(minElevation, rc.senseElevation(loc));
+            }
+        }
+        minElevation = Math.max(2, minElevation);
+        if (rc.getRoundNum() > Util.floodRound(minElevation)-60 && droneCount < 27) {
+            Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
+            for (int i = 0; i < 8; i++) {
+                MapLocation loc = rc.getLocation().add(optDir);
+                if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
+                    optDir = optDir.rotateRight();
+                    continue;
+                }
+                if (rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
+                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
+                    droneCount++;
+                    break;
+                }
+                optDir = optDir.rotateRight();
+            }
+        }
+
         Direction optDir = Direction.NORTHEAST;
         if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150+rushCost/2) {
             for (int i = 0; i < 8; i++) {
