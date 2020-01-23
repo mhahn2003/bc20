@@ -375,8 +375,17 @@ public class Landscaper extends Unit {
                     }
                 }
             }
-            // build the turtle
-            turtle.buildFort(rc);
+            // go to opposite side if they can
+            MapLocation op = new Vector(-1, -1).rotate(rotateState).addWith(HQLocation);
+            if (rc.canSenseLocation(op)) {
+                RobotInfo r = rc.senseRobotAtLocation(op);
+                if (r == null && rc.getLocation().isAdjacentTo(op)) {
+                    Direction moveDir = rc.getLocation().directionTo(op);
+                    if (rc.canMove(moveDir)) rc.move(moveDir);
+                }
+            }
+            // if not build the turtle
+            if (rc.isReady()) turtle.buildFort(rc);
         }
         else if (teraformMode == 4) {
             // reinforce the turtle
