@@ -390,8 +390,19 @@ public class Miner extends Unit {
         System.out.println("Before calling I have: " + Clock.getBytecodesLeft());
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
-            if (rc.senseFlooding(check)) continue;
-            if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(check)) > 3) continue;
+            if (rc.senseFlooding(check)) {
+                // check if there's anything near it that's land
+                boolean isLand = false;
+                for (Direction dir: directions) {
+                    MapLocation loc = check.add(dir);
+                    if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc)) {
+                        isLand = true;
+                        break;
+                    }
+                }
+                if (!isLand) continue;
+            }
+//            if (Math.abs(rc.senseElevation(rc.getLocation())-rc.senseElevation(check)) > 3) continue;
             int checkDist = check.distanceSquaredTo(rc.getLocation());
             if (soupLoc == null || checkDist < soupLoc.distanceSquaredTo(rc.getLocation())
                     || (checkDist == soupLoc.distanceSquaredTo(rc.getLocation()) && rc.senseSoup(check) > rc.senseSoup(soupLoc)))
