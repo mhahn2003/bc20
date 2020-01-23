@@ -144,7 +144,7 @@ public class Miner extends Unit {
             }
             // build landscaper factory
             MapLocation LFLoc = new Vector(2, 2).rotate(rotateState).addWith(HQLocation);
-            if (factoryLocation == null && isBuilder) {
+            if (factoryLocation == null) {
                 System.out.println("rotateState is: " + rotateState);
                 System.out.println("LFLoc is: " + LFLoc.toString());
                 if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost + rushCost) {
