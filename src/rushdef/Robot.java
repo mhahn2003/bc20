@@ -153,7 +153,7 @@ public class Robot {
                 return;
             }
             turtle = new Turtle(rc, HQLocation, rotateState);
-            System.out.println("Initialized teraform!");
+//            System.out.println("Initialized teraform!");
             teraformLoc[0] = null;
             teraformLoc[1] = null;
             teraformLoc[2] = null;
@@ -166,9 +166,9 @@ public class Robot {
                         if (factory != null && factory.getType() == RobotType.DESIGN_SCHOOL && factory.getTeam() == rc.getTeam()) {
                             factoryLocation = loc;
                             factoryHeight = rc.senseElevation(factoryLocation);
-                            System.out.println("direction of factory is: " + dir.toString());
+//                            System.out.println("direction of factory is: " + dir.toString());
                             if (dir.equals(rotateDir(Direction.NORTHEAST))) {
-                                System.out.println("My mode is 2!");
+//                                System.out.println("My mode is 2!");
                                 teraformMode = 2;
                             }
                             break;
@@ -181,8 +181,7 @@ public class Robot {
 //                    System.out.println("rotated direction: " + rotateDir(Direction.NORTHEAST));
 //                    System.out.println("rotateState: " + rotateState);
                     if (rc.getLocation().directionTo(factoryLocation).equals(rotateDir(Direction.NORTHEAST))) {
-                        System.out.println("My mode is 2!");
-                        teraformMode = 2;
+                         teraformMode = 2;
                     }
                     factoryHeight = rc.senseElevation(factoryLocation);
                 }
@@ -307,25 +306,25 @@ public class Robot {
 
     // find how many holes can fit in the map and initialize the array
     static void findHoleSize() {
-        int minX = HQLocation.x % 3;
-        int minY = HQLocation.y % 3;
+        int minX = HQLocation.x % 2;
+        int minY = HQLocation.y % 2;
         int maxX = HQLocation.x;
         int maxY = HQLocation.y;
         while (maxX < rc.getMapWidth()) {
-            maxX += 3;
+            maxX += 2;
         }
         while (maxY < rc.getMapHeight()) {
-            maxY += 3;
+            maxY += 2;
         }
-        System.out.println("maxX: " + maxX);
-        System.out.println("minX: " + minX);
-        System.out.println("maxY: " + maxY);
-        System.out.println("minY: " + minY);
+//        System.out.println("maxX: " + maxX);
+//        System.out.println("minX: " + minX);
+//        System.out.println("maxY: " + maxY);
+//        System.out.println("minY: " + minY);
 
-        sizeX = (maxX-minX+3)/3;
-        sizeY = (maxY-minY+3)/3;
-        System.out.println("sizeX: " + sizeX);
-        System.out.println("sizeY: " + sizeY);
+        sizeX = (maxX-minX+2)/2;
+        sizeY = (maxY-minY+2)/2;
+//        System.out.println("sizeX: " + sizeX);
+//        System.out.println("sizeY: " + sizeY);
         holeLocation = new boolean[sizeX][sizeY];
     }
 

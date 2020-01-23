@@ -111,16 +111,16 @@ public class Turtle {
         if (rc.getRoundNum() > Util.floodRound(rc.senseElevation(HQLocation))-15) {
             if (rc.getDirtCarrying() == 0) {
                 // dig
-                System.out.println("I have no dirt");
+//                System.out.println("I have no dirt");
                 Direction digDir = getDig();
                 if (rc.canDigDirt(digDir)) {
-                    System.out.println("Digging towards " + digDir.toString());
+//                    System.out.println("Digging towards " + digDir.toString());
                     rc.digDirt(digDir);
                 }
             } else {
                 // fill
                 if (rc.canDepositDirt(evenDir)) {
-                    System.out.println("Filling out at " + evenDir.toString());
+//                    System.out.println("Filling out at " + evenDir.toString());
                     rc.depositDirt(evenDir);
                 }
             }
@@ -130,16 +130,16 @@ public class Turtle {
             // then pretend this is last position
             if (rc.getDirtCarrying() == 0) {
                 // dig
-                System.out.println("I have no dirt");
+//                System.out.println("I have no dirt");
                 Direction digDir = getDig();
                 if (rc.canDigDirt(digDir)) {
-                    System.out.println("Digging towards " + digDir.toString());
+//                    System.out.println("Digging towards " + digDir.toString());
                     rc.digDirt(digDir);
                 }
             } else {
                 // fill
                 if (even && rc.canDepositDirt(evenDir)) {
-                    System.out.println("Filling out at " + evenDir.toString());
+//                    System.out.println("Filling out at " + evenDir.toString());
                     rc.depositDirt(evenDir);
                 }
                 if (rc.canDepositDirt(Direction.CENTER)) {
@@ -151,16 +151,16 @@ public class Turtle {
             // last position
             if (rc.getDirtCarrying() == 0) {
                 // dig
-                System.out.println("I have no dirt");
+//                System.out.println("I have no dirt");
                 Direction optDir = getDig();
                 if (rc.canDigDirt(optDir)) {
-                    System.out.println("Digging towards " + optDir.toString());
+//                    System.out.println("Digging towards " + optDir.toString());
                     rc.digDirt(optDir);
                 }
             } else {
                 // fill
                 if (even && rc.canDepositDirt(evenDir)) {
-                    System.out.println("Filling out at " + evenDir.toString());
+//                    System.out.println("Filling out at " + evenDir.toString());
                     rc.depositDirt(evenDir);
                 }
                 if (rc.canDepositDirt(Direction.CENTER)) {
@@ -170,47 +170,47 @@ public class Turtle {
         }
         else if (index != 7) {
             MapLocation nextSpot = innerLoc[index-1].addWith(HQLocation);
-            System.out.println("nextSpot is " + nextSpot.toString());
+//            System.out.println("nextSpot is " + nextSpot.toString());
             if (rc.isReady()) {
                 Direction optDir = rc.getLocation().directionTo(nextSpot);
                 if (rc.canMove(optDir) && !rc.senseFlooding(nextSpot)) {
-                    System.out.println("Moving towards " + optDir.toString());
+//                    System.out.println("Moving towards " + optDir.toString());
                     rc.move(optDir);
                 } else {
                     // if can't move, then check if we need to dig or bury
                     RobotInfo r = rc.senseRobotAtLocation(nextSpot);
                     if (r == null) {
                         if (rc.senseElevation(rc.getLocation()) > rc.senseElevation(nextSpot)) {
-                            System.out.println("The elevation is lower");
+//                            System.out.println("The elevation is lower");
                             // if lower, fill
                             if (rc.getDirtCarrying() == 0) {
-                                System.out.println("I don't have any dirt");
+//                                System.out.println("I don't have any dirt");
                                 // dig
                                 Direction digDir = getDig();
                                 if (rc.canDigDirt(digDir)) {
-                                    System.out.println("Digging towards " + digDir.toString());
+//                                    System.out.println("Digging towards " + digDir.toString());
                                     rc.digDirt(digDir);
                                 }
                             } else {
                                 // fill
                                 if (rc.canDepositDirt(optDir)) {
-                                    System.out.println("Filling out at " + optDir.toString());
+//                                    System.out.println("Filling out at " + optDir.toString());
                                     rc.depositDirt(optDir);
                                 }
                             }
                         } else {
                             // if higher, dig the other thing
-                            System.out.println("The elevation is higher");
+//                            System.out.println("The elevation is higher");
                             if (rc.getDirtCarrying() == 0) {
                                 // dig
                                 if (rc.canDigDirt(optDir)) {
-                                    System.out.println("Digging towards " + optDir.toString());
+//                                    System.out.println("Digging towards " + optDir.toString());
                                     rc.digDirt(optDir);
                                 }
                             } else {
                                 // fill
                                 if (even && rc.canDepositDirt(evenDir)) {
-                                    System.out.println("Filling out at " + evenDir.toString());
+//                                    System.out.println("Filling out at " + evenDir.toString());
                                     rc.depositDirt(evenDir);
                                 }
                                 if (rc.canDepositDirt(Direction.CENTER)) {
@@ -221,37 +221,37 @@ public class Turtle {
                     }
                     else if (r.getType().isBuilding()) {
                         // if some other unit is in the way that is a building, bury it
-                        System.out.println("Building is in the way");
+//                        System.out.println("Building is in the way");
                         if (rc.getDirtCarrying() == 0) {
                             // dig
                             Direction digDir = getDig();
                             if (rc.canDigDirt(digDir)) {
-                                System.out.println("Digging towards " + digDir.toString());
+//                                System.out.println("Digging towards " + digDir.toString());
                                 rc.digDirt(digDir);
                             }
                         } else {
                             // fill
                             if (rc.canDepositDirt(optDir)) {
-                                System.out.println("Filling out at " + evenDir.toString());
+//                                System.out.println("Filling out at " + evenDir.toString());
                                 rc.depositDirt(optDir);
                             }
                         }
                     }
                     // if team is same or it's like an enemy unit or something
                     else if (!(r.getType() == RobotType.MINER && r.getTeam() == rc.getTeam())) {
-                        System.out.println("A unit, so just dig normally");
+//                        System.out.println("A unit, so just dig normally");
                         if (rc.getDirtCarrying() == 0) {
                             // dig
-                            System.out.println("I have no dirt");
+//                            System.out.println("I have no dirt");
                             Direction digDir = getDig();
                             if (rc.canDigDirt(digDir)) {
-                                System.out.println("Digging towards " + digDir.toString());
+//                                System.out.println("Digging towards " + digDir.toString());
                                 rc.digDirt(digDir);
                             }
                         } else {
                             // fill
                             if (even && rc.canDepositDirt(evenDir)) {
-                                System.out.println("Filling out at " + evenDir.toString());
+//                                System.out.println("Filling out at " + evenDir.toString());
                                 rc.depositDirt(evenDir);
                             }
                             if (rc.canDepositDirt(Direction.CENTER)) {
@@ -265,47 +265,47 @@ public class Turtle {
             // index 7
             // if no next spot, just dig dig dig
             MapLocation nextSpot = innerLoc[index-1].addWith(HQLocation);
-            System.out.println("nextSpot is " + nextSpot.toString());
+//            System.out.println("nextSpot is " + nextSpot.toString());
             if (rc.isReady()) {
                 Direction optDir = rc.getLocation().directionTo(nextSpot);
                 if (rc.canMove(optDir) && !rc.senseFlooding(nextSpot)) {
-                    System.out.println("Moving towards " + optDir.toString());
+//                    System.out.println("Moving towards " + optDir.toString());
                     rc.move(optDir);
                 } else {
                     // if can't move, then check if we need to dig or bury
                     RobotInfo r = rc.senseRobotAtLocation(nextSpot);
                     if (r == null) {
                         if (rc.senseElevation(rc.getLocation()) > rc.senseElevation(nextSpot)) {
-                            System.out.println("The elevation is lower");
+//                            System.out.println("The elevation is lower");
                             // if lower, fill
                             if (rc.getDirtCarrying() == 0) {
-                                System.out.println("I don't have any dirt");
+//                                System.out.println("I don't have any dirt");
                                 // dig
                                 Direction digDir = getDig();
                                 if (rc.canDigDirt(digDir)) {
-                                    System.out.println("Digging towards " + digDir.toString());
+//                                    System.out.println("Digging towards " + digDir.toString());
                                     rc.digDirt(digDir);
                                 }
                             } else {
                                 // fill
                                 if (rc.canDepositDirt(optDir)) {
-                                    System.out.println("Filling out at " + optDir.toString());
+//                                    System.out.println("Filling out at " + optDir.toString());
                                     rc.depositDirt(optDir);
                                 }
                             }
                         } else {
                             // if higher, dig the other thing
-                            System.out.println("The elevation is higher");
+//                            System.out.println("The elevation is higher");
                             if (rc.getDirtCarrying() == 0) {
                                 // dig
                                 if (rc.canDigDirt(optDir)) {
-                                    System.out.println("Digging towards " + optDir.toString());
+//                                    System.out.println("Digging towards " + optDir.toString());
                                     rc.digDirt(optDir);
                                 }
                             } else {
                                 // fill
                                 if (even && rc.canDepositDirt(evenDir)) {
-                                    System.out.println("Filling out at " + evenDir.toString());
+//                                    System.out.println("Filling out at " + evenDir.toString());
                                     rc.depositDirt(evenDir);
                                 }
                                 if (rc.canDepositDirt(Direction.CENTER)) {
@@ -316,66 +316,66 @@ public class Turtle {
                     }
                     else if (r.getType().isBuilding()) {
                         // if some other unit is in the way that is a building, bury it
-                        System.out.println("Building is in the way");
+//                        System.out.println("Building is in the way");
                         if (rc.getDirtCarrying() == 0) {
                             // dig
                             Direction digDir = getDig();
                             if (rc.canDigDirt(digDir)) {
-                                System.out.println("Digging towards " + digDir.toString());
+//                                System.out.println("Digging towards " + digDir.toString());
                                 rc.digDirt(digDir);
                             }
                         } else {
                             // fill
                             if (rc.canDepositDirt(optDir)) {
-                                System.out.println("Filling out at " + evenDir.toString());
+//                                System.out.println("Filling out at " + evenDir.toString());
                                 rc.depositDirt(optDir);
                             }
                         }
                     }
                     // if team is same or it's like an enemy unit or something
                     else if (!(r.getType() == RobotType.MINER && r.getTeam() == rc.getTeam())){
-                        System.out.println("A unit, so now check the other spot");
+//                        System.out.println("A unit, so now check the other spot");
                         nextSpot = innerLoc[3].addWith(HQLocation);
                         if (rc.isReady()) {
                             optDir = rc.getLocation().directionTo(nextSpot);
                             if (rc.canMove(optDir) && !rc.senseFlooding(nextSpot)) {
-                                System.out.println("Moving towards " + optDir.toString());
+//                                System.out.println("Moving towards " + optDir.toString());
                                 rc.move(optDir);
                             } else {
                                 // if can't move, then check if we need to dig or bury
                                 r = rc.senseRobotAtLocation(nextSpot);
                                 if (r == null) {
                                     if (rc.senseElevation(rc.getLocation()) > rc.senseElevation(nextSpot)) {
-                                        System.out.println("The elevation is lower");
+//                                        System.out.println("The elevation is lower");
                                         // if lower, fill
                                         if (rc.getDirtCarrying() == 0) {
-                                            System.out.println("I don't have any dirt");
+//                                            System.out.println("I don't have any dirt");
                                             // dig
                                             Direction digDir = getDig();
                                             if (rc.canDigDirt(digDir)) {
-                                                System.out.println("Digging towards " + digDir.toString());
+//                                                System.out.println("Digging towards " + digDir.toString());
                                                 rc.digDirt(digDir);
                                             }
                                         } else {
                                             // fill
                                             if (rc.canDepositDirt(optDir)) {
-                                                System.out.println("Filling out at " + optDir.toString());
+//                                                System.out.println("Filling out at " + optDir.toString());
                                                 rc.depositDirt(optDir);
                                             }
                                         }
                                     } else {
                                         // if higher, dig the other thing
-                                        System.out.println("The elevation is higher");
+//                                        System.out.println("The elevation is higher");
                                         if (rc.getDirtCarrying() == 0) {
                                             // dig
                                             if (rc.canDigDirt(optDir)) {
-                                                System.out.println("Digging towards " + optDir.toString());
+//                                                System.out.println("Digging towards " + optDir.toString());
                                                 rc.digDirt(optDir);
                                             }
                                         } else {
                                             // fill
                                             if (even && rc.canDepositDirt(evenDir)) {
-                                                System.out.println("Filling out at " + evenDir.toString());
+//                                                System.out.println("Filling out at " + evenDir.toString());
                                                 rc.depositDirt(evenDir);
                                             }
                                             if (rc.canDepositDirt(Direction.CENTER)) {
@@ -386,37 +386,37 @@ public class Turtle {
                                 }
                                 else if (r.getType().isBuilding()) {
                                     // if some other unit is in the way that is a building, bury it
-                                    System.out.println("Building is in the way");
+//                                    System.out.println("Building is in the way");
                                     if (rc.getDirtCarrying() == 0) {
                                         // dig
                                         Direction digDir = getDig();
                                         if (rc.canDigDirt(digDir)) {
-                                            System.out.println("Digging towards " + digDir.toString());
+//                                            System.out.println("Digging towards " + digDir.toString());
                                             rc.digDirt(digDir);
                                         }
                                     } else {
                                         // fill
                                         if (rc.canDepositDirt(optDir)) {
-                                            System.out.println("Filling out at " + evenDir.toString());
+//                                            System.out.println("Filling out at " + evenDir.toString());
                                             rc.depositDirt(optDir);
                                         }
                                     }
                                 }
                                 // if team is same or it's like an enemy unit or something
                                 else if (!(r.getType() == RobotType.MINER && r.getTeam() == rc.getTeam())) {
-                                    System.out.println("A unit, so just dig normally");
+//                                    System.out.println("A unit, so just dig normally");
                                     if (rc.getDirtCarrying() == 0) {
                                         // dig
-                                        System.out.println("I have no dirt");
+//                                        System.out.println("I have no dirt");
                                         Direction digDir = getDig();
                                         if (rc.canDigDirt(digDir)) {
-                                            System.out.println("Digging towards " + digDir.toString());
+//                                            System.out.println("Digging towards " + digDir.toString());
                                             rc.digDirt(digDir);
                                         }
                                     } else {
                                         // fill
                                         if (even && rc.canDepositDirt(evenDir)) {
-                                            System.out.println("Filling out at " + evenDir.toString());
+//                                            System.out.println("Filling out at " + evenDir.toString());
                                             rc.depositDirt(evenDir);
                                         }
                                         if (rc.canDepositDirt(Direction.CENTER)) {
@@ -453,7 +453,7 @@ public class Turtle {
         if (rc.senseElevation(right) < rc.senseElevation(lowest)) {
             lowest = right;
         }
-        System.out.println("Lowest is: " + lowest.toString());
+//        System.out.println("Lowest is: " + lowest.toString());
         return lowest;
     }
 
@@ -471,7 +471,7 @@ public class Turtle {
         if (rc.canSenseLocation(right)) {
             if (!(right.x == 0 || right.x == rc.getMapWidth()-1 || right.y == 0 || right.y == rc.getMapHeight()-1)) posLoc.add(right);
         }
-        System.out.println("posLoc is: " + posLoc.toString());
+//        System.out.println("posLoc is: " + posLoc.toString());
         MapLocation pos = null;
         int curElevation = 0;
         for (MapLocation loc: posLoc) {
@@ -480,7 +480,7 @@ public class Turtle {
                 curElevation = rc.senseElevation(loc);
             }
         }
-        System.out.println("Lowest is: " + lowest.toString());
+//        System.out.println("Lowest is: " + lowest.toString());
         return pos;
     }
 

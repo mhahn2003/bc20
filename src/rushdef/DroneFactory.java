@@ -12,7 +12,7 @@ public class DroneFactory extends Building {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        System.out.println("helpLoc length is: " + helpLoc.size());
+//        System.out.println("helpLoc length is: " + helpLoc.size());
         // produce 5 drones
         int minElevation = rc.senseElevation(rc.getLocation());
         for (Direction dir: directions) {
@@ -21,12 +21,21 @@ public class DroneFactory extends Building {
                 minElevation = Math.min(minElevation, rc.senseElevation(loc));
             }
         }
-        minElevation = Math.max(2, minElevation);
+        boolean netGun = false;
+        MapLocation netGunLoc = null;
+        RobotInfo[] netGuns = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        for (RobotInfo net: netGuns) {
+            if (net.getType() == RobotType.NET_GUN) {
+                netGun = true;
+                netGunLoc = net.getLocation();
+            }
+        }
+        minElevation = Math.max(3, minElevation);
         if (rc.getRoundNum() > Util.floodRound(minElevation)-60 && droneCount < 27) {
             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
-                if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
+                if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
                     optDir = optDir.rotateRight();
                     continue;
                 }
@@ -42,6 +51,11 @@ public class DroneFactory extends Building {
         Direction optDir = Direction.NORTHEAST;
         if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150+rushCost/2) {
             for (int i = 0; i < 8; i++) {
+                MapLocation loc = rc.getLocation().add(optDir);
+                if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                    optDir = optDir.rotateLeft();
+                    continue;
+                }
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 400){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
@@ -58,6 +72,11 @@ public class DroneFactory extends Building {
         optDir = Direction.NORTHEAST;
         if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost+rushCost/2 && helpLoc.size() >= 5) {
             for (int i = 0; i < 2; i++) {
+                MapLocation loc = rc.getLocation().add(optDir);
+                if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                    optDir = optDir.rotateLeft();
+                    continue;
+                }
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir) && rc.getTeamSoup() > 350){
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;
@@ -71,6 +90,11 @@ public class DroneFactory extends Building {
         // spam drones
         if (rc.getTeamSoup() >= 600) {
             for (int i = 0; i < 8; i++) {
+                MapLocation loc = rc.getLocation().add(optDir);
+                if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                    optDir = optDir.rotateLeft();
+                    continue;
+                }
                 if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)) {
                     rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
                     droneCount++;

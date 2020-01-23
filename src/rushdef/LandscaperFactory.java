@@ -90,7 +90,7 @@ public class LandscaperFactory extends Building {
             }
             // spawning 6 turtle landscapers with a bit of leeway for refineries
             if (vaporatorCount > 0 && !isTurtle && landscaperCount < 6 && rc.getTeamSoup() >= RobotType.LANDSCAPER.cost + 150 + rushCost) {
-                System.out.println("first condition");
+//                System.out.println("first condition");
                 Direction optDir = rc.getLocation().directionTo(HQLocation);
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);
@@ -98,7 +98,7 @@ public class LandscaperFactory extends Building {
                 }
             }
             if (vaporatorCount > 0 && !isTurtle && rc.getTeamSoup() >= 350) {
-                System.out.println("second condition");
+//                System.out.println("second condition");
                 Direction optDir = rc.getLocation().directionTo(HQLocation);
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);

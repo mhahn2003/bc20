@@ -422,7 +422,7 @@ public class Cast {
                             case HOLE:
                                 if (rc.getType() != RobotType.HQ) break;
                                 Hole h = Hole.getHole(loc);
-                                System.out.println("I got hole location: " + h.getX() + " " + h.getY());
+//                                System.out.println("I got hole location: " + h.getX() + " " + h.getY());
                                 holeLocation[h.getX()][h.getY()] = true;
                                 break;
                             case TURTLE:
@@ -431,7 +431,7 @@ public class Cast {
                                 break;
                             case ROTATION:
                                 rotateState = loc.y;
-                                System.out.println("Recieved rotate state of: " + rotateState);
+//                                System.out.println("Recieved rotate state of: " + rotateState);
                                 break;
                             case DRONE_SPAWN:
                                 areDrones = true;
@@ -471,9 +471,9 @@ public class Cast {
                 enemyHQLocation = r.getLocation();
                 infoQ.add(0, Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
-                System.out.println("Found enemy HQ!!!");
+//                System.out.println("Found enemy HQ!!!");
                 if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
-                System.out.println("threats are: " + nav.getThreats().toString());
+//                System.out.println("threats are: " + nav.getThreats().toString());
             }
             // why is this an else if?
             else if (rc.getType() == RobotType.MINER && (r.getType() == RobotType.REFINERY) && r.getTeam() == rc.getTeam()) {
@@ -498,7 +498,7 @@ public class Cast {
             }
         }
         if (!(rc.getType() == RobotType.LANDSCAPER || (rc.getType().isBuilding() && turnCount != 1))) {
-            System.out.println("I'm a miner and I'm getting to here");
+//            System.out.println("I'm a miner and I'm getting to here");
             if (!(soupLoc != null && rc.canSenseLocation(soupLoc) && rc.senseSoup(soupLoc) > 0)) {
                 boolean doAdd;
                 soupLoc = null;
@@ -555,19 +555,19 @@ public class Cast {
                     // if there isn't any soup around it then remove
                     findSoup();
                     if (rc.senseSoup(soup) == 0 && (soupLoc == null || rc.getLocation().distanceSquaredTo(soupLoc) >= soupClusterDist || soup.equals(soupLoc))) {
-                        System.out.println("There's no soup!");
+//                        System.out.println("There's no soup!");
                         infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, soup));
                         soupLocation.remove(soup);
                     }
                     break;
                 }
             }
-            System.out.println("Still getting here");
+//            System.out.println("Still getting here");
             if (suspects != null) {
                 for (MapLocation l : suspects) {
                     if (!suspectsVisited.get(l)) {
                         if (rc.getLocation().isAdjacentTo(l)) {
-                            System.out.println("I've already visited this place!");
+//                            System.out.println("I've already visited this place!");
                             suspectsVisited.replace(l, true);
                             infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                         } else if (rc.canSenseLocation(l)) {
@@ -581,7 +581,8 @@ public class Cast {
             // TODO: send information that landscapers will send
         }
         if (nav != null) {
-            for (MapLocation netGun: nav.getThreats()) {
+            ArrayList<MapLocation> threats = nav.getThreats();
+            for (MapLocation netGun: threats) {
                 if (rc.canSenseLocation(netGun)) {
                     RobotInfo r = rc.senseRobotAtLocation(netGun);
                     if (r == null || r.getType() != RobotType.NET_GUN || r.getTeam() == rc.getTeam()) {
@@ -736,7 +737,7 @@ public class Cast {
 //        System.out.println("h2 is: " + h2.getMapLoc().toString());
 //        System.out.println("h3 is: " + h3.getMapLoc().toString());
         if (h3 != null) {
-            System.out.println("Adding holes");
+//            System.out.println("Adding holes");
             infoQ.add(getMessage(h1, h2, h3));
         }
     }

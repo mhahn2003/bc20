@@ -59,18 +59,18 @@ public class Landscaper extends Unit {
         super.takeTurn();
         if (rc.getLocation().isAdjacentTo(HQLocation)) teraformMode = 2;
         if (teraformMode == 0) {
-            System.out.println("floods at: " + (Util.floodRound(factoryHeight)-40));
+//            System.out.println("floods at: " + (Util.floodRound(factoryHeight)-40));
             if (rc.getRoundNum() > Util.floodRound(factoryHeight)-40 && rc.getRoundNum() < Util.floodRound(factoryHeight)+40) {
-                System.out.println("Switching to teraform mode 4");
+//                System.out.println("Switching to teraform mode 4");
                 teraformMode = 4;
             }
             // teraform mode
-            System.out.println("Initially I have: " + Clock.getBytecodesLeft());
+//            System.out.println("Initially I have: " + Clock.getBytecodesLeft());
             if (teraformLoc[0] == null) {
-                System.out.println("My teraformLoc is: null");
+//                System.out.println("My teraformLoc is: null");
             } else {
                 for (MapLocation loc : teraformLoc) {
-                    System.out.println("My teraformLoc is: " + loc.toString());
+//                    System.out.println("My teraformLoc is: " + loc.toString());
                 }
             }
             // if in position to build turtle, build it instead
@@ -78,41 +78,41 @@ public class Landscaper extends Unit {
                 // build the teraform
                 // assume landscaper factory is distance 10 away from HQ
             if (rc.getLocation().distanceSquaredTo(HQLocation) > 2 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
-                System.out.println("Case 1");
+//                System.out.println("Case 1");
                 Direction dig = holeTo();
-                System.out.println("After checking hole locations, I have: " + Clock.getBytecodesLeft());
+//                System.out.println("After checking hole locations, I have: " + Clock.getBytecodesLeft());
                 fill = null;
                 digLoc = null;
                 checkFillAndDig(dig);
                 MapLocation hole = closestHole();
-                System.out.println("After checking both locations, I have: " + Clock.getBytecodesLeft());
+//                System.out.println("After checking both locations, I have: " + Clock.getBytecodesLeft());
                 if (fill == null) {
-                    System.out.println("No place to fill");
+//                    System.out.println("No place to fill");
                     // no place to fill, check if we need to shave off height instead
                     if (digLoc == null) {
-                        System.out.println("No place to dig");
+//                        System.out.println("No place to dig");
                         // nothing to do here, move onto another location after crossing this one out
                         MapLocation closeHole = rc.getLocation().add(dig);
                         if (visitedHole.contains(closeHole)) {
-                            System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+//                            System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
                             if (hole != null) {
-                                System.out.println("closest hole is: " + hole);
+//                                System.out.println("closest hole is: " + hole);
                                 moveTo(hole);
                             } else {
                                 moveTo(HQLocation);
                             }
                         } else {
                             if (hole != null && hole.distanceSquaredTo(HQLocation) <= 32) {
-                                System.out.println("closest hole is: " + hole);
+//                                System.out.println("closest hole is: " + hole);
                                 moveTo(hole);
                             } else if (fillMore(closeHole)) {
-                                System.out.println("There's more to do!");
+//                                System.out.println("There's more to do!");
                                 moveTo(closeHole);
                             } else {
                                 sendHole(closeHole);
-                                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+//                                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
                                 if (hole != null) {
-                                    System.out.println("closest hole is: " + hole);
+//                                    System.out.println("closest hole is: " + hole);
                                     moveTo(hole);
                                 } else {
                                     moveTo(enemyHQLocationSuspect);
@@ -121,10 +121,10 @@ public class Landscaper extends Unit {
                         }
                     } else {
                         if (rc.getDirtCarrying() < RobotType.LANDSCAPER.dirtLimit) {
-                            System.out.println("Digging at digLoc: " + digLoc.toString());
+//                            System.out.println("Digging at digLoc: " + digLoc.toString());
                             if (rc.canDigDirt(digLoc)) rc.digDirt(digLoc);
-                        } else {
-                            System.out.println("Depositing at dig: " + dig.toString());
+//                        } else {
+//                            System.out.println("Depositing at dig: " + dig.toString());
                             if (rc.canDepositDirt(dig)) rc.depositDirt(dig);
                         }
                     }
@@ -137,9 +137,9 @@ public class Landscaper extends Unit {
                 }
             } else {
                 MapLocation hole = closestHole();
-                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
+//                System.out.println("After checking closest hole, I have: " + Clock.getBytecodesLeft());
                 if (hole != null) {
-                    System.out.println("closest hole is: " + hole);
+//                    System.out.println("closest hole is: " + hole);
                     moveTo(hole);
                 } else {
                     moveTo(enemyHQLocationSuspect);
@@ -154,7 +154,7 @@ public class Landscaper extends Unit {
             DFdir = null;
             RFdir = null;
             getDirections(robots);
-            if (RFdir != null) System.out.println("Rfdir is: " + RFdir.toString());
+//            if (RFdir != null) System.out.println("Rfdir is: " + RFdir.toString());
             Direction digTo = getAttackDig();
             if (rc.getLocation().isAdjacentTo(enemyHQLocation)) {
                 if (LFdir != null) {
@@ -200,12 +200,12 @@ public class Landscaper extends Unit {
                     else if (RFdir != null) {
                         if (rc.getDirtCarrying() > 0) {
                             if (rc.canDepositDirt(RFdir)) {
-                                System.out.println("I'm depositing towards: " + RFdir.toString());
+//                                System.out.println("I'm depositing towards: " + RFdir.toString());
                                 rc.depositDirt(RFdir);
                             }
                         } else {
                             if (rc.canDigDirt(digTo)) {
-                                System.out.println("I'm digging towards: " + digTo.toString());
+//                                System.out.println("I'm digging towards: " + digTo.toString());
                                 rc.digDirt(digTo);
                             }
                         }
@@ -313,7 +313,7 @@ public class Landscaper extends Unit {
                             dist = tempD;
                         }
                     }
-                    System.out.println("Going to: " + goTo.toString());
+//                    System.out.println("Going to: " + goTo.toString());
                     nav.bugNav(rc, goTo);
                 }
             }
@@ -413,14 +413,14 @@ public class Landscaper extends Unit {
             if (rc.isReady()) {
                 // TODO: implement landscapers digging their way through
                 Direction dig = holeTo();
-                System.out.println("After checking hole locations, I have: " + Clock.getBytecodesLeft());
+//                System.out.println("After checking hole locations, I have: " + Clock.getBytecodesLeft());
                 fill = null;
                 digLoc = null;
                 checkFillAndDig(dig);
-                MapLocation hole = closestHole();
-                System.out.println("After checking both locations, I have: " + Clock.getBytecodesLeft());
+//                MapLocation hole = closestHole();
+//                System.out.println("After checking both locations, I have: " + Clock.getBytecodesLeft());
                 if (fill == null) {
-                    System.out.println("No place to fill");
+//                    System.out.println("No place to fill");
                     // no place to fill, move to available spots
                     MapLocation emptySpot = null;
                     for (MapLocation loc: reinforceLoc) {
@@ -460,7 +460,7 @@ public class Landscaper extends Unit {
             }
         }
         if (deepest<2000000000 && deepest_direction!=Direction.CENTER) return deepest_direction;
-        System.out.println("ill be a grave bot");
+//        System.out.println("ill be a grave bot");
         // this shouldn't happen
         return Direction.CENTER;
     }
@@ -566,7 +566,7 @@ public class Landscaper extends Unit {
     }
 
     public boolean fillMore(MapLocation hole) throws GameActionException {
-        System.out.println("Before completing fillMore I have: " + Clock.getBytecodesLeft());
+//        System.out.println("Before completing fillMore I have: " + Clock.getBytecodesLeft());
         for (Direction dir: directions) {
             MapLocation fill = hole.add(dir);
             boolean bad = false;
@@ -594,7 +594,7 @@ public class Landscaper extends Unit {
                 }
             }
         }
-        System.out.println("After completing fillMore I have: " + Clock.getBytecodesLeft());
+//        System.out.println("After completing fillMore I have: " + Clock.getBytecodesLeft());
         return false;
     }
 
@@ -612,7 +612,7 @@ public class Landscaper extends Unit {
             }
         }
         if (alreadySent) return;
-        System.out.println("Sending hole");
+//        System.out.println("Sending hole");
         infoQ.add(Cast.getMessage(Cast.InformationCategory.HOLE, closeHole));
     }
 

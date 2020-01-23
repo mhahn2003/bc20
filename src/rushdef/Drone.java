@@ -25,9 +25,9 @@ public class Drone extends Unit {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        System.out.println("My wander value is " + nav.getWander());
-        System.out.println("My stuck value is " + nav.getStuck());
-        System.out.println("My threats are: " + nav.getThreats().toString());
+//        System.out.println("My wander value is " + nav.getWander());
+//        System.out.println("My stuck value is " + nav.getStuck());
+//        System.out.println("My threats are: " + nav.getThreats().toString());
         // check if it needs to explode
         if (nav.getStuck() >= explodeThresh && rc.getRoundNum() < 1000) {
             explode = true;
@@ -76,7 +76,7 @@ public class Drone extends Unit {
                 if (pickup != null) {
                     // if can pickup do pickup
                     if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
-                        System.out.println("Just picked up a " + pickup.getType());
+//                        System.out.println("Just picked up a " + pickup.getType());
                         if (rc.canPickUpUnit(pickup.getID())) {
                             isCow = pickup.getType() == RobotType.COW;
                             rc.pickUpUnit(pickup.getID());
@@ -84,7 +84,7 @@ public class Drone extends Unit {
                     } else {
                         // if not navigate to that unit
                         nav.bugNav(rc, pickup.getLocation());
-                        System.out.println("Navigating to unit at " + pickup.getLocation().toString());
+//                        System.out.println("Navigating to unit at " + pickup.getLocation().toString());
                     }
                 } else {
                     // form a wall
@@ -100,7 +100,10 @@ public class Drone extends Unit {
                             }
                         }
                     }
-                    nav.bugNav(rc, HQLocation);
+                    if (rc.getLocation().distanceSquaredTo(HQLocation) < 4) {
+                        nav.bugNav(rc, enemyHQLocation);
+                    }
+                    else nav.bugNav(rc, HQLocation);
                     return;
                 }
             } else {
@@ -254,13 +257,14 @@ public class Drone extends Unit {
                             }
                         }
                     }
-                    System.out.println("Threats are: " + nav.getThreats().toString());
+//                    System.out.println("Threats are: " + nav.getThreats().toString());
                     // find opponent units and pick up
                     if (!rc.isCurrentlyHoldingUnit()) {
-                        System.out.println("I'm not holding any units!");
+//                        System.out.println("I'm not holding any units!");
                         // find opponent units
                         RobotInfo pickup = null;
-                        for (RobotInfo r : rc.senseNearbyRobots()) {
+                        RobotInfo[] enemies = rc.senseNearbyRobots();
+                        for (RobotInfo r : enemies) {
                             if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
                                 if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
                                     if (r.getType() == RobotType.COW) {
@@ -276,7 +280,7 @@ public class Drone extends Unit {
                         if (pickup != null) {
                             // if can pickup do pickup
                             if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
-                                System.out.println("Just picked up a " + pickup.getType());
+//                                System.out.println("Just picked up a " + pickup.getType());
                                 if (rc.canPickUpUnit(pickup.getID())) {
                                     isCow = pickup.getType() == RobotType.COW;
                                     rc.pickUpUnit(pickup.getID());
@@ -307,7 +311,7 @@ public class Drone extends Unit {
                         }
                     } else {
                         // find water if not cow
-                        System.out.println("I'm holding a unit!");
+//                        System.out.println("I'm holding a unit!");
                         if (isCow) {
                             // go to enemyHQ
                             boolean canPlace = false;
@@ -358,7 +362,7 @@ public class Drone extends Unit {
                                 if (exploreTo == null || suspectsVisited.get(exploreTo)) {
                                     nav.nextExplore();
                                 }
-                                System.out.println("I'm exploring to " + exploreTo.toString());
+//                                System.out.println("I'm exploring to " + exploreTo.toString());
                                 nav.bugNav(rc, exploreTo);
                             }
                         }
@@ -366,12 +370,15 @@ public class Drone extends Unit {
                     break;
                 case PREPARE:
                     if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) >= enemyPatrolRadiusMax) {
+                        System.out.println("Too far");
                         // if too far, move in
                         nav.bugNav(rc, enemyHQLocation);
                         break;
                     } else if (enemyHQLocation.distanceSquaredTo(rc.getLocation()) < enemyPatrolRadiusMin) {
+                        System.out.println("Too close");
                         // if too close, move out
                         nav.bugNav(rc, HQLocation);
+                        break;
                     }
                     // with in the area, move to closest possible position around enemy hq
                     MapLocation minDistancedSafe = rc.getLocation();
@@ -407,7 +414,7 @@ public class Drone extends Unit {
                             int currentDistToEnemyHQ = rc.getLocation().distanceSquaredTo(enemyHQLocation);
                             for (Direction dir : directions) {
                                 nextEscapeLocation = rc.getLocation().add(dir);
-                                // manhattan distaance is odd makes a lattice
+                                // manhattan distance is odd makes a lattice
                                 // even or closer make sure no dense positions
                                 // check if empty
                                 if (manhattanDistance(enemyHQLocation, nextEscapeLocation) % 2 == 0 &&
@@ -529,7 +536,7 @@ public class Drone extends Unit {
                 case DEFENSE:
                     if (rc.isCurrentlyHoldingUnit()) {
                         // find water if not cow
-                        System.out.println("I'm holding a unit!");
+//                        System.out.println("I'm holding a unit!");
                         if (isCow) {
                             // go to enemyHQ
                             boolean canPlace = false;
@@ -554,12 +561,12 @@ public class Drone extends Unit {
                             MapLocation robotLoc = rc.getLocation();
                             if (water != null) {
                                 if (water.isAdjacentTo(robotLoc)) {
-                                    System.out.println("Dropping off unit!");
+//                                    System.out.println("Dropping off unit!");
                                     // drop off unit
                                     Direction dropDir = robotLoc.directionTo(water);
                                     if (rc.canDropUnit(dropDir)) rc.dropUnit(dropDir);
                                 } else {
-                                    System.out.println("Navigating to water at " + water.toString());
+//                                    System.out.println("Navigating to water at " + water.toString());
                                     nav.bugNav(rc, water);
                                 }
                             } else {
@@ -567,14 +574,15 @@ public class Drone extends Unit {
                                 if (exploreTo == null || suspectsVisited.get(exploreTo)) {
                                     nav.nextExplore();
                                 }
-                                System.out.println("I'm exploring to " + exploreTo.toString());
+//                                System.out.println("I'm exploring to " + exploreTo.toString());
                                 nav.bugNav(rc, exploreTo);
                             }
                         }
                     } else {
                         // find opponent units
                         RobotInfo pickup = null;
-                        for (RobotInfo r : rc.senseNearbyRobots()) {
+                        RobotInfo[] enemies = rc.senseNearbyRobots();
+                        for (RobotInfo r : enemies) {
                             if (r.getTeam() != rc.getTeam() && (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.COW)) {
                                 if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
                                     if (r.getType() == RobotType.COW) {
@@ -590,7 +598,7 @@ public class Drone extends Unit {
                         if (pickup != null) {
                             // if can pickup do pickup
                             if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
-                                System.out.println("Just picked up a " + pickup.getType());
+//                                System.out.println("Just picked up a " + pickup.getType());
                                 if (rc.canPickUpUnit(pickup.getID())) {
                                     isCow = pickup.getType() == RobotType.COW;
                                     rc.pickUpUnit(pickup.getID());
@@ -598,7 +606,7 @@ public class Drone extends Unit {
                             } else {
                                 // if not navigate to that unit
                                 nav.bugNav(rc, pickup.getLocation());
-                                System.out.println("Navigating to unit at " + pickup.getLocation().toString());
+//                                System.out.println("Navigating to unit at " + pickup.getLocation().toString());
                             }
                         } else {
                             // if there are no robots nearby
@@ -608,7 +616,7 @@ public class Drone extends Unit {
 
             }
         }
-        System.out.println("I'm at " + rc.getLocation().toString());
+//        System.out.println("I'm at " + rc.getLocation().toString());
     }
 
     static int manhattanDistance(MapLocation loc1, MapLocation loc2){
