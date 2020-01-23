@@ -350,7 +350,7 @@ public class Landscaper extends Unit {
             }
             // if spawn location has bad height then dig it
             MapLocation spawn = HQLocation.add(rotateDir(Direction.NORTHEAST));
-            if (rc.getLocation().isAdjacentTo(spawn)) {
+            if (rc.getLocation().isAdjacentTo(spawn) && rc.getRoundNum() < Util.floodRound(rc.senseElevation(HQLocation))-40) {
                 if (rc.canSenseLocation(spawn) && Math.abs(rc.senseElevation(spawn) - factoryHeight) > 3) {
                     RobotInfo rob = rc.senseRobotAtLocation(spawn);
                     if (rob == null) {
