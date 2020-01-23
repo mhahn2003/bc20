@@ -473,7 +473,7 @@ public class Cast {
                 enemyHQLocation = r.getLocation();
                 infoQ.add(0, Cast.getMessage(Cast.InformationCategory.ENEMY_HQ, enemyHQLocation));
                 infoQ.add(Cast.getMessage(Cast.InformationCategory.NET_GUN, enemyHQLocation));
-//                System.out.println("Found enemy HQ!!!");
+                System.out.println("Found enemy HQ!!!");
                 if (!nav.isThreat(enemyHQLocation)) nav.addThreat(enemyHQLocation);
 //                System.out.println("threats are: " + nav.getThreats().toString());
             }
@@ -568,11 +568,7 @@ public class Cast {
             if (suspects != null) {
                 for (MapLocation l : suspects) {
                     if (!suspectsVisited.get(l)) {
-                        if (rc.getLocation().isAdjacentTo(l)) {
-//                            System.out.println("I've already visited this place!");
-                            suspectsVisited.replace(l, true);
-                            infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
-                        } else if (rc.canSenseLocation(l)) {
+                        if (rc.canSenseLocation(l) && !l.equals(enemyHQLocation)) {
                             suspectsVisited.replace(l, true);
                             infoQ.add(Cast.getMessage(Cast.InformationCategory.REMOVE, l));
                         }
@@ -584,14 +580,20 @@ public class Cast {
         }
         if (nav != null) {
             ArrayList<MapLocation> threats = nav.getThreats();
+            MapLocation removeNet = null;
             for (MapLocation netGun: threats) {
                 if (rc.canSenseLocation(netGun)) {
                     RobotInfo r = rc.senseRobotAtLocation(netGun);
-                    if (r == null || r.getType() != RobotType.NET_GUN || r.getTeam() == rc.getTeam()) {
-                        nav.removeThreat(netGun);
-                        infoQ.add(getMessage(InformationCategory.REMOVE, netGun));
+                    if (r == null || (r.getType() != RobotType.NET_GUN && r.getType() != RobotType.HQ) || r.getTeam() == rc.getTeam()) {
+                        removeNet = netGun;
+                        break;
                     }
                 }
+            }
+            if (removeNet != null) {
+                System.out.println("I removed " + removeNet);
+                nav.removeThreat(removeNet);
+                infoQ.add(getMessage(InformationCategory.REMOVE, removeNet));
             }
         }
         // don't send yet if it's hq

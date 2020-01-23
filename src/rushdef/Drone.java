@@ -633,6 +633,7 @@ public class Drone extends Unit {
             }
         }
 //        System.out.println("I'm at " + rc.getLocation().toString());
+//        System.out.println("My threats are: " + nav.getThreats().toString());
     }
 
     static int manhattanDistance(MapLocation loc1, MapLocation loc2){

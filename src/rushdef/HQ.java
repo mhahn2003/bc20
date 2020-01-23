@@ -26,9 +26,9 @@ public class HQ extends Shooter {
         else if (HQLocation.x == 1 || HQLocation.x == rc.getMapWidth()-2 || HQLocation.y == 1 || HQLocation.y == rc.getMapHeight()-2) space = 7;
         else space = 8;
         int landscapers = 0;
-        System.out.println("space is: " + space);
+//        System.out.println("space is: " + space);
         if (!isTurtle) {
-            System.out.println("Checking turtle");
+//            System.out.println("Checking turtle");
             for (Direction dir : directions) {
                 MapLocation loc = rc.getLocation().add(dir);
                 if (rc.canSenseLocation(loc)) {
@@ -38,7 +38,7 @@ public class HQ extends Shooter {
                     }
                 }
             }
-            System.out.println("I have landscapers: " + landscapers);
+//            System.out.println("I have landscapers: " + landscapers);
             if (landscapers == space) {
                 // broadcast turtle
                 System.out.println("turtle!!!!!!!!!!");

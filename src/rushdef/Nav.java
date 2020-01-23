@@ -49,7 +49,7 @@ public class Nav {
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
         if (rc.getType() == RobotType.DELIVERY_DRONE) {
-//            System.out.println("My threats are: " + threats.toString());
+            System.out.println("My threats are: " + threats.toString());
         }
         if (rc.getLocation().equals(dest)) {
 //            System.out.println("Location is equal");
@@ -193,7 +193,7 @@ public class Nav {
     public boolean canGoDrone(RobotController rc, Direction dir, boolean free) throws GameActionException {
         if (!rc.canMove(dir)) return false;
         MapLocation goodLoc = rc.getLocation().add(dir);
-        if (!free && goodLoc.equals(lastLoc) || goodLoc.equals(lastLastLoc)) return false;
+//        if (!free && goodLoc.equals(lastLoc) || goodLoc.equals(lastLastLoc)) return false;
         for (MapLocation loc: threats) {
             if (goodLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
         }
