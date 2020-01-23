@@ -377,7 +377,7 @@ public class Cast {
                             case REMOVE:
                                 soupLocation.remove(loc);
                                 waterLocation.remove(loc);
-//                                nav.removeThreat(loc);
+                                if (nav != null) nav.removeThreat(loc);
                                 if (suspects != null) {
                                     for (MapLocation l : suspects) {
                                         if (l.equals(loc)) {
@@ -579,6 +579,17 @@ public class Cast {
             }
         } else {
             // TODO: send information that landscapers will send
+        }
+        if (nav != null) {
+            for (MapLocation netGun: nav.getThreats()) {
+                if (rc.canSenseLocation(netGun)) {
+                    RobotInfo r = rc.senseRobotAtLocation(netGun);
+                    if (r == null || r.getType() != RobotType.NET_GUN || r.getTeam() == rc.getTeam()) {
+                        nav.removeThreat(netGun);
+                        infoQ.add(getMessage(InformationCategory.REMOVE, netGun));
+                    }
+                }
+            }
         }
         // don't send yet if it's hq
         if (rc.getRoundNum() == 1 && rc.getType() == RobotType.HQ) return;

@@ -130,7 +130,7 @@ public class Miner extends Unit {
                             }
                         }
                     }
-                    if (rc.canBuildRobot(RobotType.VAPORATOR, vapDir) && (rc.getLocation().add(vapDir).distanceSquaredTo(HQLocation) < 100 || rc.senseElevation(rc.getLocation().add(vapDir)) > 5)) {
+                    if (vapDir != null && rc.canBuildRobot(RobotType.VAPORATOR, vapDir) && (rc.getLocation().add(vapDir).distanceSquaredTo(HQLocation) < 100 || rc.senseElevation(rc.getLocation().add(vapDir)) > 5)) {
                         rc.buildRobot(RobotType.VAPORATOR, vapDir);
                     }
                 }
