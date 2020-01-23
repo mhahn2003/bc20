@@ -88,7 +88,7 @@ public class DroneFactory extends Building {
         }
 
         // spam drones
-        if (rc.getTeamSoup() >= 600) {
+        if (vaporatorCount > 0 && rc.getTeamSoup() >= 600) {
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
                 if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
