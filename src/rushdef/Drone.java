@@ -206,7 +206,7 @@ public class Drone extends Unit {
                             RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
                             RobotInfo landscaper = null;
                             for (RobotInfo rob : robots) {
-                                if (rob.getType() == RobotType.LANDSCAPER && !rob.getLocation().isAdjacentTo(HQLocation) && (enemyHQLocation == null || rob.getLocation().distanceSquaredTo(enemyHQLocation) <= 18)) {
+                                if (rob.getType() == RobotType.LANDSCAPER && !rob.getLocation().isAdjacentTo(HQLocation)) {
                                     landscaper = rob;
                                     break;
                                 }
