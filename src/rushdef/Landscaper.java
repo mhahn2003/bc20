@@ -66,15 +66,15 @@ public class Landscaper extends Unit {
             }
             // teraform mode
 //            System.out.println("Initially I have: " + Clock.getBytecodesLeft());
-            if (teraformLoc[0] == null) {
-//                System.out.println("My teraformLoc is: null");
-            } else {
-                for (MapLocation loc : teraformLoc) {
-//                    System.out.println("My teraformLoc is: " + loc.toString());
-                }
-            }
+//            if (teraformLoc[0] == null) {
+////                System.out.println("My teraformLoc is: null");
+//            } else {
+//                for (MapLocation loc : teraformLoc) {
+////                    System.out.println("My teraformLoc is: " + loc.toString());
+//                }
+//            }
             // if in position to build turtle, build it instead
-//            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 8) teraformMode = 1;
+            if (rc.getLocation().distanceSquaredTo(HQLocation) <= 2) teraformMode = 2;
                 // build the teraform
                 // assume landscaper factory is distance 10 away from HQ
             if (rc.getLocation().distanceSquaredTo(HQLocation) > 2 && rc.getLocation().distanceSquaredTo(HQLocation) < 300 && (enemyHQLocation == null || !(rc.getLocation().distanceSquaredTo(enemyHQLocation) < 36 && rc.getLocation().distanceSquaredTo(HQLocation) > 36))) {
