@@ -151,6 +151,18 @@ public class Miner extends Unit {
             }
             // build landscaper factory
             MapLocation LFLoc = new Vector(2, 2).rotate(rotateState).addWith(HQLocation);
+            if (rc.getRoundNum() > 250) {
+                for (Direction dir : directions) {
+                    MapLocation loc = rc.getLocation().add(dir);
+                    if (loc.equals(LFLoc)) {
+                        if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
+                            rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
+                            factoryLocation = rc.getLocation().add(dir);
+                            break;
+                        }
+                    }
+                }
+            }
             if (factoryLocation == null) {
                 System.out.println("rotateState is: " + rotateState);
                 System.out.println("LFLoc is: " + LFLoc.toString());

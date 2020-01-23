@@ -62,21 +62,62 @@ public class Drone extends Unit {
 //            }
 //        }
         if (rc.getRoundNum() > 1000 && rc.getRoundNum() < 2300) {
-            // form a wall
-            for (MapLocation loc: wallLoc) {
-                if (rc.getLocation().equals(loc)) return;
-            }
-            for (MapLocation loc: wallLoc) {
-                if (rc.getLocation().isAdjacentTo(loc) && rc.canSenseLocation(loc)) {
-                    Direction dir = rc.getLocation().directionTo(loc);
-                    if (rc.canMove(dir)) {
-                        rc.move(dir);
-                        return;
+            // check if there's any enemy landscapers and drop them
+            if (!rc.isCurrentlyHoldingUnit()) {
+                RobotInfo pickup = null;
+                RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                for (RobotInfo r : enemies) {
+                    if (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER) {
+                        if (pickup == null || r.getLocation().distanceSquaredTo(rc.getLocation()) < pickup.getLocation().distanceSquaredTo(rc.getLocation())) {
+                            pickup = r;
+                        }
                     }
                 }
+                if (pickup != null) {
+                    // if can pickup do pickup
+                    if (pickup.getLocation().isAdjacentTo(rc.getLocation())) {
+                        System.out.println("Just picked up a " + pickup.getType());
+                        if (rc.canPickUpUnit(pickup.getID())) {
+                            isCow = pickup.getType() == RobotType.COW;
+                            rc.pickUpUnit(pickup.getID());
+                        }
+                    } else {
+                        // if not navigate to that unit
+                        nav.bugNav(rc, pickup.getLocation());
+                        System.out.println("Navigating to unit at " + pickup.getLocation().toString());
+                    }
+                } else {
+                    // form a wall
+                    for (MapLocation loc : wallLoc) {
+                        if (rc.getLocation().equals(loc)) return;
+                    }
+                    for (MapLocation loc : wallLoc) {
+                        if (rc.getLocation().isAdjacentTo(loc) && rc.canSenseLocation(loc)) {
+                            Direction dir = rc.getLocation().directionTo(loc);
+                            if (rc.canMove(dir)) {
+                                rc.move(dir);
+                                return;
+                            }
+                        }
+                    }
+                    nav.bugNav(rc, HQLocation);
+                    return;
+                }
+            } else {
+                // drop them in water, even if it's something like our units
+                MapLocation water = findWater();
+                if (water != null) {
+                    for (Direction dir: directions) {
+                        MapLocation loc = rc.getLocation().add(dir);
+                        if (rc.canSenseLocation(loc) && rc.senseFlooding(loc)) {
+                            if (rc.canDropUnit(dir)) rc.dropUnit(dir);
+                        }
+                    }
+                    // if no water
+                    if (rc.isReady()) nav.bugNav(rc, water);
+                }
+                // if there's no water (which i really doubt) just stay there i guess?
             }
-            nav.bugNav(rc, HQLocation);
-            return;
         }
         // check for help mode
         if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
@@ -303,7 +344,6 @@ public class Drone extends Unit {
                         else {
                             // enemy unit
                             MapLocation water = findWater();
-                            MapLocation robotLoc = rc.getLocation();
                             if (water != null) {
                                 for (Direction dir: directions) {
                                     MapLocation loc = rc.getLocation().add(dir);
