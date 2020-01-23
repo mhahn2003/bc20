@@ -8,7 +8,20 @@ import static rushdef.Util.*;
 
 public class Drone extends Unit {
 
+    private Vector[] wall;
+    private MapLocation[] wallLoc;
+
     public Drone(RobotController r) { super(r); }
+
+    @Override
+    public void initialize() throws GameActionException {
+        super.initialize();
+        wall = new Vector[]{new Vector(3, 0), new Vector(3, -1), new Vector(3, -2), new Vector(3, -3), new Vector(2, -3), new Vector(1, -3), new Vector(0, -3), new Vector(-1, -3), new Vector(-2, -3), new Vector(-3, -3), new Vector(-3, -2), new Vector(-3, -1), new Vector(-3, 0), new Vector(-3, 1), new Vector(-3, 2), new Vector(-3, 3), new Vector(-2, 3), new Vector(-1, 3), new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 3), new Vector(3, 2), new Vector(3, 1)};
+        wallLoc = new MapLocation[24];
+        for (int i = 0; i < 24; i++) {
+            wallLoc[i] = wall[i].addWith(HQLocation);
+        }
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
@@ -16,7 +29,7 @@ public class Drone extends Unit {
         System.out.println("My stuck value is " + nav.getStuck());
         System.out.println("My threats are: " + nav.getThreats().toString());
         // check if it needs to explode
-        if (nav.getStuck() >= explodeThresh) {
+        if (nav.getStuck() >= explodeThresh && rc.getRoundNum() < 1000) {
             explode = true;
             return;
         }
@@ -48,6 +61,23 @@ public class Drone extends Unit {
 //                }
 //            }
 //        }
+        if (rc.getRoundNum() > 1000 && rc.getRoundNum() < 2300) {
+            // form a wall
+            for (MapLocation loc: wallLoc) {
+                if (rc.getLocation().equals(loc)) return;
+            }
+            for (MapLocation loc: wallLoc) {
+                if (rc.getLocation().isAdjacentTo(loc) && rc.canSenseLocation(loc)) {
+                    Direction dir = rc.getLocation().directionTo(loc);
+                    if (rc.canMove(dir)) {
+                        rc.move(dir);
+                        return;
+                    }
+                }
+            }
+            nav.bugNav(rc, HQLocation);
+            return;
+        }
         // check for help mode
         if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
             // check for unit to help

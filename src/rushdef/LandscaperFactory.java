@@ -66,7 +66,7 @@ public class LandscaperFactory extends Building {
                 }
             }
             minElevation = Math.max(1, minElevation);
-            if (rc.getRoundNum() > Util.floodRound(minElevation)-40) {
+            if (rc.getRoundNum() > Util.floodRound(minElevation)-40 && landscaperCount < 18) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation);
                 if (rc.canBuildRobot(RobotType.LANDSCAPER, optDir)) {
                     rc.buildRobot(RobotType.LANDSCAPER, optDir);
