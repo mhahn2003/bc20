@@ -629,7 +629,7 @@ public class Drone extends Unit {
             // manhattan distance is odd makes a lattice
             // even or closer make sure no dense positions
             // check if empty
-            if (manhattanDistance(enemyHQLocation, nextAttackLocation) % 2 == parity &&
+            if (nextAttackLocation.distanceSquaredTo(enemyHQLocation) > 2 && manhattanDistance(enemyHQLocation, nextAttackLocation) % 2 == parity &&
                     (manhattanDistance(enemyHQLocation, rc.getLocation()) % 2 == nonparity || nextAttackLocation.distanceSquaredTo(loc) <= currentDist) &&
                     rc.canMove(dir)) {
                 rc.move(dir);
