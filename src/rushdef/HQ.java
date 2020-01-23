@@ -134,13 +134,13 @@ public class HQ extends Shooter {
 //            }
 //        }
         // attack
-        if (rc.getRoundNum() == 2300) {
+        if (rc.getRoundNum() == 2300 && !isUnderAttack) {
             infoQ.add(getMessage(InformationCategory.PREPARE, HQLocation));
         }
         if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 2400) {
             infoQ.add(getMessage(InformationCategory.ATTACK, HQLocation));
         }
-        if (rc.getRoundNum() == 2450) {
+        if (phase == RobotPlayer.actionPhase.ATTACK && rc.getRoundNum() == 2450) {
             infoQ.add(getMessage(InformationCategory.SURRENDER, HQLocation));
         }
     }
