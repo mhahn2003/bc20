@@ -26,9 +26,9 @@ public class Miner extends Unit {
                 infoQ.add(getMessage(InformationCategory.RUSH, HQLocation));
                 // call off the rush
             }
-            System.out.println("I'm a rusher!");
+//            System.out.println("I'm a rusher!");
             if (Rush.getRush()) {
-                System.out.println("Rushing enemy!");
+//                System.out.println("Rushing enemy!");
                 Rush.killEnemy();
                 return;
             }
@@ -111,7 +111,7 @@ public class Miner extends Unit {
                 // if it's going to drown, then go back to HQ
                 if (nav.needHelp(rc, turnCount, HQLocation)) {
                     helpMode = 1;
-                    System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//                    System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     infoQ.add(Cast.getMessage(rc.getLocation(), HQLocation));
                 } else nav.bugNav(rc, HQLocation);
             }
@@ -130,7 +130,7 @@ public class Miner extends Unit {
                             }
                         }
                     }
-                    if (rc.canBuildRobot(RobotType.VAPORATOR, vapDir) && (rc.getLocation().add(vapDir).distanceSquaredTo(HQLocation) < 100 || rc.senseElevation(rc.getLocation().add(vapDir)) > 5)) {
+                    if (vapDir != null && rc.canBuildRobot(RobotType.VAPORATOR, vapDir) && (rc.getLocation().add(vapDir).distanceSquaredTo(HQLocation) < 100 || rc.senseElevation(rc.getLocation().add(vapDir)) > 5)) {
                         rc.buildRobot(RobotType.VAPORATOR, vapDir);
                     }
                 }
@@ -151,9 +151,21 @@ public class Miner extends Unit {
             }
             // build landscaper factory
             MapLocation LFLoc = new Vector(2, 2).rotate(rotateState).addWith(HQLocation);
-            if (factoryLocation == null && isBuilder) {
-                System.out.println("rotateState is: " + rotateState);
-                System.out.println("LFLoc is: " + LFLoc.toString());
+            if (rc.getRoundNum() > 250) {
+                for (Direction dir : directions) {
+                    MapLocation loc = rc.getLocation().add(dir);
+                    if (loc.equals(LFLoc)) {
+                        if (rc.canBuildRobot(RobotType.DESIGN_SCHOOL, dir)) {
+                            rc.buildRobot(RobotType.DESIGN_SCHOOL, dir);
+                            factoryLocation = rc.getLocation().add(dir);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (factoryLocation == null) {
+//                System.out.println("rotateState is: " + rotateState);
+//                System.out.println("LFLoc is: " + LFLoc.toString());
                 if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost + rushCost) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
@@ -194,10 +206,10 @@ public class Miner extends Unit {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + 60 + rushCost) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) > 20) {
+                        if (loc.distanceSquaredTo(HQLocation) > 9 && loc.distanceSquaredTo(HQLocation) < 50) {
                             if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
                                 MapLocation placeLoc = rc.getLocation().add(dir);
-                                if (placeLoc.x % 2 == HQLocation.x % 2 && placeLoc.y % 2 == HQLocation.y % 2)
+                                if (placeLoc.x % 2 != HQLocation.x % 2 || placeLoc.y % 2 != HQLocation.y % 2)
                                     continue;
                                 rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
                                 droneFactoryLocation = rc.getLocation().add(dir);
@@ -323,23 +335,29 @@ public class Miner extends Unit {
                 } else {
                     if (nav.needHelp(rc, turnCount, closestRefineryLocation)) {
                         helpMode = 1;
-                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//                        System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         infoQ.add(Cast.getMessage(rc.getLocation(), closestRefineryLocation));
                     } else nav.bugNav(rc, closestRefineryLocation);
                 }
             } else {
-                System.out.println("I'm looking for soup");
+//                System.out.println("I'm looking for soup");
                 // try to mine soup in all directions because miner finding soup can be slightly buggy
                 boolean canMine = false;
                 MapLocation op = rc.getLocation().add(rc.getLocation().directionTo(HQLocation).opposite());
                 if (rc.canMineSoup(Direction.CENTER)) {
-                    System.out.println("I can mine " + Direction.CENTER.toString());
+                    if (rc.getRoundNum() > 200 && rc.getLocation().isAdjacentTo(HQLocation)) {
+                        nav.bugNav(rc, op);
+                    }
+//                    System.out.println("I can mine " + Direction.CENTER.toString());
                     rc.mineSoup(Direction.CENTER);
                     canMine = true;
                 }
                 for (Direction d : directions) {
                     if (rc.canMineSoup(d)) {
-                        System.out.println("I can mine " + d.toString());
+                        if (rc.getRoundNum() > 200 && rc.getLocation().isAdjacentTo(HQLocation)) {
+                            nav.bugNav(rc, op);
+                        }
+//                        System.out.println("I can mine " + d.toString());
                         rc.mineSoup(d);
                         canMine = true;
                         break;
@@ -347,9 +365,9 @@ public class Miner extends Unit {
                 }
                 if (soupLoc != null) {
 
-                    System.out.println("Soup is at: " + soupLoc.toString());
+//                    System.out.println("Soup is at: " + soupLoc.toString());
                     if (canMine) {
-                        System.out.println("I mined soup!");
+//                        System.out.println("I mined soup!");
                         // pollution might make miner skip this even though it's right next to soup
                         nav.navReset(rc, rc.getLocation());
                     }
@@ -357,16 +375,16 @@ public class Miner extends Unit {
                     else {
                         if (nav.needHelp(rc, turnCount, soupLoc)) {
                             helpMode = 1;
-                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                             infoQ.add(Cast.getMessage(rc.getLocation(), soupLoc));
                         } else {
-                            System.out.println("I'm going to soup");
-                            System.out.println("Soup is at: " + soupLoc.toString());
+//                            System.out.println("I'm going to soup");
+//                            System.out.println("Soup is at: " + soupLoc.toString());
                             nav.bugNav(rc, soupLoc);
                         }
                     }
                 } else {
-                    System.out.println("Exploring!");
+//                    System.out.println("Exploring!");
                     // check if getting close to flooded
                     // scout for soup
                     nav.bugNav(rc, new MapLocation(rc.getMapWidth()/2, rc.getMapHeight()/2));
@@ -382,12 +400,11 @@ public class Miner extends Unit {
         } else return false;
     }
 
-    // TODO: reimplement this function
     // stores the closest MapLocation of soup in the robot's stored soup locations in soupLoc
     // but if within vision range, just normally find the closest soup
     static void findSoup() throws GameActionException {
         // try to find soup very close
-        System.out.println("Before calling I have: " + Clock.getBytecodesLeft());
+//        System.out.println("Before calling I have: " + Clock.getBytecodesLeft());
         MapLocation[] soups = rc.senseNearbySoup();
         for (MapLocation check: soups) {
             if (rc.senseFlooding(check)) {
@@ -420,6 +437,6 @@ public class Miner extends Unit {
                 soupLoc = soup;
             }
         }
-        System.out.println("After calling I have: " + Clock.getBytecodesLeft());
+//        System.out.println("After calling I have: " + Clock.getBytecodesLeft());
     }
 }

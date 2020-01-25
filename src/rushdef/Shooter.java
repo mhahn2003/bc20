@@ -16,6 +16,32 @@ public class Shooter extends Building {
 
         for (RobotInfo e : enemiesInRange) {
             if (e.type == RobotType.DELIVERY_DRONE) {
+                if (e.isCurrentlyHoldingUnit()) {
+                    RobotInfo carried = rc.senseRobot(e.getHeldUnitID());
+                    if (carried.getType() == RobotType.MINER && carried.getTeam() != rc.getTeam()) {
+                        if (rc.canShootUnit(e.ID)){
+                            rc.shootUnit(e.ID);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        for (RobotInfo e : enemiesInRange) {
+            if (e.type == RobotType.DELIVERY_DRONE) {
+                if (e.isCurrentlyHoldingUnit()) {
+                    RobotInfo carried = rc.senseRobot(e.getHeldUnitID());
+                    if (carried.getType() == RobotType.LANDSCAPER && carried.getTeam() != rc.getTeam()) {
+                        if (rc.canShootUnit(e.ID)){
+                            rc.shootUnit(e.ID);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        for (RobotInfo e : enemiesInRange) {
+            if (e.type == RobotType.DELIVERY_DRONE) {
                 if (rc.canShootUnit(e.ID)){
                     rc.shootUnit(e.ID);
                     break;

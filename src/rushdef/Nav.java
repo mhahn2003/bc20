@@ -49,7 +49,7 @@ public class Nav {
     // use bug navigation algorithm to navigate to destination
     public void bugNav(RobotController rc, MapLocation dest) throws GameActionException {
         if (rc.getType() == RobotType.DELIVERY_DRONE) {
-//            System.out.println("My threats are: " + threats.toString());
+            System.out.println("My threats are: " + threats.toString());
         }
         if (rc.getLocation().equals(dest)) {
 //            System.out.println("Location is equal");
@@ -193,7 +193,7 @@ public class Nav {
     public boolean canGoDrone(RobotController rc, Direction dir, boolean free) throws GameActionException {
         if (!rc.canMove(dir)) return false;
         MapLocation goodLoc = rc.getLocation().add(dir);
-        if (!free && goodLoc.equals(lastLoc) || goodLoc.equals(lastLastLoc)) return false;
+//        if (!free && goodLoc.equals(lastLoc) || goodLoc.equals(lastLastLoc)) return false;
         for (MapLocation loc: threats) {
             if (goodLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) return false;
         }
@@ -244,19 +244,19 @@ public class Nav {
         if (travelDist < 20) {
             if (rc.getRoundNum()-travelRound-15 > travelDist*5 && areDrones && turnCount > 25) {
                 helpReq = rc.getLocation();
-                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
+//                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
             if (rc.getRoundNum()-travelRound-15 > travelDist*5 && areDrones && turnCount > 25) {
                 helpReq = rc.getLocation();
-                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
+//                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
         }
         else {
             if (rc.getRoundNum()-travelRound - 10 > travelDist*7/4 && areDrones && turnCount > 25) {
                 helpReq = rc.getLocation();
-                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
+//                System.out.println("I have traveled for " + (rc.getRoundNum()-travelRound));
                 return true;
             }
         }
@@ -317,7 +317,7 @@ public class Nav {
     public void nextExplore() throws GameActionException {
         int closestDist = 1000000;
         for (int i = 0; i < 8; i++) {
-            System.out.println("For i: " + i + " we have: " + suspectsVisited.get(suspects.get(i)));
+//            System.out.println("For i: " + i + " we have: " + suspectsVisited.get(suspects.get(i)));
             if (!suspectsVisited.get(suspects.get(i))) {
                 if (rc.getLocation().distanceSquaredTo(suspects.get(i)) < closestDist) {
                     closestDist = rc.getLocation().distanceSquaredTo(suspects.get(i));
