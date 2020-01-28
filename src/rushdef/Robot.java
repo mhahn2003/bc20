@@ -81,6 +81,8 @@ public class Robot {
     static boolean rushHappening = true;
     // rush cost
     static int rushCost = 250;
+    // is reinforce layer done
+    static boolean isReinforce = false;
 
     // used for exploring enemy HQ locations
     static int idIncrease = 0;

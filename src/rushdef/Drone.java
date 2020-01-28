@@ -74,7 +74,7 @@ public class Drone extends Unit {
             // rotate around hq
             if (!rushed) nav.bugNav(rc, HQLocation);
         }
-        if (rc.getRoundNum() > 1000 && (rc.getRoundNum() < 2300 || phase == RobotPlayer.actionPhase.NON_ATTACKING || phase == RobotPlayer.actionPhase.DEFENSE)) {
+        if (rc.getRoundNum() > 1000 && (rc.getRoundNum() < 1600 || phase == RobotPlayer.actionPhase.NON_ATTACKING || phase == RobotPlayer.actionPhase.DEFENSE) || rc.getRoundNum() > 1800) {
             // check if there's any enemy landscapers and drop them
             if (!rc.isCurrentlyHoldingUnit()) {
                 RobotInfo pickup = null;

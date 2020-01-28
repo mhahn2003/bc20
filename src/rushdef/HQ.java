@@ -86,6 +86,26 @@ public class HQ extends Shooter {
                 crunchDroneCount++;
             }
         }
+        if (!isReinforce) {
+            // check reinforce layer
+            boolean empty = false;
+            Vector[] reinforce = new Vector[]{new Vector(1, 2), new Vector(2, 1), new Vector(-1, 2), new Vector(2, -1), new Vector(1, -2), new Vector(-2, 1), new Vector(-1, -2), new Vector(-2, -1)};
+            for (int i = 0; i < 8; i++) {
+                MapLocation loc = reinforce[i].addWith(HQLocation);
+                if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc)) {
+                    RobotInfo r = rc.senseRobotAtLocation(loc);
+                    if (r == null || r.getType() != RobotType.LANDSCAPER || r.getTeam() != rc.getTeam()) {
+                        empty = true;
+                        break;
+                    }
+                }
+            }
+            if (!empty) {
+                // reinforce is true
+                isReinforce = true;
+                infoQ.add(getMessage(InformationCategory.REINFORCE, HQLocation));
+            }
+        }
         if (!isUnderAttack) {
             for (RobotInfo r : robots) {
                 if ((r.getType() == RobotType.LANDSCAPER || r.getType() == RobotType.MINER || (r.getType() == RobotType.DELIVERY_DRONE && r.currentlyHoldingUnit)) && r.getTeam() != rc.getTeam()) {
@@ -138,13 +158,13 @@ public class HQ extends Shooter {
 //            }
 //        }
         // attack
-        if (rc.getRoundNum() == 2300 && crunchDroneCount < 11) {
+        if (rc.getRoundNum() == 1600 && crunchDroneCount < 11) {
             infoQ.add(getMessage(InformationCategory.PREPARE, HQLocation));
         }
-        if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 2400) {
+        if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 1725) {
             infoQ.add(getMessage(InformationCategory.ATTACK, HQLocation));
         }
-        if (phase == RobotPlayer.actionPhase.ATTACK && rc.getRoundNum() == 2450) {
+        if (phase == RobotPlayer.actionPhase.ATTACK && rc.getRoundNum() == 1750) {
             infoQ.add(getMessage(InformationCategory.SURRENDER, HQLocation));
         }
     }
