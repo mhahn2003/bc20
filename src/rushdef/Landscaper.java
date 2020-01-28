@@ -391,21 +391,24 @@ public class Landscaper extends Unit {
             if (rc.isReady()) turtle.buildFort(rc);
         }
         else if (teraformMode == 4) {
+            System.out.println("In teraform mode 4!");
             // reinforce the turtle
             for (MapLocation loc: reinforceLoc) {
                 if (rc.getLocation().equals(loc)) {
                     Direction dig = digReinforce();
                     RobotInfo rob = rc.senseRobotAtLocation(rc.getLocation().add(dig));
                     if (rc.senseElevation(rc.getLocation()) >= GameConstants.getWaterLevel(rc.getRoundNum())+3) {
+                        System.out.println("Putting dirt on turtle");
                         // refinforce turtle
-                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
+                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam() || rob.getType() == RobotType.DELIVERY_DRONE)) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
                         } else {
                             Direction fill = lowestElevation();
                             if (rc.canDepositDirt(fill)) rc.depositDirt(fill);
                         }
                     } else {
-                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
+                        System.out.println("Putting dirt on myself");
+                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam() || rob.getType() == RobotType.DELIVERY_DRONE)) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
                         } else {
                             if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
@@ -516,13 +519,17 @@ public class Landscaper extends Unit {
                 RobotInfo rob = rc.senseRobotAtLocation(fill);
                 if ((rc.senseElevation(fill) > -30 && rc.senseElevation(fill) < optHeight(fill) && (rob == null || !rob.getType().isBuilding())) ||
                         (rob != null && rob.getType().isBuilding() && rob.getTeam() != rc.getTeam())) {
-                    this.fill = dir;
-                    return;
+                    if (!(fill.distanceSquaredTo(HQLocation) == 5 && rob != null && rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam())) {
+                        this.fill = dir;
+                        return;
+                    }
                 }
                 if ((rc.senseElevation(fill) > optHeight(fill) && rc.senseElevation(fill) < 40)
                         && (rob == null || !rob.getType().isBuilding() || (rob.getType().isBuilding() && rob.getTeam() == rc.getTeam() && rob.dirtCarrying > 0))) {
-                    this.digLoc = dir;
-                    return;
+                    if (!(fill.distanceSquaredTo(HQLocation) == 5 && rob != null && rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam())) {
+                        this.digLoc = dir;
+                        return;
+                    }
                 }
             }
         }
@@ -601,7 +608,9 @@ public class Landscaper extends Unit {
 //                    System.out.println("Direction " + dir + " looks ok");
 //                    System.out.println("optimal height is " + optHeight(fill));
 //                    System.out.println("After completing fillMore I have: " + Clock.getBytecodesLeft());
-                    return true;
+                    if (!(fill.distanceSquaredTo(HQLocation) == 5 && rob != null && rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam())) {
+                        return true;
+                    }
                 }
             }
         }

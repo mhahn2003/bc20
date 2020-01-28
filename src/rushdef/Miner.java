@@ -107,7 +107,7 @@ public class Miner extends Unit {
 //                }
 //            } else {
             // build vaporators if this particular miner hasn't build one
-            if (rc.getRoundNum() > Util.floodRound(Math.max(2, rc.senseElevation(rc.getLocation()))-80) && rc.getLocation().distanceSquaredTo(HQLocation) > 100) {
+            if (rc.getRoundNum() > Util.floodRound(Math.max(2, rc.senseElevation(rc.getLocation()))-80) && rc.getLocation().distanceSquaredTo(HQLocation) > 16) {
                 // if it's going to drown, then go back to HQ
                 if (nav.needHelp(rc, turnCount, HQLocation)) {
                     helpMode = 1;
@@ -206,7 +206,7 @@ public class Miner extends Unit {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + 60 + rushCost) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) > 9 && loc.distanceSquaredTo(HQLocation) < 50) {
+                        if (loc.distanceSquaredTo(HQLocation) > 7 && loc.distanceSquaredTo(HQLocation) < 50) {
                             if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
                                 MapLocation placeLoc = rc.getLocation().add(dir);
                                 if (placeLoc.x % 2 != HQLocation.x % 2 || placeLoc.y % 2 != HQLocation.y % 2)
