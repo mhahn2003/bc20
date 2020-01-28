@@ -277,6 +277,68 @@ public class Drone extends Unit {
                             }
                         }
                     }
+                    else if (!isReinforce) {
+                        System.out.println("Not reinforced right now");
+                        if (!rc.isCurrentlyHoldingUnit()) {
+                            RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
+                            RobotInfo landscaper = null;
+                            for (RobotInfo rob : robots) {
+                                if (rob.getType() == RobotType.LANDSCAPER && rob.getTeam() == rc.getTeam() && rob.getLocation().distanceSquaredTo(HQLocation) > 5) {
+                                    landscaper = rob;
+                                    break;
+                                }
+                            }
+                            if (landscaper != null) {
+                                System.out.println("I found our landscaper!");
+                                // then go pick it up
+                                if (landscaper.getLocation().isAdjacentTo(rc.getLocation())) {
+                                    if (rc.canPickUpUnit(landscaper.getID())) {
+                                        rc.pickUpUnit(landscaper.getID());
+                                        isLandscaper = true;
+                                    }
+                                } else {
+                                    // navigate to that landscaper
+                                    nav.bugNav(rc, landscaper.getLocation());
+                                }
+                            }
+                            // if there is none then just do normal stuff
+                        } else {
+                            // if it is holding a unit, check if it's a friendly landscaper
+                            if (isLandscaper) {
+                                System.out.println("I'm holding our landscaper");
+                                // if it is, then navigate to HQ and try to find closest empty spot
+                                MapLocation emptySpot = null;
+                                int dist = 100000;
+                                Vector[] reinforce = new Vector[]{new Vector(1, 2), new Vector(2, 1), new Vector(-1, 2), new Vector(2, -1), new Vector(1, -2), new Vector(-2, 1), new Vector(-1, -2), new Vector(-2, -1)};
+                                for (Vector v: reinforce) {
+                                    MapLocation loc = v.addWith(HQLocation);
+                                    if (rc.canSenseLocation(loc) && !rc.senseFlooding(loc)) {
+                                        RobotInfo r = rc.senseRobotAtLocation(loc);
+                                        if (r == null) {
+                                            if (emptySpot == null || rc.getLocation().distanceSquaredTo(loc) < dist)
+                                                emptySpot = loc;
+                                            dist = rc.getLocation().distanceSquaredTo(loc);
+                                        }
+                                    }
+                                }
+                                if (emptySpot != null) {
+                                    // check if adjacent and drop off
+                                    if (rc.getLocation().isAdjacentTo(emptySpot)) {
+                                        Direction drop = rc.getLocation().directionTo(emptySpot);
+                                        if (rc.canDropUnit(drop)) {
+                                            isLandscaper = false;
+                                            rc.dropUnit(drop);
+                                        }
+                                    } else {
+                                        // navigate to there
+                                        nav.bugNav(rc, emptySpot);
+                                    }
+                                } else {
+                                    patrolHQ();
+                                }
+                            }
+                        }
+                    }
 //                    System.out.println("Threats are: " + nav.getThreats().toString());
                     // find opponent units and pick up
                     if (!rc.isCurrentlyHoldingUnit()) {
