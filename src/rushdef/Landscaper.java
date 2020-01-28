@@ -396,7 +396,7 @@ public class Landscaper extends Unit {
                 if (rc.getLocation().equals(loc)) {
                     Direction dig = digReinforce();
                     RobotInfo rob = rc.senseRobotAtLocation(rc.getLocation().add(dig));
-                    if (rc.senseElevation(rc.getLocation()) >= 80) {
+                    if (rc.senseElevation(rc.getLocation()) >= GameConstants.getWaterLevel(rc.getRoundNum())+3) {
                         // refinforce turtle
                         if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam())) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
@@ -535,7 +535,7 @@ public class Landscaper extends Unit {
         int heuristic = 0;
         for (MapLocation hole: teraformLoc) {
             if (visitedHole.contains(hole)) continue;
-            int holeH = rc.getLocation().distanceSquaredTo(hole)+HQLocation.distanceSquaredTo(hole);
+            int holeH = rc.getLocation().distanceSquaredTo(hole)+10*HQLocation.distanceSquaredTo(hole);
             if (closest == null || holeH < heuristic) {
                 closest = hole;
                 heuristic = holeH;

@@ -74,12 +74,16 @@ public class HQ extends Shooter {
         RobotInfo[] robots = rc.senseNearbyRobots();
         boolean isVaporator = false;
         int netGunCount = 0;
+        int crunchDroneCount = 0;
         for (RobotInfo r : robots) {
             if (r.getType() == RobotType.VAPORATOR && r.getTeam() == rc.getTeam()) {
                 isVaporator = true;
             }
             if (r.getType() == RobotType.NET_GUN && r.getTeam() == rc.getTeam()) {
                 netGunCount++;
+            }
+            if (r.getType() == RobotType.DELIVERY_DRONE && r.getTeam() != rc.getTeam()) {
+                crunchDroneCount++;
             }
         }
         if (!isUnderAttack) {
@@ -134,7 +138,7 @@ public class HQ extends Shooter {
 //            }
 //        }
         // attack
-        if (rc.getRoundNum() == 2300 && !isUnderAttack) {
+        if (rc.getRoundNum() == 2300 && crunchDroneCount < 11) {
             infoQ.add(getMessage(InformationCategory.PREPARE, HQLocation));
         }
         if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 2400) {
