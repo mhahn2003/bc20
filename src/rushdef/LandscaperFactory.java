@@ -130,7 +130,7 @@ public class LandscaperFactory extends Building {
                     optDir = optDir.rotateRight();
                 }
             }
-            if (vaporatorCount > 0 && landscaperCount < 16 && rc.getTeamSoup() >= 550) {
+            if (vaporatorCount > 0 && !isReinforce && rc.getTeamSoup() >= 550) {
                 Direction optDir = rc.getLocation().directionTo(HQLocation);
                 for (int i = 0; i < 8; i++) {
                     if (rc.getLocation().directionTo(HQLocation).equals(optDir)) {
