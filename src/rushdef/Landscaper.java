@@ -400,7 +400,7 @@ public class Landscaper extends Unit {
                     if (rc.senseElevation(rc.getLocation()) >= GameConstants.getWaterLevel(rc.getRoundNum())+3) {
                         System.out.println("Putting dirt on turtle");
                         // refinforce turtle
-                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam() || rob.getType() == RobotType.DELIVERY_DRONE)) {
+                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam() || rob.getType() == RobotType.DELIVERY_DRONE || rc.senseElevation(rc.getLocation().add(dig)) < -10)) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
                         } else {
                             Direction fill = lowestElevation();
@@ -408,13 +408,13 @@ public class Landscaper extends Unit {
                         }
                     } else {
                         System.out.println("Putting dirt on myself");
-                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam() || rob.getType() == RobotType.DELIVERY_DRONE)) {
+                        if (rc.getDirtCarrying() == 0 && (rob == null || rob.getTeam() != rc.getTeam() || rob.getType() == RobotType.DELIVERY_DRONE || rc.senseElevation(rc.getLocation().add(dig)) < -10)) {
                             if (rc.canDigDirt(dig)) rc.digDirt(dig);
                         } else {
                             if (rc.canDepositDirt(Direction.CENTER)) rc.depositDirt(Direction.CENTER);
                         }
                     }
-                    break;
+                    return;
                 }
             }
             if (rc.isReady()) {
@@ -505,7 +505,8 @@ public class Landscaper extends Unit {
 
     public void checkFillAndDig(Direction dig) throws GameActionException {
         for (Direction dir: directions) {
-            if (dig.equals(dir) || isHole(dir) && ! rc.senseFlooding(rc.getLocation().add(dir))) continue;
+            if (!rc.canSenseLocation(rc.getLocation().add(dir))) continue;
+            if (dig.equals(dir) || isHole(dir) && !rc.senseFlooding(rc.getLocation().add(dir))) continue;
             MapLocation fill = rc.getLocation().add(dir);
             boolean bad = false;
             for (int i = 0; i < untouchSize; i++) {
