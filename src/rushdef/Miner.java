@@ -40,38 +40,39 @@ public class Miner extends Unit {
         }
         if (helpMode == 0) {
             // if we can build vaporators now
-//            if (isBuilder && rc.getRoundNum() > 150) {
-//                if (!netGun && factoryLocation != null) {
-//                    System.out.println("I need to build a net gun!");
-//                    // build net gun close to factory
-//                    if (rc.getLocation().distanceSquaredTo(factoryLocation) > 5) {
-//                        System.out.println("Still getting there");
-//                        // move in
-//                        if (nav.needHelp(rc, turnCount, factoryLocation)) {
-//                            helpMode = 1;
-//                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//                            infoQ.add(Cast.getMessage(rc.getLocation(), factoryLocation));
-//                        } else {
-//                            nav.bugNav(rc, factoryLocation);
-//                        }
-//                    } else {
-//                        System.out.println("Close enough");
-//                        // try to build net gun
-//                        Direction optDir = rc.getLocation().directionTo(factoryLocation);
-//                        for (int i = 0; i < 8; i++) {
-//                            MapLocation loc = rc.getLocation().add(optDir);
-//                            if (loc.x % 2 == HQLocation.x % 2 || loc.y % 2 == HQLocation.y % 2 || loc.distanceSquaredTo(HQLocation) <= 8) {
-//                                optDir = optDir.rotateRight();
-//                                continue;
-//                            }
-//                            if (rc.canBuildRobot(RobotType.NET_GUN, optDir)) {
-//                                System.out.println("I built a net gun!");
-//                                rc.buildRobot(RobotType.NET_GUN, optDir);
-//                                netGun = true;
-//                            } else optDir = optDir.rotateRight();
-//                        }
-//                    }
-//                }
+            if (isBuilder && rc.getRoundNum() > 150 && isTurtle) {
+                if (!netGun && factoryLocation != null) {
+                    System.out.println("I need to build a net gun!");
+                    // build net gun close to factory
+                    if (rc.getLocation().distanceSquaredTo(factoryLocation) > 8) {
+                        System.out.println("Still getting there");
+                        // move in
+                        if (nav.needHelp(rc, turnCount, factoryLocation)) {
+                            helpMode = 1;
+                            System.out.println("Sending help!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            infoQ.add(Cast.getMessage(rc.getLocation(), factoryLocation));
+                        } else {
+                            nav.bugNav(rc, factoryLocation);
+                        }
+                    } else {
+                        System.out.println("Close enough");
+                        // try to build net gun
+                        Direction optDir = rc.getLocation().directionTo(factoryLocation);
+                        for (int i = 0; i < 8; i++) {
+                            MapLocation loc = rc.getLocation().add(optDir);
+                            if (loc.distanceSquaredTo(HQLocation) <= 8 || !loc.isAdjacentTo(factoryLocation)) {
+                                optDir = optDir.rotateRight();
+                                continue;
+                            }
+                            if (rc.canBuildRobot(RobotType.NET_GUN, optDir)) {
+                                System.out.println("I built a net gun!");
+                                rc.buildRobot(RobotType.NET_GUN, optDir);
+                                netGun = true;
+                            } else optDir = optDir.rotateRight();
+                        }
+                    }
+                }
+            }
 //                else if (factoryLocation != null && rc.getRoundNum() > 350) {
 //                    expandVaporator += 0.1;
 //                    for (Direction dir : directions) {
@@ -107,7 +108,7 @@ public class Miner extends Unit {
 //                }
 //            } else {
             // build vaporators if this particular miner hasn't build one
-            if (rc.getRoundNum() > Util.floodRound(Math.max(2, rc.senseElevation(rc.getLocation()))-80) && rc.getLocation().distanceSquaredTo(HQLocation) > 16) {
+            if (rc.getRoundNum() > Util.floodRound(Math.max(2, rc.senseElevation(rc.getLocation())))-80 && rc.getLocation().distanceSquaredTo(HQLocation) > 16) {
                 // if it's going to drown, then go back to HQ
                 if (nav.needHelp(rc, turnCount, HQLocation)) {
                     helpMode = 1;
