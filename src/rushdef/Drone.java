@@ -16,9 +16,9 @@ public class Drone extends Unit {
     @Override
     public void initialize() throws GameActionException {
         super.initialize();
-        wall = new Vector[]{new Vector(3, 0), new Vector(3, -1), new Vector(3, -2), new Vector(3, -3), new Vector(2, -3), new Vector(1, -3), new Vector(0, -3), new Vector(-1, -3), new Vector(-2, -3), new Vector(-3, -3), new Vector(-3, -2), new Vector(-3, -1), new Vector(-3, 0), new Vector(-3, 1), new Vector(-3, 2), new Vector(-3, 3), new Vector(-2, 3), new Vector(-1, 3), new Vector(0, 3), new Vector(1, 3), new Vector(2, 3), new Vector(3, 3), new Vector(3, 2), new Vector(3, 1)};
-        wallLoc = new MapLocation[24];
-        for (int i = 0; i < 24; i++) {
+        wall = new Vector[]{new Vector(2, 0), new Vector(2, 1), new Vector(2, 2), new Vector(1, 2), new Vector(0, 2), new Vector(-1, 2), new Vector(-2, 2), new Vector(-2, 1), new Vector(-2, 0), new Vector(-2, -1), new Vector(-2, -2), new Vector(-1, -2), new Vector(0, -2), new Vector(1, -2), new Vector(2, -2), new Vector(2, -1)};
+        wallLoc = new MapLocation[16];
+        for (int i = 0; i < 16; i++) {
             wallLoc[i] = wall[i].addWith(HQLocation);
         }
     }
@@ -61,6 +61,19 @@ public class Drone extends Unit {
 //                }
 //            }
 //        }
+        if (rc.getRoundNum() < 200) {
+            // circle around hq right next to it
+            RobotInfo[] rush = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+            // check for any enemy units
+            boolean rushed = false;
+            for (RobotInfo r: rush) {
+                if (r.getType() == RobotType.MINER || r.getType() == RobotType.LANDSCAPER) {
+                    rushed = true;
+                }
+            }
+            // rotate around hq
+            if (!rushed) nav.bugNav(rc, HQLocation);
+        }
         if (rc.getRoundNum() > 1000 && rc.getRoundNum() < 2300) {
             // check if there's any enemy landscapers and drop them
             if (!rc.isCurrentlyHoldingUnit()) {
@@ -121,6 +134,7 @@ public class Drone extends Unit {
                 }
                 // if there's no water (which i really doubt) just stay there i guess?
             }
+            return;
         }
         // check for help mode
         if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
