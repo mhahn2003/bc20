@@ -71,9 +71,33 @@ public class Nav {
         if (!rc.isReady()) return;
         if (!isBugging) {
             // if the state is free
+            Direction go = null;
+            Direction left = optDir.rotateLeft();
+            Direction right = optDir.rotateRight();
             if (canGo(rc, optDir, true)) {
+                MapLocation goTo = rc.getLocation().add(optDir);
+                if (goTo.distanceSquaredTo(dest) < closestDist) {
+                    closestDist = goTo.distanceSquaredTo(dest);
+                    go = optDir;
+                }
+            }
+            if (canGo(rc, left, true)) {
+                MapLocation goTo = rc.getLocation().add(left);
+                if (goTo.distanceSquaredTo(dest) < closestDist) {
+                    closestDist = goTo.distanceSquaredTo(dest);
+                    go = left;
+                }
+            }
+            if (canGo(rc, right, true)) {
+                MapLocation goTo = rc.getLocation().add(right);
+                if (goTo.distanceSquaredTo(dest) < closestDist) {
+                    closestDist = goTo.distanceSquaredTo(dest);
+                    go = right;
+                }
+            }
+            if (go != null) {
                 stuck = 0;
-                rc.move(optDir);
+                rc.move(go);
             }
             else {
                 tryToDig(rc, dest);
