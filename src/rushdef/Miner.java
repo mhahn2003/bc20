@@ -207,7 +207,7 @@ public class Miner extends Unit {
                 if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + 60 + rushCost) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) > 7 && loc.distanceSquaredTo(HQLocation) < 50) {
+                        if (loc.distanceSquaredTo(HQLocation) > 7 && loc.distanceSquaredTo(HQLocation) < 50 && !loc.equals(LFLoc)) {
                             if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
                                 MapLocation placeLoc = rc.getLocation().add(dir);
                                 if (placeLoc.x % 2 != HQLocation.x % 2 || placeLoc.y % 2 != HQLocation.y % 2)
@@ -222,18 +222,29 @@ public class Miner extends Unit {
                     if (factoryLocation != null) nav.bugNav(rc, factoryLocation);
                 }
             }
-            if (rc.getRoundNum() > 300 && droneFactoryLocation == null && isTurtle) {
-                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+60) {
+            if (rc.getRoundNum() > 100 && droneFactoryLocation == null) {
+                // check if they see any drone factories first i guess?
+                RobotInfo[] droneFact = rc.senseNearbyRobots(-1, rc.getTeam());
+                boolean notBuilt = true;
+                for (RobotInfo r: droneFact) {
+                    if (r.getType() == RobotType.FULFILLMENT_CENTER) {
+                        notBuilt = false;
+                        break;
+                    }
+                }
+                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && notBuilt) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
-                        if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
-                            MapLocation placeLoc = rc.getLocation().add(dir);
-                            if (placeLoc.x % 2 == HQLocation.x % 2 && placeLoc.y % 2 == HQLocation.y % 2)
-                                continue;
-                            rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
-                            droneFactoryLocation = rc.getLocation().add(dir);
-                            infoQ.add(getMessage(InformationCategory.DRONE_FACTORY, droneFactoryLocation));
-                            break;
+                        if (loc.distanceSquaredTo(HQLocation) > 7 && loc.distanceSquaredTo(HQLocation) < 50 && !loc.equals(LFLoc)) {
+                            if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
+                                MapLocation placeLoc = rc.getLocation().add(dir);
+                                if (placeLoc.x % 2 != HQLocation.x % 2 || placeLoc.y % 2 != HQLocation.y % 2)
+                                    continue;
+                                rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
+                                droneFactoryLocation = rc.getLocation().add(dir);
+                                infoQ.add(getMessage(InformationCategory.DRONE_FACTORY, droneFactoryLocation));
+                                break;
+                            }
                         }
                     }
                 }
