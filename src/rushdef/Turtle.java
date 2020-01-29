@@ -114,13 +114,13 @@ public class Turtle {
 //                System.out.println("I have no dirt");
                 Direction digDir = getDig();
                 if (rc.canDigDirt(digDir)) {
-//                    System.out.println("Digging towards " + digDir.toString());
+                    System.out.println("Digging towards " + digDir.toString());
                     rc.digDirt(digDir);
                 }
             } else {
                 // fill
                 if (rc.canDepositDirt(evenDir)) {
-//                    System.out.println("Filling out at " + evenDir.toString());
+                    System.out.println("Filling out at " + evenDir.toString());
                     rc.depositDirt(evenDir);
                 }
             }
@@ -464,12 +464,21 @@ public class Turtle {
         lowest = rc.getLocation();
         left = HQLocation.add(dir.rotateLeft());
         right = HQLocation.add(dir.rotateRight());
+        MapLocation curPos = rc.getLocation();
+        boolean onEdge = curPos.x == 0 || curPos.x == rc.getMapWidth()-1 || curPos.y == 0 || curPos.y == rc.getMapHeight()-1;
+        System.out.println("onEdge is: " + onEdge);
         if (rc.canSenseLocation(lowest)) posLoc.add(lowest);
         if (rc.canSenseLocation(left)) {
-            if (!(left.x == 0 || left.x == rc.getMapWidth()-1 || left.y == 0 || left.y == rc.getMapHeight()-1)) posLoc.add(left);
+            if (!(left.x == 0 || left.x == rc.getMapWidth()-1 || left.y == 0 || left.y == rc.getMapHeight()-1) || !onEdge) {
+                System.out.println("I added left");
+                posLoc.add(left);
+            }
         }
         if (rc.canSenseLocation(right)) {
-            if (!(right.x == 0 || right.x == rc.getMapWidth()-1 || right.y == 0 || right.y == rc.getMapHeight()-1)) posLoc.add(right);
+            if (!(right.x == 0 || right.x == rc.getMapWidth()-1 || right.y == 0 || right.y == rc.getMapHeight()-1) || !onEdge) {
+                System.out.println("I added right");
+                posLoc.add(right);
+            }
         }
 //        System.out.println("posLoc is: " + posLoc.toString());
         MapLocation pos = null;
