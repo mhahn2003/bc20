@@ -10,6 +10,7 @@ public class Drone extends Unit {
 
     private Vector[] wall;
     private MapLocation[] wallLoc;
+    private boolean rushDefended = false;
 
     public Drone(RobotController r) { super(r); }
 
@@ -61,7 +62,8 @@ public class Drone extends Unit {
 //                }
 //            }
 //        }
-        if (rc.getRoundNum() < 225) {
+        if (rc.getRoundNum() < 225 && !rushDefended) {
+            if (rc.isCurrentlyHoldingUnit()) rushDefended = true;
             // circle around hq right next to it
             RobotInfo[] rush = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
             // check for any enemy units
@@ -72,7 +74,10 @@ public class Drone extends Unit {
                 }
             }
             // rotate around hq
-            if (!rushed) nav.bugNav(rc, HQLocation);
+            if (!rushed) {
+                if (!rc.getLocation().isAdjacentTo(HQLocation)) nav.bugNav(rc, HQLocation);
+                return;
+            }
         }
         if (rc.getRoundNum() > 1000 && (rc.getRoundNum() < 1600 || phase == RobotPlayer.actionPhase.NON_ATTACKING || phase == RobotPlayer.actionPhase.DEFENSE) || rc.getRoundNum() > 1800) {
             // check if there's any enemy landscapers and drop them

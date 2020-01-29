@@ -222,7 +222,7 @@ public class Miner extends Unit {
                     if (factoryLocation != null) nav.bugNav(rc, factoryLocation);
                 }
             }
-            if (rc.getRoundNum() > 40 && droneFactoryLocation == null) {
+            if (droneFactoryLocation == null) {
                 // check if they see any drone factories first i guess?
                 RobotInfo[] droneFact = rc.senseNearbyRobots(-1, rc.getTeam());
                 boolean notBuilt = true;
@@ -232,7 +232,7 @@ public class Miner extends Unit {
                         break;
                     }
                 }
-                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+rushCost && notBuilt) {
+                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && notBuilt) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
                         if (loc.distanceSquaredTo(HQLocation) > 7 && loc.distanceSquaredTo(HQLocation) < 50 && !loc.equals(LFLoc)) {
