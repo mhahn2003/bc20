@@ -140,7 +140,7 @@ public class HQ extends Shooter {
                 } else optDir = optDir.rotateLeft();
             }
         }
-        if (minerCount < 4 + plusMiners && rc.getRoundNum() > 150) {
+        if (minerCount < 4 + plusMiners && rc.getRoundNum() > 150 && !isUnderAttack) {
             for (int i = 0; i < 8; i++) {
                 if (rc.isReady() && rc.canBuildRobot(RobotType.MINER, optDir)) {
                     rc.buildRobot(RobotType.MINER, optDir);
