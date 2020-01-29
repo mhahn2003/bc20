@@ -416,7 +416,6 @@ public class Cast {
                                 break;
                             case TERAFORM:
                                 if (rc.getType() != RobotType.LANDSCAPER) break;
-                                System.out.println("I got teraform!");
                                 MapLocation h1 = Cast.getH1(message);
                                 MapLocation h2 = Cast.getH2(message);
                                 MapLocation h3 = Cast.getH3(message);

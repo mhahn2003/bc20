@@ -58,11 +58,11 @@ public class Landscaper extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         if (rc.getLocation().isAdjacentTo(HQLocation)) teraformMode = 2;
+        if (rc.getLocation().distanceSquaredTo(HQLocation) == 5) {
+            teraformMode = 4;
+        }
         if (teraformMode == 0) {
 //            System.out.println("floods at: " + (Util.floodRound(factoryHeight)-40));
-            if (rc.getLocation().distanceSquaredTo(HQLocation) == 5) {
-                teraformMode = 4;
-            }
             if (rc.getRoundNum() > Util.floodRound(factoryHeight)-40 && rc.getRoundNum() < Util.floodRound(factoryHeight)+40) {
 //                System.out.println("Switching to teraform mode 4");
                 teraformMode = 4;

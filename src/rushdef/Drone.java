@@ -61,7 +61,7 @@ public class Drone extends Unit {
 //                }
 //            }
 //        }
-        if (rc.getRoundNum() < 200) {
+        if (rc.getRoundNum() < 225) {
             // circle around hq right next to it
             RobotInfo[] rush = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
             // check for any enemy units

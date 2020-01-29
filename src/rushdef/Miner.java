@@ -117,7 +117,7 @@ public class Miner extends Unit {
                 } else nav.bugNav(rc, HQLocation);
             }
             if (vaporatorCount < 3) {
-                if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost) {
+                if (rc.getTeamSoup() >= RobotType.VAPORATOR.cost && phase != RobotPlayer.actionPhase.DEFENSE) {
                     Direction vapDir = null;
                     int height = 0;
                     for (Direction dir: directions) {
@@ -167,7 +167,7 @@ public class Miner extends Unit {
             if (factoryLocation == null) {
 //                System.out.println("rotateState is: " + rotateState);
 //                System.out.println("LFLoc is: " + LFLoc.toString());
-                if (rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost + rushCost) {
+                if (rc.getRoundNum() > 200 && rc.getTeamSoup() >= RobotType.DESIGN_SCHOOL.cost + rushCost) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
                         if (loc.equals(LFLoc)) {
