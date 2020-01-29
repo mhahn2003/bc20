@@ -610,7 +610,7 @@ public class Cast {
     }
 
     // send information collected to the blockchain
-    public void sendInfo() throws GameActionException {
+    public static void sendInfo() throws GameActionException {
         if (rc.getType() == RobotType.HQ) exploreHole();
         if (!infoQ.isEmpty())  {
             int blockSize = Math.min(6, infoQ.size());
@@ -630,7 +630,7 @@ public class Cast {
         }
     }
 
-    private int[] padMessage(int[] arr) throws GameActionException {
+    private static int[] padMessage(int[] arr) throws GameActionException {
         int[] message = new int[7];
         for (int i = 0; i < 7; i++) {
             if (i < arr.length) {
@@ -696,7 +696,7 @@ public class Cast {
     }
 
     // HQ will find explorable hole locations
-    public void exploreHole() {
+    public static void exploreHole() {
         // on the first return don't call this
         if (rc.getRoundNum() == 1) return;
         Hole h1 = null;

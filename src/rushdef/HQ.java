@@ -161,11 +161,12 @@ public class HQ extends Shooter {
         if (rc.getRoundNum() == 1600 && crunchDroneCount < 11) {
             infoQ.add(getMessage(InformationCategory.PREPARE, HQLocation));
         }
-        if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 1725) {
+        if (phase == RobotPlayer.actionPhase.PREPARE && rc.getRoundNum() == 1730) {
             infoQ.add(getMessage(InformationCategory.ATTACK, HQLocation));
         }
-        if (phase == RobotPlayer.actionPhase.ATTACK && rc.getRoundNum() == 1750) {
+        if (phase == RobotPlayer.actionPhase.ATTACK && rc.getRoundNum() == 1745) {
             infoQ.add(getMessage(InformationCategory.SURRENDER, HQLocation));
+            Cast.sendInfo();
         }
     }
 }
