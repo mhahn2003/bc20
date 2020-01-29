@@ -49,7 +49,7 @@ public class DroneFactory extends Building {
         }
 
         Direction optDir = Direction.NORTHEAST;
-        if (droneCount < 1 && rc.getRoundNum() > 120 && rc.getTeamSoup() >= 160) {
+        if (droneCount < 1 && rc.getRoundNum() > 50 && rc.getTeamSoup() >= 160) {
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
                 if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {

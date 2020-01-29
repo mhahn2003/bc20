@@ -222,7 +222,7 @@ public class Miner extends Unit {
                     if (factoryLocation != null) nav.bugNav(rc, factoryLocation);
                 }
             }
-            if (rc.getRoundNum() > 100 && droneFactoryLocation == null) {
+            if (rc.getRoundNum() > 40 && droneFactoryLocation == null) {
                 // check if they see any drone factories first i guess?
                 RobotInfo[] droneFact = rc.senseNearbyRobots(-1, rc.getTeam());
                 boolean notBuilt = true;
