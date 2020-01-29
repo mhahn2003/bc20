@@ -31,7 +31,7 @@ public class DroneFactory extends Building {
             }
         }
         minElevation = Math.max(3, minElevation);
-        if (rc.getRoundNum() > Util.floodRound(minElevation)-60 && droneCount < 27) {
+        if (rc.getRoundNum() > Util.floodRound(minElevation)-60 && droneCount < 27 && isTurtle) {
             Direction optDir = rc.getLocation().directionTo(HQLocation).opposite();
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
@@ -49,7 +49,7 @@ public class DroneFactory extends Building {
         }
 
         Direction optDir = Direction.NORTHEAST;
-        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150+rushCost/2) {
+        if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150+rushCost/2 && isTurtle) {
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
                 if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
@@ -70,7 +70,7 @@ public class DroneFactory extends Building {
             }
         }
         optDir = Direction.NORTHEAST;
-        if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost+rushCost/2 && helpLoc.size() >= 5) {
+        if (droneCount < 8 && rc.getTeamSoup() >= RobotType.REFINERY.cost+RobotType.DELIVERY_DRONE.cost+rushCost/2 && helpLoc.size() >= 5 && isTurtle) {
             for (int i = 0; i < 2; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
                 if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
@@ -88,7 +88,7 @@ public class DroneFactory extends Building {
         }
 
         // spam drones
-        if (vaporatorCount > 0 && rc.getTeamSoup() >= 600) {
+        if (vaporatorCount > 0 && rc.getTeamSoup() >= 600 && isTurtle) {
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
                 if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
