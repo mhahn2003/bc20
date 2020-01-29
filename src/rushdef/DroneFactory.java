@@ -70,6 +70,27 @@ public class DroneFactory extends Building {
             }
         }
         optDir = Direction.NORTHEAST;
+        if (droneCount < 2 && rc.getRoundNum() > 100 && rc.getTeamSoup() >= 160) {
+            for (int i = 0; i < 8; i++) {
+                MapLocation loc = rc.getLocation().add(optDir);
+                if (netGun && netGunLoc.distanceSquaredTo(loc) <= GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED) {
+                    optDir = optDir.rotateLeft();
+                    continue;
+                }
+                if (rc.isReady() && rc.canBuildRobot(RobotType.DELIVERY_DRONE, optDir)){
+                    rc.buildRobot(RobotType.DELIVERY_DRONE, optDir);
+                    droneCount++;
+                    if (droneCount == 1) {
+                        infoQ.add(getMessage(InformationCategory.DRONE_SPAWN, HQLocation));
+                        areDrones = true;
+                    }
+                    break;
+                } else {
+                    optDir = optDir.rotateLeft();
+                }
+            }
+        }
+        optDir = Direction.NORTHEAST;
         if (droneCount < 5 && rc.getTeamSoup() >= RobotType.DELIVERY_DRONE.cost + 150+rushCost/2 && isTurtle) {
             for (int i = 0; i < 8; i++) {
                 MapLocation loc = rc.getLocation().add(optDir);
