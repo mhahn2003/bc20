@@ -137,7 +137,7 @@ public class Drone extends Unit {
             return;
         }
         // check for help mode
-        if (helpMode == 0 && !rc.isCurrentlyHoldingUnit()) {
+        if (helpMode == 0 && !rc.isCurrentlyHoldingUnit() && rc.getRoundNum() > 225) {
             // check for unit to help
             // check for all of helpLoc if there's anything, if so, change helpMode and order of helpLoc
             helpIndex = -1;
