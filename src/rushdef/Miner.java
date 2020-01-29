@@ -3,8 +3,7 @@ package rushdef;
 import battlecode.common.*;
 
 import static rushdef.Cast.*;
-import static rushdef.Util.directions;
-import static rushdef.Util.refineryDist;
+import static rushdef.Util.*;
 
 public class Miner extends Unit {
 
@@ -19,6 +18,7 @@ public class Miner extends Unit {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         if (rc.getRoundNum() > 500 && rc.getLocation().isAdjacentTo(HQLocation)) rc.disintegrate();
+        if (nav.getStuck() >= explodeThresh && rc.getLocation().isAdjacentTo(HQLocation)) rc.disintegrate();
         if (isAttacker) {
             if (rc.getRoundNum() > 180 && !Rush.engaged() && Rush.getRush()) {
                 rushHappening = false;
@@ -195,26 +195,6 @@ public class Miner extends Unit {
                                 rc.buildRobot(RobotType.REFINERY, dir);
                                 infoQ.add(getMessage(InformationCategory.NEW_REFINERY, placeLoc));
                                 refineryLocation.add(placeLoc);
-                                break;
-                            }
-                        }
-                    }
-                    if (factoryLocation != null) nav.bugNav(rc, factoryLocation);
-                }
-            }
-            // build drone factory
-            if (droneFactoryLocation == null && isBuilder) {
-                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost + 60 + rushCost) {
-                    for (Direction dir : directions) {
-                        MapLocation loc = rc.getLocation().add(dir);
-                        if (loc.distanceSquaredTo(HQLocation) > 7 && loc.distanceSquaredTo(HQLocation) < 50 && !loc.equals(LFLoc)) {
-                            if (rc.canBuildRobot(RobotType.FULFILLMENT_CENTER, dir)) {
-                                MapLocation placeLoc = rc.getLocation().add(dir);
-                                if (placeLoc.x % 2 != HQLocation.x % 2 || placeLoc.y % 2 != HQLocation.y % 2)
-                                    continue;
-                                rc.buildRobot(RobotType.FULFILLMENT_CENTER, dir);
-                                droneFactoryLocation = rc.getLocation().add(dir);
-                                infoQ.add(getMessage(InformationCategory.DRONE_FACTORY, droneFactoryLocation));
                                 break;
                             }
                         }

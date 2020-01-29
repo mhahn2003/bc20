@@ -70,6 +70,7 @@ public class Nav {
         Direction optDir = loc.directionTo(dest);
         if (!rc.isReady()) return;
         if (!isBugging) {
+            System.out.println("Not bugging right now");
             // if the state is free
             Direction go = null;
             Direction left = optDir.rotateLeft();
@@ -96,6 +97,7 @@ public class Nav {
                 }
             }
             if (go != null) {
+                System.out.println("Moving towards " + go.toString());
                 stuck = 0;
                 rc.move(go);
             }
@@ -105,6 +107,7 @@ public class Nav {
             }
         }
         if (isBugging) {
+            System.out.println("Bugging right now");
             // if the state is bug
             boolean canMove = false;
             for (int i = 0; i < 8; i++) {
@@ -127,6 +130,7 @@ public class Nav {
                 lastLastLoc = lastLoc;
                 lastLoc = rc.getLocation();
                 addToStuck(rc.getLocation());
+                System.out.println("Moving toowards: " + optDir);
                 rc.move(optDir);
             }
             else {
@@ -157,7 +161,7 @@ public class Nav {
                     }
                 } else {
                     for (int i = 0; i < 8; i++) {
-                        if (rc.canMove(optDir)) {
+                        if (rc.canMove(optDir) && (rc.getType() == RobotType.DELIVERY_DRONE || !rc.senseFlooding(rc.getLocation().add(optDir)))) {
                             stuck = 0;
                             isStuck = false;
                             rc.move(optDir);

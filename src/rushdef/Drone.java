@@ -75,8 +75,7 @@ public class Drone extends Unit {
             }
             // rotate around hq
             if (!rushed) {
-                if (!rc.getLocation().isAdjacentTo(HQLocation)) nav.bugNav(rc, HQLocation);
-                return;
+                nav.bugNav(rc, HQLocation);
             }
         }
         if (rc.getRoundNum() > 1000 && (rc.getRoundNum() < 1600 || phase == RobotPlayer.actionPhase.NON_ATTACKING || phase == RobotPlayer.actionPhase.DEFENSE) || rc.getRoundNum() > 1800) {
