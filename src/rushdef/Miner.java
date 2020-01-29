@@ -232,7 +232,7 @@ public class Miner extends Unit {
                         break;
                     }
                 }
-                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost && notBuilt) {
+                if (rc.getTeamSoup() >= RobotType.FULFILLMENT_CENTER.cost+rushCost && notBuilt) {
                     for (Direction dir : directions) {
                         MapLocation loc = rc.getLocation().add(dir);
                         if (loc.distanceSquaredTo(HQLocation) > 7 && loc.distanceSquaredTo(HQLocation) < 50 && !loc.equals(LFLoc)) {

@@ -109,16 +109,7 @@ public class Rush {
                     // build net gun if we need to and can
                     if (!netGunPlaced && flyingDetected) {
 //                        System.out.println("I don't have a net gun yet!");
-                        // check if there are any landscapers first before spawning
-                        boolean isLandscaper = false;
-                        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam());
-                        for (RobotInfo r: robots) {
-                            if (r.getType() == RobotType.LANDSCAPER) {
-                                isLandscaper = true;
-                                break;
-                            }
-                        }
-                        if (isLandscaper && rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
+                        if (rc.getTeamSoup() >= RobotType.NET_GUN.cost) {
                             Direction optDir = rc.getLocation().directionTo(enemyHQLocation);
                             for (int i = 0; i < 8; i++) {
                                 if (rc.canBuildRobot(RobotType.NET_GUN, optDir)) {
