@@ -1,6 +1,6 @@
 # Battlecode 2020
 
-This was our first year competing in Battlecode as team <b>confused</b>. You can check out our postmortem [here](Battlecode_2020_Postmortem.pdf).
+This was our first year competing in Battlecode as team <b>confused</b>. You can check out our postmortem [here](https://www.notion.so/Battlecode-2020-Postmortem-fadb827d0e114e9c8fd17617c785a1ce).
 
 ### Resources
 
